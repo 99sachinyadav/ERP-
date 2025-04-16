@@ -12,10 +12,12 @@ const teacherSchema  = new mongoose.Schema({
     password:{
         type:String,
         required:true,
+        unique:true
     },
     email:{
         type:String,
-        required:true
+        required:true, 
+        
     },
     section:[{type:mongoose.Schema.Types.ObjectId, ref:'Section', required:true}],
     subjects:[{type:String}]

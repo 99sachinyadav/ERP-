@@ -20,7 +20,6 @@ const studentSchema = new mongoose.Schema(
       required: true,
       select: false,
     },
-   
     section: {
       type: String,
       required: true,
@@ -38,17 +37,29 @@ const studentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    father_name :{
-        type :String,
-        required :true,
+    father_name: {
+      type: String,
+      required: true,
     },
     gender: {
       type: String,
       enum: ["Male", "Female", "other"],
     },
-    avtar:{
-      type:String,
+    avtar: {
+      type: String,
     },
+    batch: {
+      type: String,
+      required: true,
+    },
+    attendance: [
+      { 
+        subject: { type: String, required: true },
+        date: { type: Date, required: true },
+        noofLecAttended: { type: Number, required: true },
+        totalnoLec: { type: Number, required: true },
+      },
+    ],
     contactinfo: {
       address: { type: String },
       phoneNo: {
