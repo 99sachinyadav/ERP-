@@ -2,9 +2,10 @@ import jwt from 'jsonwebtoken';
 const authTeacher = (req,res,next)=>{
     try {
         const {teachertoken} = req.headers;
-       // console.log(req.headers); // Log the entire headers object to debug
+        // console.log(req.headers); // Log the entire headers object to debug
+    //    console.log(teachertoken)
         if(!teachertoken){
-          return res.status(402).json({sucess:false,message:"token is not available"})
+          return res.status(402).json({sucess:false,message:"teacher credentials is not available"})
         }
         const decodedToken = jwt.verify(teachertoken, process.env.JWT_SECRET);
 

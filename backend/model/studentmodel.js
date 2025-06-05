@@ -2,13 +2,10 @@ import mongoose from "mongoose";
 
 const studentSchema = new mongoose.Schema(
   {
-    firstname: {
+    name: {
       type: String,
       required: true,
-    },
-    lastname: {
-      type: String,
-      minlength: [3, "lastname must contain atleast three letter"],
+      minlength: [3, "lastname must contain at least three letters"],
     },
 
     email: {
@@ -52,12 +49,22 @@ const studentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    subjects: [
+      {
+        type: String,
+        required: true,
+      },
+    ],
     attendance: [
-      { 
-        subject: { type: String, required: true },
-        date: { type: Date, required: true },
-        noofLecAttended: { type: Number, required: true },
-        totalnoLec: { type: Number, required: true },
+      {
+        subject: [
+          {
+            name: { type: String, required: true },
+            date: { type: Date, required: true },
+            noofLecAttended: { type: Number, required: true },
+            totalnoLec: { type: Number, required: true },
+          },
+        ],
       },
     ],
     contactinfo: {

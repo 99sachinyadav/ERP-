@@ -7,7 +7,7 @@ const  adminAuth =  (req,res ,next)=>{
               // console.log(req.headers); // Log the entire headers object to debug
               // console.log(admintoken); // Log the admintokenspecifically if(!adminToken){
            if(!admintoken){
-            return res.status(403).json({sucess:false,message:" token not found"});
+            return res.status(403).json({sucess:false,message:"admin credentials not found"});
            }
          const decodedToken =  jwt.verify(admintoken, process.env.JWT_SECRET)
              //console.log(decodedToken)
@@ -21,5 +21,6 @@ const  adminAuth =  (req,res ,next)=>{
          return res.status(401).json({sucess:false,message:error.message})
      }
 }
+
 
  export  { adminAuth};

@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken"
 const authStudent = async (req,res,next)=>{
     try {
        const {token} = req.headers;
-
+           console.log(token)
        if(!token){
          return res.status(402).json({sucess:false,message:"token is not available"})
        }

@@ -3,17 +3,17 @@ import { Teacher } from "../model/teachermodel.js";
 
 const Sectionregister = async (req,res)=>{
    try {
-    const {section ,year,batch,teacheremail} = req.body
+    const { year,batch,teacheremail} = req.body
+    let { section } = req.body;
+    section=section.toUpperCase().trim();
    // console.log(year)
     if(!section ||!year || !batch){
         return res.status(401).json({sucess:false,message:'please fill all the details'})
     }
     const yearSection= section+year+"_"+batch
-    console.log(yearSection)
+    // console.log(yearSection)
     const sectionExist = await Section.findOne({
-        name: yearSection,
-        year: year,
-        batch: batch
+       name:yearSection,
     });
     //console.log(sectionExist)
     if (sectionExist) {
@@ -31,13 +31,13 @@ const Sectionregister = async (req,res)=>{
         batch: batch,
          teacher: teacherExists._id,
     });
-    console.log(newsection) 
+    // console.log(newsection) 
     // Optionally, you can also update the teacher's record to include the section
     teacherExists.section = teacherExists.section || [];
     teacherExists.section.push(newsection._id);
     await teacherExists.save();
     
-    res.status(200).json({sucess:true,message:'user saved sucessfully',newsection})
+    res.status(200).json({sucess:true,message:'Section created sucessfully',newsection})
 
 }
 catch (error) {
@@ -47,4 +47,41 @@ catch (error) {
 
 }
 
-export  {Sectionregister}
+const addSubjects = async(req,res)=>{
+      try {
+        let { batch ,year, subject } = req.body
+        let { section } = req.body;
+        section=section.toUpperCase().trim();
+        batch=batch.trim();
+        year=year.trim();
+        subject=subject.trim();
+        if(!section ||!year || !batch || !subject){
+            return res.status(401).json({sucess:false,message:'please fill all the details'})
+        }
+        const yearSection= section+year+"_"+batch
+        console.log(yearSection)
+          const sectionFind = await Section.findOne({
+            name: yearSection,
+         
+          })
+
+          if(!sectionFind){
+           return res.status(203).json({sucess:false,message:"Section not found"})
+          }
+
+          const  subjectExists = sectionFind.subjects.find((sub) => sub === subject);
+            if (subjectExists) {
+                return res.status(401).json({ success: false, message: "Subject already exists" }); 
+
+            }
+            sectionFind.subjects.push(subject);
+            await sectionFind.save();   
+            res.status(200).json({sucess:true,message:'Subject added sucessfully',sectionFind}) 
+      } catch (error) { 
+        console.log(error.message); 
+        res.json({sucess:false,message:error.message})  
+      }
+}
+
+
+export  {Sectionregister,addSubjects}

@@ -1,5 +1,16 @@
  
  @import "tailwindcss";
+ .tailwind-datepicker {
+  @apply bg-white border border-gray-300 rounded-lg shadow-lg p-4;
+}
+
+.react-datepicker__day--selected {
+  @apply bg-blue-500 text-white;
+}
+
+.react-datepicker__day:hover {
+  @apply bg-blue-100;
+}
 
  
  

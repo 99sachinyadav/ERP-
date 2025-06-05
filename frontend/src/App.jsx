@@ -12,25 +12,33 @@ import Department from './pages/Department'
 import Contact from './pages/Contact'
 import Sidepannel from './Components/Sidepannel'
 import Footer from './Components/Footer'
+import toast, { Toaster } from 'react-hot-toast';
+import AttendenceUI from './Components/AttendenceUI'
+import Attendence from './Components/Attendence'
  const App = () => {
    return (
      
-    <div  >
+<>
+<div className=" w-full  ">
        <Navbar/>
-      
+      <Toaster/>
         <Routes>
-          <Route path='/'  element={<Home/>}  />
-          <Route path='/signup'  element={<Studentsignup/>}  />
+          <Route path='/home'  element={<Home/>}  />
+          <Route path='/'  element={<Studentsignup/>}  />
            <Route path='/login'  element={<StudentLogin/>}/>
           <Route path='/profile' element={<Profile/>}/>
           <Route path='/about' element={<About/>}/>
           <Route path='/department' element={<Department/>}/>
           <Route path='/contact'  element={<Contact/>}/>
           <Route path='/sidepannel'  element={<Sidepannel/>}/>
+          <Route path='/attendance'  element={<AttendenceUI/>}/>
+          <Route path='/viewattendance'  element={<Attendence/>}/>
+
         </Routes>
         <Footer/>
         
      </div>
+</>
   
    )
  }
