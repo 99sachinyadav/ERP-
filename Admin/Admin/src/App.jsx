@@ -7,6 +7,11 @@ import TeacherRegister from "./pages/TeacherRegister"
 import Dashboard from "./pages/Dashboard"
 import TeacherLogin from "./pages/TeacherLogin"
 import Home from "./pages/Home"
+import AdminProtect from "./Components/AdminProtect"
+import TeacherProTect from "./Components/TeacherProTect"
+import TeacherDashboard from "./pages/TeacherDashboard"
+import AddSubjects from "./Components/AddSubjects"
+import SeeAllStudent from "./Components/SeeAllStudent"
  
  
 
@@ -18,10 +23,38 @@ function App() {
 
     <Toaster/>
        <Routes>
-          <Route path="/admindashboard" element={<Home />} />
+          <Route path="/admindashboard" element={
+            <AdminProtect>
+              <Home />
+            </AdminProtect>
+          }
+           />
           <Route path="/" element={<AdminLogin />} />
-          <Route path="/teacherRegister" element={<TeacherRegister/>} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/teacherRegister" element={
+            <AdminProtect>
+              <TeacherRegister/>
+            </AdminProtect>
+          } />
+          <Route path="/teacherdashboard" element={
+            <TeacherProTect>
+              <TeacherDashboard/>
+            </TeacherProTect>
+          } />
+           <Route path = '/addSubjects' element ={
+            <TeacherProTect>
+            <AddSubjects/>
+            </TeacherProTect>
+          } />
+           <Route path = '/seeStudent' element ={
+            <TeacherProTect>
+            <SeeAllStudent/>
+            </TeacherProTect>
+          } />
+          <Route path="/dashboard" element={
+            <TeacherProTect>
+              <Dashboard />
+            </TeacherProTect>
+          } />
           <Route path="/teacherlogin" element={<TeacherLogin />} />
        </Routes>
 

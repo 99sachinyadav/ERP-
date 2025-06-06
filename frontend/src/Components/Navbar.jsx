@@ -64,9 +64,7 @@ const Navbar = () => {
         <Link to="/about" className="hidden sm:block text-sm sm:text-2xl">
           ABOUT
         </Link>
-        <Link to="/department" className="hidden sm:block text-sm sm:text-2xl">
-          DEPARTMENT
-        </Link>
+       
         <Link to="/contact" className="hidden sm:block text-sm sm:text-2xl">
           CONTACT
         </Link>
@@ -145,18 +143,7 @@ const Navbar = () => {
             <h1 className="text-md font-semibold ml-6"> PROFILE</h1>
           </div>
           <hr className="w-full h-[1px]" />
-          <div
-            onClick={() => {
-              navigator("/department"),
-                setIsopen(false),
-                setcolorbg("department");
-            }}
-            className={`flex gap-8 h-12 ${
-              colorbg == "department" ? "bg-pink-300 text-blue-900" : "bg-white"
-            } pl-3 items-center`}
-          >
-            <h1 className="text-md font-semibold ml-6"> DEPARTMENT</h1>
-          </div>
+         
           <hr className="w-full h-[1px]" />
           <div
             onClick={() => {

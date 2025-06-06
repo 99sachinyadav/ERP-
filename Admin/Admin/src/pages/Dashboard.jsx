@@ -25,11 +25,12 @@ function formatDate(date) {
 
  const showStudents = async ()=>{
     try {
-        // console.log(year,section,batch)
-        
+     
+        // console.log(localStorage.getItem('teacherToken'), localStorage.getItem('adminToken'));
         const responce = await axios.get('http://localhost:4000/api/gelStudentBySection', {
             headers: {
-                teachertoken: localStorage.getItem('teacherToken'),
+                teachertoken: localStorage.getItem('teacherToken')? localStorage.getItem('teacherToken') : null,
+                adminToken: localStorage.getItem('adminToken')? localStorage.getItem('adminToken') : null,
             },
             params: {
                 year: year,
@@ -60,7 +61,7 @@ function formatDate(date) {
 
  const markAttendance = async (rollno) => {
     try {
-        console.log(rollno, formatDate(selectedDate), singleSubject, totalnoLec[rollno], noofLecAttended[rollno]);
+        // console.log(localStorage.getItem('teacherToken'), localStorage.getItem('adminToken'));
         const response = await axios.post('http://localhost:4000/api/markAttendance', {
             rollno: rollno,
             date: formatDate(selectedDate),
@@ -70,6 +71,7 @@ function formatDate(date) {
         }, {
             headers: {
                 teachertoken: localStorage.getItem('teacherToken'),
+                adminToken: localStorage.getItem('adminToken'),
             },
         });
         console.log(response.data);

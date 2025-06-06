@@ -99,7 +99,8 @@ function formatDate(date) {
               </table>
             </div>
           </div>
-        <div className="w-[370px] sm:w-[450px] gap-5 flex flex-col m-3  items-center bg-teal-400 rounded-lg shadow p-4">
+       <div className="flex justify-center items-center">
+           <div className="w-[370px] sm:w-[450px] gap-5 flex flex-col m-3  items-center bg-teal-400 rounded-lg shadow p-4">
       <h2 className="text-2xl sm:text-3xl text-blue-900 font-bold mb-2">Select Date</h2>
       <Calendar
       className='sm:w-[400px] h-[400px] rounded-lg  bg-blue-600'
@@ -128,6 +129,7 @@ function formatDate(date) {
         {selectedDate ? `Selected Date: ${formatDate(selectedDate)}` : "Please select a date"}
       </div>
     </div>
+       </div>
  </div>
   );
 };

@@ -18,7 +18,7 @@ function Home() {
 
 
   return ( 
-    <div className="flex w-full flex-col gap-20  sm:flex-row mt-10 mb-10 p-6  ">
+    <div className="flex w-full flex-col-reverse gap-20  sm:flex-row mt-10 mb-10 p-6  ">
       <div className="flex flex-col      w-full sm:w-1/2 p-4">
             <h1 className="sm:text-6xl text-3xl sm:mt-10 sm:ml-30 font-bold text-blue-800">Hii ! {localStorage.getItem('studentname')}</h1>
             <h1 className="sm:text-5xl text-3xl sm:mt-8 sm:ml-30 font-bold text-blue-800">Welcome to Attendance Portal</h1>
@@ -44,7 +44,7 @@ function Home() {
                 Go to Profile
               </div>
             </div>
-             <button className="bg-blue-500 ml-15 sm:ml-30 text-white py-2 px-4 rounded w-40 mt-10" onClick={() =>{ navigate("/"),logout()}}>Log Out</button>
+             <button className="bg-blue-500 hidden sm:block ml-15 sm:ml-30 text-white py-2 px-4 rounded w-40 mt-10" onClick={() =>{ navigate("/"),logout()}}>Log Out</button>
         </div>
           <img className="h-80 sm:h-[600px]" src={welcome} alt="Welcome" />
         

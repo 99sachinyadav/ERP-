@@ -52,6 +52,7 @@ const Studentsignup = () => {
       if (responce.data.sucess) {
          localStorage.setItem('token', responce.data.studentToken);
          localStorage.setItem('studentname',responce.data.name );
+         
          navigate('/home');
    toast.success(responce.data.message)
       }  
@@ -87,7 +88,7 @@ const Studentsignup = () => {
 
 
   return (
-    <div className="w-full  sm:h-screen  mb-10  flex items-center justify-center flex-1 bg-gray-100 ">
+    <div className="w-full  sm:h-screen  mb-10  sm:mb-0 flex items-center justify-center flex-1 bg-gray-100 ">
       <div className="  top-10 w-full h-full">
         <div className="w-[100%] h-full flex flex-col items-center gap-8">
           <h1 className=" text-3xl sm:text-7xl ml-10   flex justify-center mt-20 sm:mt-10 font-bold  text-blue-900   text-wrap ">

@@ -128,16 +128,16 @@ const adminLogin = async (req, res) => {
 //DONE
 const attendancebyTeacher = async (req, res) => {
   try {
-    const { subject, rollno, date, noofLecAttended, totalnoLec, teacherId } =
+    const { subject, rollno, date, noofLecAttended, totalnoLec, teacherId ,adminID} =
       req.body;
-    console.log(subject, rollno, date, noofLecAttended , totalnoLec,teacherId)
+    // console.log(subject, rollno, date, noofLecAttended , totalnoLec,teacherId)
     if (!subject || !rollno || !date || !noofLecAttended || !totalnoLec) {
       return res
         .status(403)
         .json({ sucess: false, message: "kindly fill you full details" });
     }
-    console.log(totalnoLec, noofLecAttended);
-    console.log(Number(totalnoLec) < Number(noofLecAttended));
+    // console.log(totalnoLec, noofLecAttended);
+    // console.log(Number(totalnoLec) < Number(noofLecAttended));
     if (Number(totalnoLec) < Number(noofLecAttended)) {
       return res
         .status(401)
@@ -154,10 +154,10 @@ const attendancebyTeacher = async (req, res) => {
         .json({ sucess: false, message: "student not found" });
     }
     const findTeacherbyAuth = await Teacher.findOne({ _id: teacherId });
-    if (!findTeacherbyAuth) {
+    if (!findTeacherbyAuth && !adminID) {
       return res
         .status(401)
-        .json({ sucess: false, message: "Teacher not found in database" });
+        .json({ sucess: false, message: "Teacher or admin not found in database " });
     }
     const sectionName =
       findStudent.section + findStudent.year + "_" + findStudent.batch;
@@ -170,7 +170,7 @@ const attendancebyTeacher = async (req, res) => {
           message: "section assigned to student not found",
         });
     }
-    if (findSection.teacher.toString() !== findTeacherbyAuth._id.toString()) {
+    if (findSection.teacher.toString() !== findTeacherbyAuth?._id.toString() && !adminID) {
       return res
         .status(401)
         .json({

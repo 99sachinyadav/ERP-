@@ -20,8 +20,8 @@ function Profile() {
           token: token,
         },
       });
-      console.log(response.data);
-      console.log(response.data.success);
+      // console.log(response.data);
+      // console.log(response.data.success);
       if (response.data.sucess) {
         setresponce(response.data.profile);
         setAttendance(response.data.profile.attendance);
@@ -32,7 +32,7 @@ function Profile() {
       toast.error(error.response.data.message); // Display error message
     }
   };
-  console.log(response);
+  // console.log(response);
 
  
   return (
@@ -42,13 +42,13 @@ function Profile() {
           <h1 className="text-2xl sm:text-4xl flex justify-center sm:mt-10 mt-8 font-bold text-blue-900 text-wrap">
             Student <span className="text-red-500 ml-3"> Profile</span>
           </h1>
-          <div className="flex flex-col sm:flex-row">
+          <div className="flex sm:flex-row">
             <img
               src={banner}
-              className="w-30 h-30 sm:w-40 sm:h-40 mt-8 ml-20 sm:ml-8 rounded-[50%]"
+              className="w-30 h-30 sm:w-40 sm:h-40 mt-8 ml-10 sm:ml-8 rounded-[50%]"
               alt=""
             />
-            <div className="flex flex-col sm:mt-8">
+            <div className="flex flex-col justify-center sm:mt-8">
               <h1 className="text-xl sm:text-4xl font-semibold ml-8 mt-4">
                 {response?.name}
               </h1>
@@ -60,15 +60,15 @@ function Profile() {
           </div>
           <table className="w-11/12 mx-auto my-4 text-center border-separate border-spacing-y-2">
             <tbody className="flex sm:flex-col justify-evenly">
-              <tr className="bg-gray-100 rounded flex flex-col justify-between sm:pl-10 sm:pr-10  sm:flex-row">
+              <tr className="sm:bg-gray-100 rounded flex flex-col justify-between sm:pl-10 sm:pr-10  sm:flex-row">
                 <td className="text-xl sm:text-2xl font-bold py-2 rounded-l">Section</td>
                 <td className="text-xl sm:text-2xl font-semibold py-2 sm:text-left">{response?.section}</td>
               </tr>
-              <tr className="bg-gray-100 rounded flex flex-col justify-between sm:pl-10 sm:pr-10  sm:flex-row">
+              <tr className="sm:bg-gray-100 rounded flex flex-col justify-between sm:pl-10 sm:pr-10  sm:flex-row">
                 <td className="text-xl sm:text-2xl font-bold py-2">Year</td>
                 <td className="text-xl sm:text-2xl font-semibold py-2 sm:text-left ">{response?.year}</td>
               </tr>
-              <tr className="bg-gray-100 rounded flex flex-col justify-between sm:pl-10 sm:pr-10  sm:flex-row">
+              <tr className="sm:bg-gray-100 rounded flex flex-col justify-between sm:pl-10 sm:pr-10  sm:flex-row">
                 <td className="text-xl sm:text-2xl font-bold py-2 rounded-l">Dob</td>
                 <td className="text-xl sm:text-2xl font-semibold py-2 sm:text-left">{response?.dob}</td>
               </tr>
@@ -76,7 +76,7 @@ function Profile() {
           </table>
           <button
             onClick={() => setisOpen(!isOpen)}
-            className="bg-blue-500 w-50 sm:w-80 ml-10 mb-4 sm:ml-26 sm:m-10 text-white py-2 px-4 rounded"
+            className="bg-blue-500 w-50 sm:w-80 ml-20 mb-4 sm:ml-26 sm:m-10 text-white py-2 px-4 rounded"
           >
             View Attendence
           </button>
@@ -130,14 +130,14 @@ function Profile() {
   // Calculate totals outside JSX
   let totalnooflec = 0;
   let noofattend = 0;
-  // Fix typo: item?.subjec should be item?.subject
+ 
   item?.subject?.forEach(element => {
     totalnooflec += element.totalnoLec || 0;
     noofattend += element.noofLecAttended || 0;
   });
 
   return (
-    <tr key={idx} className="border-t hover:bg-gray-50">
+    <tr key={idx} className={`border-t ${(noofattend/totalnooflec)*100 < 75 ? "bg-red-400" : "bg-white"} hover:bg-gray-200`}>
       <td className="py-2 px-4 text-md sm:text-lg font-medium">{item?.subject?.[0]?.name}</td>
       <td className="py-2 px-4 text-md sm:text-lg text-center">{totalnooflec}</td>
       <td className="py-2 px-4 text-md sm:text-lg text-center">{noofattend}</td>

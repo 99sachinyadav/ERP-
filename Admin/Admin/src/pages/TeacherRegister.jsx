@@ -29,7 +29,7 @@ const TeacherRegister = (props) => {
                 }
               }
             )
-            console.log(responce.data);
+            // console.log(responce.data);
             if(responce.data.success){
               localStorage.setItem('teacherToken',responce.data.teacherToken)
               setname('');

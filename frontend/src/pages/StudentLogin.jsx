@@ -21,6 +21,7 @@ function StudentLogin() {
           localStorage.setItem('token',responce.data.refreshToken )
           localStorage.setItem('studentname',responce.data.name )
           toast.success(responce.data.message);
+      
           navigate('/home')
         }
         else{
@@ -46,7 +47,11 @@ function StudentLogin() {
           <label className="text-gray-700 font-semibold" htmlFor="password">Password</label>
           <input value={password} onChange={(e) => setpassword(e.target.value)} type="password" id="password" className="border border-gray-300 rounded-md p-2" required />
 
+         
           <button type="submit" className="bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600">Login</button>
+            <p onClick={()=>navigate('/')} className="text-md sm:text-lg font-s text-center  text-blue-700">
+                  <span className='text-red-500'>Don't have an account?</span> signup here...
+                </p>
         </form>
 
       </div>

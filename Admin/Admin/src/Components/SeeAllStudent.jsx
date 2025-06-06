@@ -13,6 +13,7 @@ const SeeAllStudent = () => {
  const [year, setyear] = useState("")
   const [batch, setbatch] = useState("")
   const [students, setstudents] = useState([])
+  const [Attendance, setAttendance] = useState([]);
 const getStudent = async ()=>{
    try {
     console.log(localStorage.getItem('teacherToken'))
@@ -23,7 +24,8 @@ const getStudent = async ()=>{
         batch,
       },
        headers:{
-        teachertoken:localStorage.getItem('teacherToken')
+        teachertoken:localStorage.getItem('teacherToken')? localStorage.getItem('teacherToken') : null,
+        admintoken:localStorage.getItem('adminToken')? localStorage.getItem('adminToken') : null
       }
     }
      
@@ -31,6 +33,7 @@ const getStudent = async ()=>{
     console.log(responce.data)
     if(responce.data.sucess){
       setstudents(responce.data.findSection.students)
+         setAttendance(responce.data.attendance);
       toast.success(responce.data.message)
     }
    } catch (error) {

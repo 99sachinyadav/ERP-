@@ -18,7 +18,8 @@ const AddSubjects = () => {
             subject
           },{
             headers:{
-              teachertoken: localStorage.getItem('teacherToken')
+              teachertoken: localStorage.getItem('teacherToken')? localStorage.getItem('teacherToken') : null,
+              admintoken: localStorage.getItem('adminToken')? localStorage.getItem('adminToken') : null
             }
           })
           // console.log(responce.data);
@@ -62,7 +63,7 @@ const AddSubjects = () => {
           <label className="text-gray-700 font-semibold" htmlFor="Subject">Subject</label>
           <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder='Enter Subject Name'   type="subject" id="subject" className="border border-gray-300 rounded-md p-1" required />
 
-          <button onClick={addSubject} type="submit" className="bg-blue-500 text-white font-semibold py-1 rounded-md hover:bg-blue-600">Update teacher</button>
+          <button onClick={addSubject} type="submit" className="bg-blue-500 text-white font-semibold py-1 rounded-md hover:bg-blue-600">ADD NEW ONE</button>
  
         </form>
 

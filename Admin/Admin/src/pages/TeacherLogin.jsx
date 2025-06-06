@@ -23,7 +23,7 @@ const TeacherLogin = () => {
         console.log(responce.data)
         if(responce.data.success){
            localStorage.setItem('teacherToken',responce.data.refeshTeacherToken)
-            navigate('/dashboard')
+            navigate('/teacherdashboard')
            toast.success(responce.data.message)
         }
         
@@ -49,7 +49,7 @@ const TeacherLogin = () => {
 
           <button type="submit" className="bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600">Login</button>
 
-          <p onClick={()=>navigate('/teacherRegister')}  className='text-center mt-2 text-lg text-blue-900'>Sign Up...</p>
+          {/* <p onClick={()=>navigate('/teacherRegister')}  className='text-center mt-2 text-lg text-blue-900'>Sign Up...</p> */}
         </form>
 
       </div>
