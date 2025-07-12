@@ -9,6 +9,7 @@ import UpdateTeacher from '../Components/UpdateTeacher';
 import CreateSection from '../Components/CreateSection';
 import ChangeYear from '../Components/ChangeYear';
 import AddSubjects from '../Components/AddSubjects';
+import MonitorAttendence from '../Components/MonitorAttendence';
 import Dashboard from './Dashboard';
  import { useNavigate } from 'react-router-dom';
 const Home = () => {
@@ -111,6 +112,7 @@ const Home = () => {
    {activeComponent === 'AddSubjects'  && <AddSubjects   />}
    
    {activeComponent === 'Dashboard'  && <Dashboard/>}
+   {activeComponent === 'MonitorAttendence'  && <MonitorAttendence/>}
 
       </div>
     </div>
