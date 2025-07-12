@@ -160,7 +160,6 @@ See the controller files in `backend/controller/` for detailed endpoints.
 
 ## License
 
-This project is for educational purposes.  
-Feel free to use and modify as per your needs.
+This project is for my college attendance managment
 
 ---
