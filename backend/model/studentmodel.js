@@ -72,6 +72,15 @@ const studentSchema = new mongoose.Schema(
         ],
       },
     ],
+
+
+      semester: { 
+        type: String,
+         required: true,
+         enum: ["Ist", "IInd", "IIIrd", "IVth", "Vth", "VIth", "VIIth", "VIIIth  "],
+
+       },
+       
     contactinfo: {
       address: { type: String },
       phoneNo: {

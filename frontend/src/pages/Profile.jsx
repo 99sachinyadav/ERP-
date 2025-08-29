@@ -1,5 +1,5 @@
 import axios from "axios";
-import { banner } from "../assets/assets";
+import { banner, User } from "../assets/assets";
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -44,12 +44,12 @@ function Profile() {
           </h1>
           <div className="flex sm:flex-row">
             <img
-              src={banner}
-              className="w-30 h-30 sm:w-40 sm:h-40 mt-8 ml-10 sm:ml-8 rounded-[50%]"
+              src={User}
+              className="w-30 h-35 sm:w-40 sm:h-60 mt-8 ml-6 sm:ml-8 rounded-[50%]"
               alt=""
             />
             <div className="flex flex-col justify-center sm:mt-8">
-              <h1 className="text-xl sm:text-4xl font-semibold ml-8 mt-4">
+              <h1 className="text-xl text-wrap sm:text-4xl font-semibold ml-8 mt-4">
                 {response?.name}
               </h1>
               <h1 className="sm:text-xl sm:mt-2 ml-8">{response?.rollno}</h1>
@@ -76,7 +76,7 @@ function Profile() {
           </table>
           <button
             onClick={() => setisOpen(!isOpen)}
-            className="bg-blue-500 w-50 sm:w-80 ml-20 mb-4 sm:ml-26 sm:m-10 text-white py-2 px-4 rounded"
+            className="bg-blue-500 w-50 sm:w-80   mx-auto mb-4 sm:ml-26 sm:m-10 text-white py-2 px-4 rounded"
           >
             View Attendence
           </button>

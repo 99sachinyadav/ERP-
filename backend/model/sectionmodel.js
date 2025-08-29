@@ -12,6 +12,11 @@ const sectionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    semester: {
+      type: String,
+      required: true,
+      enum: ["Ist", "IInd", "IIIrd", "IVth", "Vth", "VIth", "VIIth", "VIIIth  "],
+    },
     subjects: [
       {
         type: String,

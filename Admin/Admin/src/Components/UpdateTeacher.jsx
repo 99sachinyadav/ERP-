@@ -26,7 +26,7 @@ const UpdateTeacher = () => {
           adminToken:localStorage.getItem('adminToken')
         }
       })
-       console.log(responce);
+      // console.log(responce);
        if(responce.data.sucess){
         toast.success(responce.data.message)
         setsection("")
@@ -46,7 +46,7 @@ const UpdateTeacher = () => {
       
   <div className='flex  justify-center items-center h-screen bg-gray-100 relative'>
         <div className="flex flex-col   pb-20 sm:pb-50 items-center gap-5  bg-gray-100 ">
-         <h1 className=" text-3xl sm:text-5xl    flex justify-center sm:mt-10  font-bold  text-blue-900   text-wrap ">
+         <h1 className=" text-3xl sm:text-4xl    flex justify-center sm:mt-10  font-bold  text-blue-900   text-wrap ">
            Update  <span className="text-red-500 ml-3"> Teacher</span>
           </h1> 
        

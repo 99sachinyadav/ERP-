@@ -8,6 +8,7 @@ const TeacherLogin = () => {
    
     const [email,setemail] = useState('')
     const [password,setpassword]= useState('')
+    let section = "";
   
     const navigate = useNavigate();
 
@@ -23,6 +24,11 @@ const TeacherLogin = () => {
         console.log(responce.data)
         if(responce.data.success){
            localStorage.setItem('teacherToken',responce.data.refeshTeacherToken)
+           localStorage.setItem('teachername',responce.data.findTeacher.name)
+           responce.data.findTeacher?.section?.forEach((elem)=>{
+              section=section+','+elem.name+" ";
+           })
+           localStorage.setItem('teachersection',section)
             navigate('/teacherdashboard')
            toast.success(responce.data.message)
         }

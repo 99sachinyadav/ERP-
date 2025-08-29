@@ -33,10 +33,11 @@ const registerStudent = async (req, res) => {
       batch,
       dob,
       contactinfo,
+      semester,
     } = req.body;
     let { section } = req.body; // Destructure section from req.body
     const { address, phoneNO } = contactinfo || {};
-    //console.log(name  , father_name,email,password,rollno,section,year,dob,address )
+    console.log(name  , father_name,email,password,rollno,section,year,dob,address,semester )
     if (
       !name ||
       !email ||
@@ -46,7 +47,8 @@ const registerStudent = async (req, res) => {
       !year ||
       !dob ||
       !address ||
-      !batch
+      !batch ||
+      !semester   
     ) {
       return res
         .status(401)
@@ -60,12 +62,12 @@ const registerStudent = async (req, res) => {
           message: "Password must be at least 6 characters",
         });
     } //console.log(phoneNO)
-    if (phoneNO && phoneNO.length < 10) {
+    if (phoneNO && phoneNO.length === 10) {
       return res
         .status(401)
         .json({
           success: false,
-          message: "Phone number must be at least 10 digits",
+          message: "Phone number must be exactly 10 digits",
         });
     } // Check if student exists and convert it to ObjectId
     section = section.toUpperCase(); // Convert section to uppercase
@@ -82,6 +84,7 @@ const registerStudent = async (req, res) => {
       name: sectionYear,
       year: year,
       batch: batch,
+      
     });
     if (!sectionExist) {
       return res
@@ -89,6 +92,14 @@ const registerStudent = async (req, res) => {
         .json({
           success: false,
           message: `Section ${section} not found in year ${year} and batch ${batch}`,
+        });
+    }
+    if(sectionExist.semester !== semester){
+      return res
+        .status(401)
+        .json({
+          success: false,
+          message: `Section ${section} is not available for semester ${semester}`,
         });
     }
 
@@ -102,6 +113,7 @@ const registerStudent = async (req, res) => {
       rollno: rollno,
       batch: batch,
       dob: dob,
+      semester: semester,
 
       contactinfo: {
         address: address,

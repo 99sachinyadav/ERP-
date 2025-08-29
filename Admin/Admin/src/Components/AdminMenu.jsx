@@ -3,19 +3,11 @@ import React from "react";
 
 const AdminMenu = (props) => {
 
-// style={{
-//           backgroundImage: `url(${college})`,
-//           backgroundSize: "cover",
-//           backgroundPosition: "center",
-//         }} >
-
-
+  
   return (
     <div className =" "  >
       <div
-        className="content flex flex-wrap mt-8 md:mt-2 p-2 md:p-0 pb-8 md:pb-1 justify-center"
-       
-      >
+        className="content flex flex-wrap mt-8 md:mt-2 p-2 md:p-0 pb-8 md:pb-1 justify-center">
         <div
           onClick={() => {
             props.setActiveComponent("TeacherRegister");
@@ -63,7 +55,7 @@ const AdminMenu = (props) => {
         </div>
       </div>
 
-      <div className="content flex flex-wrap  mt-6 md:mt-0 p-2 md:p-2 pb-8 md:pb-0 justify-center">
+      <div className="content flex flex-wrap   md:mt-0 p-2 md:p-2 pb-8 md:pb-0 justify-center">
         <div
           onClick={() => {
             props.setActiveComponent("AddSubjects");
@@ -106,7 +98,7 @@ const AdminMenu = (props) => {
         </div>
       </div>
 
-      <div className=" content sm:ml-27 w-full flex flex-wrap gap-20 sm:flex-row  mt-6 md:mt-2 p-2 md:p-4 pb-8 md:pb-1  flex-col  items-center">
+      <div className=" content sm:ml-27 w-full flex flex-wrap gap-0 sm:gap-17 sm:flex-row  mt-0 md:mt-2 p-2 md:p-4 pb-8 md:pb-1  flex-col  items-center">
         <div    onClick={
           ()=>{props.setActiveComponent("MonitorAttendence")
           props.setIsOpen(true)}
@@ -119,12 +111,23 @@ const AdminMenu = (props) => {
           </div>
         </div>
 
-           <div className="flex flex-col gap-0 h-55 w-70 md:h-60 md:w-60">
+           <div  onClick={()=>{props.setActiveComponent("ChangeTeacherpassword"), props.setIsOpen(true)}} className="flex flex-col gap-0 h-55 w-70 md:h-60 md:w-60">
             <div className="bg-[#ed8f42] rounded-t-lg rounded-b-none p-4 flex flex-col items-center">
-              <i className="ri-facebook-fill text-white text-4xl mb-2"></i>
+              <i className="ri-lock-unlock-line text-white text-4xl mb-2"></i>
             </div>
             <div className="bg-[#e0e7ff] h-20 rounded-b-lg rounded-t-none p-4 flex flex-col items-center">
               <h1 className="text-md font-semibold">Change Teacher Password</h1>
+            </div>
+
+
+          </div>
+
+           <div  onClick={()=>{props.setActiveComponent("ChangeStudentpassword"), props.setIsOpen(true)}} className="flex flex-col gap-0 h-55 w-70 md:h-60 md:w-60">
+            <div className="bg-[#0fe4f3] rounded-t-lg rounded-b-none p-4 flex flex-col items-center">
+              <i className="ri-lock-unlock-line text-white text-4xl mb-2"></i>
+            </div>
+            <div className="bg-[#e0e7ff] h-20 rounded-b-lg rounded-t-none p-4 flex flex-col items-center">
+              <h1 className="text-md font-semibold">Change Student Password</h1>
             </div>
           </div>
 

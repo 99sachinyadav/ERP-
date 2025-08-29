@@ -61,10 +61,10 @@ const teacherLogin = async (req, res) => {
     if (!email || !password) {
       throw new Error("email or password is missing");
     }
-    console.log(email, password);
+    // console.log(email, password);
     const findTeacher = await Teacher.findOne({
       $or: [{ email: email }],
-    }).select("+password");
+    }).select("+password").populate("section");
     if (!findTeacher) {
       throw new Error("faculty does not exist");
     }
@@ -83,12 +83,7 @@ const teacherLogin = async (req, res) => {
       success: true,
       message: "Login successful",
       refeshTeacherToken,
-      teacher: {
-        id: findTeacher._id,
-        name: findTeacher.name,
-        email: findTeacher.email,
-        Sections: findTeacher.section,
-      },
+      findTeacher,
     });
   } catch (error) {
     console.log(error);
@@ -264,8 +259,12 @@ const attendancebyTeacher = async (req, res) => {
 
 const updateTeacherInSection = async (req, res) => {
   try {
-    const { section, year, batch, newteacheremail } = req.body;
-    console.log(section, year, batch, newteacheremail);
+    const {  year, batch, newteacheremail } = req.body;
+  
+     let{section} = req.body;
+
+      section=section.toUpperCase();
+        console.log(section, year, batch, newteacheremail);
     if (!section || !year || !batch || !newteacheremail) {
       return res
         .status(403)

@@ -7,6 +7,7 @@ const CreateSection = () => {
   const [section, setsection] = useState("")
   const [year, setyear] = useState("")
   const [batch, setbatch] = useState("")
+  const [semester,setsemester] = useState("")
    const [teacheremail, setteacheremail] = useState("")
   const createSection = async (e)=>{
     e.preventDefault();
@@ -15,7 +16,8 @@ const CreateSection = () => {
           section,
           year,
           batch,
-          teacheremail
+          semester,
+          teacheremail,
         },
         {
           headers:{
@@ -39,7 +41,7 @@ const CreateSection = () => {
   return (
       <div className='flex  justify-center items-center h-screen bg-gray-100 relative'>
         <div className="flex flex-col   pb-20 sm:pb-50 items-center   bg-gray-100 ">
-         <h1 className=" text-3xl sm:text-5xl    flex justify-center sm:mt-10  font-bold  text-blue-900   text-wrap ">
+         <h1 className=" text-3xl sm:text-4xl    flex justify-center sm:mt-10  font-bold  text-blue-900   text-wrap ">
            Create New <span className="text-red-500 ml-3"> Section</span>
           </h1> 
          
@@ -48,10 +50,22 @@ const CreateSection = () => {
           <input   value={section}  onChange={(e) => setsection(e.target.value)} placeholder='Enter Your Section'   type="section" id="section" className="border border-gray-300 rounded-md p-1" required />
           <label className="text-gray-700 font-semibold" htmlFor="year">Year</label>
           <select value={year} onChange={(e)=>setyear(e.target.value)} className=' border border-gray-300 rounded-md p-1' >      
-          <option value="1st Year">1st Year</option>
-          <option value="2nd Year">2nd Year</option>    
-          <option value="3rd Year">3rd Year</option>
-          <option value="4th Year">4th Year</option>
+          <option value="Ist">1st Year</option>
+          <option value="IInd">2nd Year</option>    
+          <option value="IIIrd">3rd Year</option>
+          <option value="IVth">4th Year</option>
+          </select>
+
+          <label className="text-gray-700 font-semibold" htmlFor="semester">Semester</label>
+          <select  value={semester} onChange={(e)=>setsemester(e.target.value)} className=' border border-gray-300 rounded-md p-1' >      
+          <option value="Ist">1st sem</option>
+          <option value="IInd">2nd sem</option>    
+          <option value="IIIrd">3rd sem</option>
+          <option value="IVth">4th sem</option>
+          <option value="Vth">5th sem</option>
+          <option value="VIth">6th sem</option>
+          <option value="VIIth">7th sem</option>
+          <option value="VIIIth">8th sem</option>
           </select>
 
           <label className="text-gray-700 font-semibold" htmlFor="Batch">Batch</label>

@@ -17,6 +17,7 @@ const Studentsignup = () => {
   const [batch, setbatch] = useState('');
   const [year, setyear] = useState('');
   const [fathername, setfathername] = useState('');
+  const [semester, setsemester] = useState('');
   
   const navigate = useNavigate();
  
@@ -40,6 +41,7 @@ const Studentsignup = () => {
         dob,
         batch,
         year,
+        semester,
         father_name: fathername,
         contactinfo: {
           address: address,
@@ -134,6 +136,23 @@ const Studentsignup = () => {
                       placeholder="Enter Your Father's Name "
                     />
                   </div>
+                  <div className="flex  sm:gap-21 items-center">
+                    <h1 className="text-2xl hidden sm:block font-semibold whitespace-nowrap">
+                      Semester:
+                    </h1>
+                    
+          <select  value={semester} onChange={(e)=>setsemester(e.target.value)} className="px-11 py-2 text-xl border-2 w-[320px] sm:w-[250px]" >      
+          <option value="Ist">1st sem</option>
+          <option value="IInd">2nd sem</option>    
+          <option value="IIIrd">3rd sem</option>
+          <option value="IVth">4th sem</option>
+          <option value="Vth">5th sem</option>
+          <option value="VIth">6th sem</option>
+          <option value="VIIth">7th sem</option>
+          <option value="VIIIth">8th sem</option>
+          </select>
+                  </div>
+
                 </div>
                 <div className="w-[40%]  flex justify-center items-center">
                   <label
@@ -157,9 +176,9 @@ const Studentsignup = () => {
                   </label>
                 </div>
               </div>
-              <div className="flex  flex-col mt-[-20px] sm:mt-7 gap-4  items-center p-10">
+              <div className="flex  flex-col mt-[-20px] sm:mt- gap-4  items-center p-10">
                 <div className=" flex flex-col sm:flex-row gap-4">
-                  <div className="flex gap-7    sm:ml-0 items-center">
+                  <div className="flex gap-10    sm:ml-0 items-center">
                     <h1 className="text-2xl hidden sm:block  font-semibold whitespace-nowrap">
                       Date of Birth :
                     </h1>
@@ -185,7 +204,7 @@ const Studentsignup = () => {
                   </div>
                 </div>
                 <div className="flex flex-col ml-[-10px] sm:flex-row gap-4">
-                  <div className="flex gap-31  sm: ml-3  items-center">
+                  <div className="flex gap-33  sm: ml-3  items-center">
                     <h1 className="text-2xl hidden sm:block font-semibold whitespace-nowrap">
                       Year :
                     </h1>
@@ -218,7 +237,7 @@ const Studentsignup = () => {
                   </div>
                 </div>
                 <div className="flex flex-col ml-[-10px] sm:flex-row gap-4">
-                  <div className="flex gap-29  sm: ml-3  items-center">
+                  <div className="flex gap-31  sm: ml-3  items-center">
                     <h1 className="text-2xl hidden sm:block font-semibold whitespace-nowrap">
                       Email:
                     </h1>
@@ -248,7 +267,7 @@ const Studentsignup = () => {
                   </div>
                 </div>
                 <div className="flex flex-col ml-[-10px] sm:flex-row gap-4">
-                  <div className="flex gap-20 sm: ml-3  items-center">
+                  <div className="flex gap-22 sm: ml-3  items-center">
                     <h1 className="text-2xl hidden sm:block font-semibold whitespace-nowrap">
                       Address :
                     </h1>

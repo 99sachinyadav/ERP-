@@ -11,6 +11,8 @@ import ChangeYear from '../Components/ChangeYear';
 import AddSubjects from '../Components/AddSubjects';
 import MonitorAttendence from '../Components/MonitorAttendence';
 import Dashboard from './Dashboard';
+import ChangeTeacherpassword from '../Components/ChangeTeacherpassword';
+import ChangeStudentpassword from '../Components/ChangeStudentpassword';
  import { useNavigate } from 'react-router-dom';
 const Home = () => {
    
@@ -110,7 +112,8 @@ const Home = () => {
    {activeComponent === 'CreateSection'  && <CreateSection    />}
    {activeComponent === 'ChangeYear'  && <ChangeYear     />}
    {activeComponent === 'AddSubjects'  && <AddSubjects   />}
-   
+   {activeComponent=== 'ChangeTeacherpassword'  && <ChangeTeacherpassword />}            
+   {activeComponent=== 'ChangeStudentpassword'  && <ChangeStudentpassword />}           
    {activeComponent === 'Dashboard'  && <Dashboard/>}
    {activeComponent === 'MonitorAttendence'  && <MonitorAttendence/>}
 
