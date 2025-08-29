@@ -61,7 +61,7 @@ return (
                     </label>
                     <input
                             type="password"
-                            id="password"
+                            id="passwor"
                             name="password"
                             value={password}
                             placeholder="Enter your password"
