@@ -160,6 +160,7 @@ See the controller files in `backend/controller/` for detailed endpoints.
 
 ## License
 
-This project is for my college attendance managment
+- This project is for my college attendance managment
+- Please Do not make any changes in it
 
 ---
