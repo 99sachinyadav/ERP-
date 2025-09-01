@@ -7,6 +7,7 @@ const AddSubjects = () => {
     const [year, setYear] = React.useState("");
     const [batch, setBatch] = React.useState("");
     const [subject, setSubject] = React.useState("");
+    const [semester, setSemester] = React.useState("");
     // console.log(section,year,batch,subject)
      const addSubject = async (e)=>{
       e.preventDefault();
@@ -15,7 +16,8 @@ const AddSubjects = () => {
             section,
             year, 
             batch,
-            subject
+            subject,
+            semester
           },{
             headers:{
               teachertoken: localStorage.getItem('teacherToken')? localStorage.getItem('teacherToken') : null,
@@ -29,6 +31,7 @@ const AddSubjects = () => {
             setYear("");
             setBatch("");
             setSubject("");
+            setSemester("");
           }
              
           else{
@@ -59,7 +62,18 @@ const AddSubjects = () => {
           </select>
 
           <label className="text-gray-700 font-semibold" htmlFor="Batch">Batch</label>
-          <input value={batch} onChange={(e) => setBatch(e.target.value)} placeholder='Enter a Your Starting Year'   type="batch" id="password" className="border border-gray-300 rounded-md p-1" required />
+          <input value={batch} onChange={(e) => setBatch(e.target.value)} placeholder='Enter a  Starting Year'   type="batch" id="password" className="border border-gray-300 rounded-md p-1" required />
+          <label className="text-gray-700 font-semibold" htmlFor="Batch">Semester</label>
+          <select className=' border border-gray-300 rounded-md p-1' onChange={(e) => setSemester(e.target.value)} value={semester}>
+          <option value="Ist">Ist Semester</option>
+          <option value="IInd">IInd Semester</option>    
+          <option value="IIIrd">IIIrd Semester</option>
+          <option value="IVth">IV Semester</option>
+          <option value="Vth">V Semester</option>
+          <option value="VIth">VI Semester</option>
+          <option value="VIIth">VII Semester</option>
+          <option value="VIIIth">VIII Semester</option>
+          </select>
           <label className="text-gray-700 font-semibold" htmlFor="Subject">Subject</label>
           <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder='Enter Subject Name'   type="subject" id="subject" className="border border-gray-300 rounded-md p-1" required />
 

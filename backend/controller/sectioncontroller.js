@@ -59,13 +59,13 @@ const Sectionregister = async (req, res) => {
 
 const addSubjects = async (req, res) => {
   try {
-    let { batch, year, subject } = req.body;
+    let { batch, year, subject ,semester } = req.body;
     let { section } = req.body;
     section = section.toUpperCase().trim();
     batch = batch.trim();
     year = year.trim();
-    subject = subject.trim();
-    if (!section || !year || !batch || !subject) {
+    subject = subject.toUpperCase().trim();
+    if (!section || !year || !batch || !subject || !semester) {
       return res
         .status(401)
         .json({ sucess: false, message: "please fill all the details" });
@@ -82,17 +82,25 @@ const addSubjects = async (req, res) => {
         .json({ sucess: false, message: "Section not found" });
     }
     //  console.log(sectionFind)
-    const subjectExists = sectionFind.subjects.find((sub) => sub === subject);
+    if (sectionFind.semester !== semester) {
+       return res
+         .status(401)
+         .json({ sucess: false, message: "Semester mismatch" });
+
+    }
+
+     const semsubject= sectionFind.semester + "_" + subject;
+    const subjectExists = sectionFind.subjects.find((sub) => sub === semsubject);
     if (subjectExists) {
       return res
         .status(401)
         .json({ success: false, message: "Subject already exists" });
     }
-    sectionFind.subjects.push(subject);
+    sectionFind.subjects.push(semsubject);
     await sectionFind.save();
 
     sectionFind.students.forEach((student) => {
-      student.subjects.push(subject);
+      student.subjects.push(semsubject);
       student.save();
     });
 
