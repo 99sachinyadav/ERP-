@@ -1,13 +1,14 @@
 import axios from "axios";
-import { banner, User } from "../assets/assets";
+import {   User } from "../assets/assets";
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+ 
 function Profile() {
   const [response, setresponce] = useState();
   const [Attendance, setAttendance] = useState([]);
   const [isOpen, setisOpen] = useState(false);
-
+   const [semester, setSemester] = useState("");
   useEffect(() => {
     getProfile(); // Call the function to fetch data
   }, []); // Dependency array to re-fetch data when response changes
@@ -25,15 +26,16 @@ function Profile() {
       if (response.data.sucess) {
         setresponce(response.data.profile);
         setAttendance(response.data.profile.attendance);
- 
+        setSemester(response.data.profile.semester);
       }
     } catch (error) {
       console.log(error); // Set error message
       toast.error(error.response.data.message); // Display error message
     }
   };
+  // console.log(Attendance)
   // console.log(response);
-
+  //  console.log(semester)
  
   return (
     <div className="w-full bg-amber-50">
@@ -56,22 +58,24 @@ function Profile() {
               <h1 className="sm:text-lg text-gray-500 font-semibold ml-8">
                 {response?.email}
               </h1>
+               
             </div>
           </div>
-          <table className="w-11/12 mx-auto my-4 text-center border-separate border-spacing-y-2">
+          <table className="w-12/12 mx-auto my-4 text-center border-separate border-spacing-y-2">
             <tbody className="flex sm:flex-col justify-evenly">
-              <tr className="sm:bg-gray-100 rounded flex flex-col justify-between sm:pl-10 sm:pr-10  sm:flex-row">
-                <td className="text-xl sm:text-2xl font-bold py-2 rounded-l">Section</td>
-                <td className="text-xl sm:text-2xl font-semibold py-2 sm:text-left">{response?.section}</td>
+              <tr className=" sm:border-b  rounded flex flex-col justify-between sm:pl-10 sm:pr-10  sm:flex-row">
+                <td className="text-lg sm:text-2xl font-bold py-2 rounded-l">Section</td>
+                <td className="text-lg sm:text-2xl font-semibold py-2 sm:text-left">{response?.section}</td>
               </tr>
-              <tr className="sm:bg-gray-100 rounded flex flex-col justify-between sm:pl-10 sm:pr-10  sm:flex-row">
-                <td className="text-xl sm:text-2xl font-bold py-2">Year</td>
-                <td className="text-xl sm:text-2xl font-semibold py-2 sm:text-left ">{response?.year}</td>
+              <tr className="  sm:border-b rounded flex flex-col justify-between sm:pl-10 sm:pr-10  sm:flex-row">
+                <td className="text-lg sm:text-2xl font-bold py-2 rounded-l">Semester</td>
+                <td className="text-lg sm:text-2xl font-semibold py-2 sm:text-left">{response?.semester}</td>
               </tr>
-              <tr className="sm:bg-gray-100 rounded flex flex-col justify-between sm:pl-10 sm:pr-10  sm:flex-row">
-                <td className="text-xl sm:text-2xl font-bold py-2 rounded-l">Dob</td>
-                <td className="text-xl sm:text-2xl font-semibold py-2 sm:text-left">{response?.dob}</td>
+              <tr className=" sm:border-b  rounded flex flex-col justify-between sm:pl-10 sm:pr-10  sm:flex-row">
+                <td className="text-lg sm:text-2xl font-bold py-2">Year</td>
+                <td className="text-lg sm:text-2xl font-semibold py-2 sm:text-left ">{response?.year}</td>
               </tr>
+             
             </tbody>
           </table>
           <button
@@ -130,19 +134,22 @@ function Profile() {
   // Calculate totals outside JSX
   let totalnooflec = 0;
   let noofattend = 0;
- 
+
   item?.subject?.forEach(element => {
-    totalnooflec += element.totalnoLec || 0;
-    noofattend += element.noofLecAttended || 0;
+    // console.log(element.name,semester)
+    if (element.name.includes(semester)) {
+      totalnooflec += element.totalnoLec || 0;
+      noofattend += element.noofLecAttended || 0;
+    }
   });
 
-  return (
-    <tr key={idx} className={`border-t ${(noofattend/totalnooflec)*100 < 75 ? "bg-red-400" : "bg-white"} hover:bg-gray-200`}>
+  return (totalnooflec !== 0 && noofattend !== 0 ? (
+    <tr key={idx} className={`border-t ${(noofattend / totalnooflec) * 100 < 75 ? "bg-red-400" : "bg-white"} hover:bg-gray-200`}>
       <td className="py-2 px-4 text-md sm:text-lg font-medium">{item?.subject?.[0]?.name}</td>
       <td className="py-2 px-4 text-md sm:text-lg text-center">{totalnooflec}</td>
       <td className="py-2 px-4 text-md sm:text-lg text-center">{noofattend}</td>
     </tr>
-  );
+  ) : null);
 })}
                 </tbody>
               </table>

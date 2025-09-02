@@ -30,7 +30,7 @@ function formatDate(date) {
         const responce = await axios.get('http://localhost:4000/api/gelStudentBySection', {
             headers: {
                 teachertoken: localStorage.getItem('teacherToken')? localStorage.getItem('teacherToken') : null,
-                adminToken: localStorage.getItem('adminToken')? localStorage.getItem('adminToken') : null,
+                // adminToken: localStorage.getItem('adminToken')? localStorage.getItem('adminToken') : null,
             },
             params: {
                 year: year,

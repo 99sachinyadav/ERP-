@@ -20,7 +20,7 @@ const AddSubjects = () => {
             semester
           },{
             headers:{
-              teachertoken: localStorage.getItem('teacherToken')? localStorage.getItem('teacherToken') : null,
+              // teachertoken: localStorage.getItem('teacherToken')? localStorage.getItem('teacherToken') : null,
               admintoken: localStorage.getItem('adminToken')? localStorage.getItem('adminToken') : null
             }
           })

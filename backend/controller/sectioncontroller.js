@@ -1,6 +1,6 @@
 import { Section } from "../model/sectionmodel.js";
 import { Teacher } from "../model/teachermodel.js";
-
+import { Student } from "../model/studentmodel.js";
 const Sectionregister = async (req, res) => {
   try {
     const { year, batch, teacheremail ,semester } = req.body;
@@ -117,4 +117,50 @@ const addSubjects = async (req, res) => {
   }
 };
 
-export { Sectionregister, addSubjects };
+const changeSemesterorSection = async (req,res)=>{
+  try {
+    const { currentSection,currentYear,currentBatch,newSemester,newSection} = req.body;
+    if(!currentSection || !currentYear || !currentBatch || !newSemester || !newSection){
+      return res
+        .status(401)
+        .json({ sucess: false, message: "please fill all the details" });
+    }
+
+    const yearSection = currentSection + currentYear + "_" + currentBatch;
+    const sectionExist = await Section.findOne({ name: yearSection });
+    if (!sectionExist) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Section does not exists check details" });
+    }
+     const updatedsectionname = newSection + currentYear + "_" + currentBatch;
+     const alreadyExistedSection = await Section.findOne({ name: updatedsectionname });
+     if (alreadyExistedSection && newSection !== currentSection) {
+       return res
+         .status(401)
+         .json({ success: false, message: " Section already exists with the new details please choose another name" });
+     }
+     sectionExist.name = updatedsectionname;
+     sectionExist.semester = newSemester;
+     sectionExist.section = newSection;
+
+     await sectionExist.save();
+ sectionExist.students.forEach(async (studentId) => {
+      await Student.updateOne({ _id: studentId }, { $set: { semester: newSemester, section: newSection } });
+ }
+)
+
+    
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "Section or semester changed successfully",
+      });
+  } catch (error) {
+      console.log(error.message);
+    res.json({ sucess: false, message: error.message });
+  }
+}
+
+export { Sectionregister, addSubjects, changeSemesterorSection };

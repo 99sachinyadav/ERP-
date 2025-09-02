@@ -14,6 +14,7 @@ import Dashboard from './Dashboard';
 import ChangeTeacherpassword from '../Components/ChangeTeacherpassword';
 import ChangeStudentpassword from '../Components/ChangeStudentpassword';
  import { useNavigate } from 'react-router-dom';
+import ChangeSemesterOrSection from '../Components/ChangeSemesterOrSection';
 const Home = () => {
    
   const [activeComponent, setActiveComponent] = useState('AdminMenu');
@@ -83,9 +84,9 @@ const Home = () => {
         </button>
         <button
           className="bg-rose-500 text-white py-2 px-4 rounded hover:bg-red-600"
-          onClick={() => {setActiveComponent('Dashboard'),setIsOpen(true)}}
+          onClick={() => {setActiveComponent('ChangeSemesterOrSection'),setIsOpen(true)}}
         >
-          Mark Attendance
+          Change Semester/Section
         </button>
         <button
           className="bg-sky-500 text-white py-2 px-4 rounded hover:bg-sky-600"
@@ -114,7 +115,7 @@ const Home = () => {
    {activeComponent === 'AddSubjects'  && <AddSubjects   />}
    {activeComponent=== 'ChangeTeacherpassword'  && <ChangeTeacherpassword />}            
    {activeComponent=== 'ChangeStudentpassword'  && <ChangeStudentpassword />}           
-   {activeComponent === 'Dashboard'  && <Dashboard/>}
+   {activeComponent === 'ChangeSemesterOrSection'  && <ChangeSemesterOrSection/>}
    {activeComponent === 'MonitorAttendence'  && <MonitorAttendence/>}
 
       </div>

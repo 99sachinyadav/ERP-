@@ -186,7 +186,7 @@ const MonitorAttendence = () => {
                                 }
                                 return (
                                   <div key={i} className="mb-2">
-                                    {Array.isArray(attend.subject) &&
+                                    {Array.isArray(attend.subject) && totalLec!=0 && totalAttend!=0 &&
                                     attend.subject.length > 0 ? (
                                       <table className="w-full text-xs mb-2">
                                         <thead>
@@ -238,7 +238,7 @@ const MonitorAttendence = () => {
                                         </tbody>
                                       </table>
                                     ) : (
-                                      <div>No subject data available.</div>
+                                      null
                                     )}
                                   </div>
                                 );
