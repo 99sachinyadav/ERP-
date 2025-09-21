@@ -17,37 +17,51 @@ function Home() {
   }
 
 
-  return ( 
-    <div className="flex w-full flex-col-reverse gap-20  sm:flex-row mt-10 mb-10 p-6  ">
-      <div className="flex flex-col      w-full sm:w-1/2 p-4">
-            <h1 className="sm:text-6xl text-3xl sm:mt-10 sm:ml-30 font-bold text-blue-800">Hii ! {localStorage.getItem('studentname')}</h1>
-            <h1 className="sm:text-5xl text-3xl sm:mt-8 sm:ml-30 font-bold text-blue-800">Welcome to Attendance Portal</h1>
-            <p className="mt-4 text-xl sm:text-2xl   sm:ml-30">Your one-stop solution for all Monitoring Attendance.</p>
-            
-             
-        
+  return (
+    <div className="flex flex-col sm:flex-row-reverse bg-gradient-to-br from-amber-50 to-blue-50 items-center justify-between w-full gap-10 sm:gap-20 pt-8 pb-8 px-4 sm:px-10">
+      {/* Image section */}
+      <div className="flex justify-center items-center w-full sm:w-1/2 order-1 sm:order-none mb-6 sm:mb-0">
+        <img
+          className="h-90 sm:h-[500px] w-auto object-contain rounded-xl shadow-lg transition-all duration-300"
+          src={welcome}
+          alt="Welcome"
+        />
+      </div>
+      {/* Text section */}
+      <div className="flex flex-col w-full sm:w-1/2 p-4 order-2 sm:order-none">
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-blue-800 mb-2 transition-all duration-300">
+          Hi, <span className="text-[#1a237e]   px-2 py-1 rounded font-semibold">{localStorage.getItem('studentname')}</span>!
+        </h1>
+        <h2 className="text-2xl sm:text-4xl font-bold text-blue-700 mb-4">
+          Welcome to Attendance Portal
+        </h2>
+        <p className="text-base sm:text-xl text-gray-700 mb-6">
+          Your one-stop solution for monitoring attendance.
+        </p>
 
-            <div className="flex flex-col items-center sm:flex-row sm:mt-15 sm:ml-30 gap-4 sm:gap-10 mt-8">
-              
-              <div
-                className="cursor-pointer bg-teal-500 flex  flex-col items-center justify-center text-xl text-white rounded-lg sm:w-60 sm:h-50 h-50 w-76 shadow hover:bg-blue-600 transition-transform hover:scale-105"
-                onClick={() => navigate("/attendance")}
-              >
-                <i className="ri-database-2-fill text-5xl  sm:text-7xl"></i>
-                View Attendance
-              </div>
-              <div
-                className="cursor-pointer bg-yellow-500 flex flex-col items-center justify-center text-xl text-white sm:w-60 sm:h-50 rounded-lg  shadow hover:bg-green-600 h-50 w-76  transition-transform hover:scale-105"
-                onClick={() => navigate("/profile")}
-              >
-                <i className="ri-profile-line text-5xl  sm:text-7xl"></i>
-                Go to Profile
-              </div>
-            </div>
-             <button className="bg-blue-500 hidden sm:block ml-15 sm:ml-30 text-white py-2 px-4 rounded w-40 mt-10" onClick={() =>{ navigate("/"),logout()}}>Log Out</button>
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 mb-8">
+          <div
+            className="cursor-pointer bg-gradient-to-r from-teal-400 to-blue-500 flex flex-col items-center justify-center text-lg sm:text-xl text-white rounded-xl w-full sm:w-48 h-32 shadow-lg hover:from-blue-500 hover:to-teal-400 transition-all duration-200 hover:scale-105"
+            onClick={() => navigate("/attendance")}
+          >
+            <i className="ri-database-2-fill text-4xl sm:text-5xl mb-2"></i>
+            <span>View Attendance</span>
+          </div>
+          <div
+            className="cursor-pointer bg-gradient-to-r from-yellow-400 to-orange-500 flex flex-col items-center justify-center text-lg sm:text-xl text-white rounded-xl w-full sm:w-48 h-32 shadow-lg hover:from-green-500 hover:to-yellow-400 transition-all duration-200 hover:scale-105"
+            onClick={() => navigate("/profile")}
+          >
+            <i className="ri-profile-line text-4xl sm:text-5xl mb-2"></i>
+            <span>Go to Profile</span>
+          </div>
         </div>
-          <img className="h-80 sm:h-[600px]" src={welcome} alt="Welcome" />
-        
+        <button
+          className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-lg w-full sm:w-40 font-semibold shadow transition-all duration-200"
+          onClick={logout}
+        >
+          Log Out
+        </button>
+      </div>
     </div>
   )
 }

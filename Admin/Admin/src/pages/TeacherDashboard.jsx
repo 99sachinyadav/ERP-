@@ -15,7 +15,7 @@ const TeacherDashboard = () => {
       <div className="text-2xl text-center pt-8 border-t">
         <div
           onClick={logout}
-          className="flex items-center w-28 sm:w-40 absolute py-2 sm:right-6 right-2 justify-center p-2 px-4 rounded-4xl cursor-pointer bg-blue-500 text-white m-1 top-6 hover:bg-blue-600 transition-all"
+          className="flex items-center w-28 sm:w-35 absolute py-2 sm:right-6 right-2 justify-center p-2 px-4 rounded-4xl cursor-pointer bg-blue-500 text-white m-1 top-6 hover:bg-blue-600 transition-all"
         >
           <i className="ri-arrow-left-line text-xl sm:text-3xl"></i>
           <span className="ml-2 font-semibold text-xs sm:text-md">LOG OUT</span>
@@ -30,39 +30,34 @@ const TeacherDashboard = () => {
           className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl object-contain"
           alt=""
         />
-        <div className="flex flex-col justify-center gap-0 w-full md:w-2/4 text-gray-600 mt-6 md:mt-0">
+        <div className="flex flex-col justify-center  gap-0 w-full md:w-2/4 text-gray-600 mt-6 md:mt-0">
 
            <h1 className="sm:text-4xl text-3xl sm:mt-5 ml-6 sm:ml-10 font-bold text-gray-800">Hii ! {localStorage.getItem('teachername')} Welcome to Attendance Portal</h1>
             <h1 className="sm:text-2xl text-1xl sm:mt-4 ml-6 sm:ml-10 font-bold text-gray-500">{localStorage.getItem('teachersection')?`Your assigned Section is ${localStorage.getItem('teachersection')}`:`You haven't assigned  any section yet`}</h1>
-          <div className="flex flex-col md:flex-row gap-4 md:gap-4 w-full">
+          <div className="flex mt-4 flex-col items-center sm:flex-row sm:justify-center md:flex-row gap-4 md:gap-4 w-full">
             <div
               onClick={() => {
-                navigate("/addSubjects");
+                navigate("/dashboard");
               }}
               className="bg-orange-200 rounded-lg p-4 h-55 w-70 md:h-60 md:w-60 text-center m-4 md:m-8 flex items-center justify-center gap-4 md:gap-6 flex-col shadow-md cursor-pointer transition-transform hover:scale-105"
             >
-              <i className="ri-apps-2-add-line text-5xl md:text-7xl"></i>
-              <h1 className="text-lg md:text-xl font-semibold">Add Subjects</h1>
+              <i className="ri-stack-line text-5xl md:text-7xl"></i>
+              <h1 className="text-lg md:text-xl font-semibold">MARK ATTENDANCE</h1>
             </div>
 
             <div
               onClick={() => {
-                navigate("/seeStudent");
+                navigate("/monitorStudents");
               }}
               className="bg-yellow-200 rounded-lg p-4 h-55 w-70 md:h-60 md:w-60 text-center m-4 md:m-8 flex items-center justify-center gap-4 md:gap-6 flex-col shadow-md cursor-pointer transition-transform hover:scale-105"
             >
               <i className="ri-graduation-cap-line text-5xl md:text-7xl"></i>
               <h1 className="text-lg md:text-xl font-semibold">
-                See ALL Student
+                 MONITOR STUDENTS
               </h1>
             </div>
           </div>
-          <button
-            className="bg-green-400 rounded-lg p-4 text-lg font-semibold w-70 md:w-60 text-center m-4 md:m-1 md:ml-8 flex items-center justify-center  flex-col shadow-md cursor-pointer transition-transform hover:scale-105"
-            onClick={() => navigate("/dashboard")}
-          >
-            MARK ATTENDANCE
-          </button>
+           
         </div>
       </div>
       <div className="text-2xl py-4">

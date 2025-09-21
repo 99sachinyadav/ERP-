@@ -5,7 +5,7 @@ const cloudinaryupload = async (image)=>{
         cloudinary.config({ 
             cloud_name: 'doveow47r', 
             api_key: '699297699595231', 
-            api_secret: 'v2vWPNqwE4S7XT2G9CZ_VARFGo8' // Click 'View API Keys' above to copy your API secret
+            api_secret: '' // Click 'View API Keys' above to copy your API secret
         });
         const uploadResult = await cloudinary.uploader
         .upload(image)

@@ -36,14 +36,14 @@ const Navbar = () => {
         
   
   return (
-    <div className="w-full sm:w-full h-[90px] sm:h-[110px] flex start-0 shadow-md relative">
+    <div className="w-full sm:w-full h-[90px] sm:h-[90px] flex start-0 shadow-md relative">
       <img
-        className="p-4 mt-2 sm:ml-10 sm:p-2 sm:pl-10 w-23 sm:w-40"
+        className="p-4 mt-2 sm:ml-10 sm:p-2 sm:pl-10 w-23 sm:w-35"
         src={logo}
         alt=""
       />
       <div className="mt-3 flex flex-col sm:ml-2 leading-5 sm:pl-4 sm:leading-4">
-        <h1 className="text-sm mt-3 sm:text-2xl font-[800] text-blue-900 text-nowrap">
+        <h1 className="text-sm mt-0 sm:text-2xl font-[800] text-blue-900 text-nowrap">
           RAJ KUMAR GOEL
         </h1>
         <p className="font-[700] text-blue-900 sm:text-sm text-nowrap text-xs">
@@ -70,7 +70,7 @@ const Navbar = () => {
         </Link>
       </div>
 
-      <div className="relative ml-[-110px] cursor-pointer sm:ml-10 sm:mt-8 mt-10">
+      <div className="relative sm:hidden lg:block  ml-[-110px] cursor-pointer sm:ml-10 sm:mt-8 mt-10">
         <i
           onClick={() => {
             setuser(!user);

@@ -19,7 +19,7 @@ import StudentProtect from "./Components/StudentProtect";
 const App = () => {
   return (
     <>
-      <div className="w-full">
+      <div className="w-full overflow-hidden">
         <Toaster />
 
         <StudentProtect>
@@ -27,7 +27,7 @@ const App = () => {
         </StudentProtect>
 
         <Routes>
-          <Route path="/" element={<Studentsignup />} />
+          <Route path="/" element={    <Studentsignup/>} />
 
           <Route
             path="/home"

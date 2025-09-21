@@ -42,7 +42,7 @@ const TeacherLogin = () => {
   return (
    <div className='flex  justify-center items-center h-screen bg-gray-100'>
         <div className="flex flex-col   pb-20 sm:pb-50 items-center  bg-gray-100">
-         <h1 className=" text-3xl sm:text-7xl   flex justify-center sm:mt-10 mt-8 font-bold  text-blue-900   text-wrap ">
+         <h1 className=" text-3xl sm:text-5xl   flex justify-center sm:mt-10 mt-8 font-bold  text-blue-900   text-wrap ">
              Login <span className="text-red-500 ml-3"> Here</span>
           </h1>
         <form  onSubmit={submithandle} className="flex flex-col gap-3 w-84 sm:w-[450px] mt-10 bg-white p-5 sm:p-8 rounded-lg shadow-md">

@@ -352,6 +352,7 @@ const viewAttendance = async (req, res) => {
 
       return res.status(200).json({
         sucess: true,
+        semester: findProfile.semester,
         message: "Attendance fetched successfully",
         attendance: arr,
       });

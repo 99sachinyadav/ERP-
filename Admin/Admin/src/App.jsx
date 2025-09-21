@@ -12,7 +12,8 @@ import TeacherProTect from "./Components/TeacherProTect"
 import TeacherDashboard from "./pages/TeacherDashboard"
 import AddSubjects from "./Components/AddSubjects"
 import SeeAllStudent from "./Components/SeeAllStudent"
- 
+import MonitorAttendence from "./Components/MonitorAttendence"
+ import ContactForm from "./pages/ContactForm"
  
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
               <TeacherRegister/>
             </AdminProtect>
           } />
+           <Route path="/email" element={<ContactForm />} />
           <Route path="/teacherdashboard" element={
             <TeacherProTect>
               <TeacherDashboard/>
@@ -43,6 +45,11 @@ function App() {
            <Route path = '/addSubjects' element ={
             <TeacherProTect>
             <AddSubjects/>
+            </TeacherProTect>
+          } />
+           <Route path = '/monitorStudents' element ={
+            <TeacherProTect>
+            <MonitorAttendence/>
             </TeacherProTect>
           } />
            <Route path = '/seeStudent' element ={

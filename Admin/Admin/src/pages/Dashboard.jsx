@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from 'axios'
@@ -126,8 +126,8 @@ function formatDate(date) {
                     </button>
                 </div>
             </div>
-            <div className="flex flex-col gap-2 bg-white rounded-md p-3 sm:p-4 md:p-5">
-                <div className="hidden sm:flex flex-wrap gap-8 md:gap-16 lg:gap-20 p-2 md:p-3">
+            <div className="flex flex-col gap-2 bg-white rounded-md p-3 sm:p-4 ">
+                <div className="hidden sm:flex flex-wrap gap-8 md:gap-22  p-2 md:p-3">
                     <h1 className="text-xs sm:text-sm md:text-base font-semibold w-24">Student ID</h1>
                     <h1 className="text-xs sm:text-sm md:text-base font-semibold w-32 sm:text-left text-center">Name</h1>
                     <h1 className="text-xs sm:text-sm md:text-base font-semibold w-32 sm:text-left text-center">Total Lecture</h1>

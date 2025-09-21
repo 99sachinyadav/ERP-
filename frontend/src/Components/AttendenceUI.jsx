@@ -29,6 +29,7 @@ const statusColors = {
 const AttendanceUI = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
     const [response, setresponce] = useState([]); // State to store fetched data
+    const [semester, setSemester] = useState("");
   // const [isOpen, setisOpen] = useState(false);
 
 function formatDate(date) {
@@ -48,10 +49,11 @@ function formatDate(date) {
         },
       });
       
-      // console.log(responce.data);
+      console.log(responce.data);
 
       if(responce.data.sucess) {
         setresponce(responce.data.attendance);
+        setSemester(responce.data.semester)
         toast.success(responce.data.message);
       }
     
@@ -71,67 +73,83 @@ function formatDate(date) {
  
 
  
-  // console.log(response);
-  return (
- <div className="flex flex-col   sm:flex-row sm:justify-center gap-10   p-3 bg-gray-100">
-       <div className={`w-full  bg-white rounded-xl shadow-2xl `}>
-            <h1 className="text-center text-2xl sm:text-3xl mt-4 text-red-500 font-semibold">
-              ATTENDANCE
-            </h1>
-            <div className="overflow-x-auto p-4">
-              <table className="min-w-full border border-gray-200 rounded-lg shadow">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="py-3 px-4 text-left text-md sm:text-xl font-semibold">Subject</th>
-                    <th className="py-3 px-4 text-left text-md sm:text-center sm:text-xl font-semibold">TOTAL LECTURE</th>
-                    <th className="py-3 px-4 text-left text-md sm:text-center sm:text-xl font-semibold">LECTURE ATTENDED</th>
+  console.log(semester);
+return (
+  <div className="min-h-screen bg-gradient-to-br from-blue-100 via-teal-100 to-purple-100 py-8 px-2">
+    <div className="max-w-6xl mx-auto flex flex-col-reverse md:flex-row gap-8 md:gap-12 items-center justify-center">
+      {/* Attendance Table */}
+      <div className="w-full md:w-2/3 bg-white rounded-2xl shadow-xl p-6 md:p-8">
+        <h1 className="text-center text-3xl md:text-4xl font-bold text-teal-700 mb-6 tracking-wide">
+          Attendance
+        </h1>
+        <div className="overflow-x-auto">
+          <table className="min-w-full border border-gray-200 rounded-lg shadow-sm">
+            <thead>
+              <tr className="bg-teal-50">
+                <th className="py-3 px-4 text-left text-lg md:text-xl font-semibold text-teal-800">Subject</th>
+                <th className="py-3 px-4 text-center text-lg md:text-xl font-semibold text-teal-800">Total Lecture</th>
+                <th className="py-3 px-4 text-center text-lg md:text-xl font-semibold text-teal-800">Lecture Attended</th>
+              </tr>
+            </thead>
+            <tbody>
+              {response && response.map(item => (
+                item.subject.includes(semester) && (
+                  <tr key={item.subject} className="border-t hover:bg-teal-50 transition">
+                    <td className="py-2 px-4 text-md md:text-lg font-medium">{item.subject}</td>
+                    <td className="py-2 px-4 text-md md:text-lg text-center">{item.totalLecture}</td>
+                    <td className="py-2 px-4 text-md md:text-lg text-center">{item.lectureAttended}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {response && response?.map((item) => (
-                    <tr key={item.subject} className="border-t hover:bg-gray-50">
-                      <td className="py-2 px-4 text-md sm:text-lg font-medium">{item.subject}</td>
-                      <td className="py-2 px-4 text-md sm:text-lg text-center">{item.totalLecture}</td>
-                      <td className="py-2 px-4 text-md sm:text-lg text-center">{item.lectureAttended}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-       <div className="flex justify-center items-center">
-           <div className="w-[370px] sm:w-[450px] gap-5 flex flex-col m-3  items-center bg-teal-400 rounded-lg shadow p-4">
-      <h2 className="text-2xl sm:text-3xl text-blue-900 font-bold mb-2">Select Date</h2>
-      <Calendar
-      className='sm:w-[400px] h-[400px] rounded-lg  bg-blue-600'
-        onChange={date => setSelectedDate(new Date(date))}
-        value={selectedDate}
-        tileContent={({ date}) => {
-          const key = formatDate(date);
-          const status = attendanceData[key];
-          
-          return status ? (
-            <div className={`mx-auto mt-1 w-2 h-2 rounded-full ${statusColors[status]}`}></div>
-          ) : null;
-        }}
-        tileClassName={({ date}) => {
-          const key = formatDate(date);
-          const status = attendanceData[key];
-          if (status === "today") return "font-bold text-green-700";
-          if (status === "leave") return "text-yellow-700";
-          if (status === "absent") return "text-red-700";
-          if (status === "holiday") return "text-purple-700";
-          return "";
-        }}
-      />
-    
-      <div className="mt-4 text-gray-700 font-semibold">
-        {selectedDate ? `Selected Date: ${formatDate(selectedDate)}` : "Please select a date"}
+                )
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {/* Calendar Section */}
+      <div className="w-full md:w-1/3 flex flex-col items-center bg-white rounded-2xl shadow-xl p-6 md:p-8">
+        <h2 className="text-2xl md:text-3xl text-teal-700 font-bold mb-4">Select Date</h2>
+        <Calendar
+          className="w-full max-w-xs md:max-w-sm rounded-lg bg-blue-50 shadow"
+          onChange={date => setSelectedDate(new Date(date))}
+          value={selectedDate}
+          tileContent={({ date }) => {
+            const key = formatDate(date);
+            const status = attendanceData[key];
+            return status ? (
+              <div className={`mx-auto mt-1 w-2 h-2 rounded-full ${statusColors[status]}`}></div>
+            ) : null;
+          }}
+          tileClassName={({ date }) => {
+            const key = formatDate(date);
+            const status = attendanceData[key];
+            if (status === "today") return "font-bold text-green-700";
+            if (status === "leave") return "text-yellow-700";
+            if (status === "absent") return "text-red-700";
+            if (status === "holiday") return "text-purple-700";
+            return "";
+          }}
+        />
+        <div className="mt-6 text-gray-700 font-semibold text-center text-lg">
+          {selectedDate ? `Selected Date: ${formatDate(selectedDate)}` : "Please select a date"}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2 justify-center">
+          <span className="flex items-center gap-1 text-sm">
+            <span className="w-3 h-3 rounded-full bg-green-600 inline-block"></span> Present
+          </span>
+          <span className="flex items-center gap-1 text-sm">
+            <span className="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span> Leave
+          </span>
+          <span className="flex items-center gap-1 text-sm">
+            <span className="w-3 h-3 rounded-full bg-red-500 inline-block"></span> Absent
+          </span>
+          <span className="flex items-center gap-1 text-sm">
+            <span className="w-3 h-3 rounded-full bg-purple-400 inline-block"></span> Holiday
+          </span>
+        </div>
       </div>
     </div>
-       </div>
- </div>
-  );
+  </div>
+);
 };
 
 export default AttendanceUI;

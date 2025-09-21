@@ -44,8 +44,8 @@ const AddSubjects = () => {
       }
      }
   return (
-     <div className='flex  justify-center items-center h-screen bg-gray-100 relative'>
-        <div className="flex flex-col   pb-20 sm:pb-50 items-center gap-5  bg-gray-100 ">
+     <div className='flex  justify-center items-center h-screen bg-gray-200 relative'>
+        <div className="flex flex-col   pb-20 sm:pb-20 items-center gap-5  bg-gray-200 ">
          <h1 className=" text-3xl sm:text-4xl    flex justify-center sm:mt-10  font-bold  text-blue-900   text-wrap ">
            Add  <span className="text-red-500 ml-3">Subjects</span>
           </h1> 
