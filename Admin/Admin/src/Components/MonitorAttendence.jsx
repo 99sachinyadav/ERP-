@@ -12,7 +12,7 @@ const MonitorAttendence = () => {
   const [semester, setsemester] = useState("");
   const getStudent = async () => {
     try {
-      console.log(localStorage.getItem("teacherToken"));
+      // console.log(localStorage.getItem("teacherToken"));
       const responce = await axios.get(
         "http://localhost:4000/api/gelStudentBySection",
         {
@@ -39,8 +39,8 @@ const MonitorAttendence = () => {
         toast.success(responce.data.message);
       }
     } catch (error) {
-      console.log(error);
-      toast.error(error.response.data.message);
+      console.log(error.response.data.message );
+      toast.error(error. response.data.message);
     }
   };
   return (
@@ -124,7 +124,7 @@ const MonitorAttendence = () => {
                 <>
                   <tr
                     onClick={() => setPopupStudent(student)}
-                    key={idx}
+                    key={student.rollno}
                     className={`${
                       ((totalAttend / totalLec) * 100).toFixed(2) < 75
                         ? "bg-red-400"

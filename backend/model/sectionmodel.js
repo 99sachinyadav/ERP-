@@ -15,15 +15,9 @@ const sectionSchema = new mongoose.Schema(
     semester: {
       type: String,
       required: true,
-      enum: ["Ist", "IInd", "IIIrd", "IVth", "Vth", "VIth", "VIIth", "VIIIth  "],
+      enum: ["Ist", "IInd", "IIIrd", "IVth", "Vth", "VIth", "VIIth", "VIIIth"],
     },
-    subjects: [
-      {
-        type: String,
-        required: true,
-        unique: true,
-      },
-    ],
+  subjects: [ { type: String }, ],
     students: [
       {
         type: mongoose.Schema.Types.ObjectId,

@@ -8,6 +8,7 @@ const AddSubjects = () => {
     const [batch, setBatch] = React.useState("");
     const [subject, setSubject] = React.useState("");
     const [semester, setSemester] = React.useState("");
+    const [teacheremail, setTeacheremail] = React.useState("");
     // console.log(section,year,batch,subject)
      const addSubject = async (e)=>{
       e.preventDefault();
@@ -17,7 +18,8 @@ const AddSubjects = () => {
             year, 
             batch,
             subject,
-            semester
+            semester,
+            teacheremail
           },{
             headers:{
               // teachertoken: localStorage.getItem('teacherToken')? localStorage.getItem('teacherToken') : null,
@@ -32,6 +34,7 @@ const AddSubjects = () => {
             setBatch("");
             setSubject("");
             setSemester("");
+            setTeacheremail("");
           }
              
           else{
@@ -45,12 +48,12 @@ const AddSubjects = () => {
      }
   return (
      <div className='flex  justify-center items-center h-screen bg-gray-200 relative'>
-        <div className="flex flex-col   pb-20 sm:pb-20 items-center gap-5  bg-gray-200 ">
+        <div className="flex flex-col   pb-20 sm:pb-20 items-center gap-5   ">
          <h1 className=" text-3xl sm:text-4xl    flex justify-center sm:mt-10  font-bold  text-blue-900   text-wrap ">
            Add  <span className="text-red-500 ml-3">Subjects</span>
           </h1> 
         
-        <form  className="flex flex-col gap-3 w-84 sm:w-[450px] mt-10 bg-white p-5 sm:p-8 rounded-lg shadow-md">
+        <form  className="flex flex-col gap-3 w-84 sm:w-[450px] mt-1 bg-white p-5 sm:p-8 rounded-lg shadow-md">
           <label className="text-gray-700 font-semibold" htmlFor="name">Section</label>
           <input value={section} onChange={(e) => setSection(e.target.value)} placeholder='Enter Your Section'   type="section" id="section" className="border border-gray-300 rounded-md p-1" required />
           <label className="text-gray-700 font-semibold" htmlFor="year">Year</label>
@@ -76,6 +79,8 @@ const AddSubjects = () => {
           </select>
           <label className="text-gray-700 font-semibold" htmlFor="Subject">Subject</label>
           <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder='Enter Subject Name'   type="subject" id="subject" className="border border-gray-300 rounded-md p-1" required />
+          <label className="text-gray-700 font-semibold" htmlFor="Subject">Subject Teacher Email</label>
+          <input value={teacheremail} onChange={(e) => setTeacheremail(e.target.value)} placeholder='Enter Subject Teacher Email'   type="email" id="teacheremail" className="border border-gray-300 rounded-md p-1" required />
 
           <button onClick={addSubject} type="submit" className="bg-blue-500 text-white font-semibold py-1 rounded-md hover:bg-blue-600">ADD NEW ONE</button>
  

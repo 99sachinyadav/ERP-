@@ -14,6 +14,7 @@ import AddSubjects from "./Components/AddSubjects"
 import SeeAllStudent from "./Components/SeeAllStudent"
 import MonitorAttendence from "./Components/MonitorAttendence"
  import ContactForm from "./pages/ContactForm"
+import SendEmail from "./Components/SendEmail"
  
 
 function App() {
@@ -30,7 +31,7 @@ function App() {
             </AdminProtect>
           }
            />
-          <Route path="/" element={<AdminLogin />} />
+          <Route path="/" element={ <AdminLogin />} />
           <Route path="/teacherRegister" element={
             <AdminProtect>
               <TeacherRegister/>
@@ -50,6 +51,12 @@ function App() {
            <Route path = '/monitorStudents' element ={
             <TeacherProTect>
             <MonitorAttendence/>
+            </TeacherProTect>
+          } />
+
+          <Route path = '/sendEmail' element ={
+            <TeacherProTect>
+            <SendEmail/>
             </TeacherProTect>
           } />
            <Route path = '/seeStudent' element ={

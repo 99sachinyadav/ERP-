@@ -62,7 +62,7 @@ const registerStudent = async (req, res) => {
           message: "Password must be at least 6 characters",
         });
     } //console.log(phoneNO)
-    if (phoneNO && phoneNO.length === 10) {
+    if (phoneNO && phoneNO.length !== 10) {
       return res
         .status(401)
         .json({
@@ -277,7 +277,7 @@ const changeYear = async (req, res) => {
 const getAllStudentBySection = async (req, res) => {
   try {
     let { year, batch, section } = req.query;
-    //console.log(year, batch , section)
+    console.log(year, batch , section)
     section = section.toUpperCase();
     if (!year || !batch || !section) {
       return res
@@ -300,7 +300,7 @@ const getAllStudentBySection = async (req, res) => {
       .status(201)
       .json({
         sucess: true,
-        message: "student fetched sucessfully",
+        message: "students fetched sucessfully",
         findSection,
       });
   } catch (error) {

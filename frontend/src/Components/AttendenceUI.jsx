@@ -4,6 +4,9 @@ import 'react-calendar/dist/Calendar.css';
 import axios from "axios";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
+import React from "react";
+import {  AreaChart,  Area, XAxis,  YAxis, CartesianGrid,Tooltip,ResponsiveContainer} from "recharts";
+import { set } from "date-fns";
 const attendanceData = {
   "2025-05-01": "leave",
   "2025-05-02": "today",
@@ -22,7 +25,13 @@ const statusColors = {
   holiday: "bg-purple-400",
 };
 
-
+const data = [
+  { subject: "Jan", Required: 65, lectureAttended: 50 },
+  { subject: "Jan", Required: 65, lectureAttended: 50 },
+  { subject: "Jan", Required: 65, lectureAttended: 50 },
+  
+  
+];
 
 
 
@@ -30,6 +39,7 @@ const AttendanceUI = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
     const [response, setresponce] = useState([]); // State to store fetched data
     const [semester, setSemester] = useState("");
+    const [mydata, setMydata] = useState([]);
   // const [isOpen, setisOpen] = useState(false);
 
 function formatDate(date) {
@@ -56,11 +66,19 @@ function formatDate(date) {
         setSemester(responce.data.semester)
         toast.success(responce.data.message);
       }
-    
+      responce.data.attendance.forEach(element => {
+      element.subject.includes(responce.data.semester) && (
+        mydata.push({subject:element.subject,Required:element.totalLecture,lectureAttended:element.lectureAttended})
+      )
+      });
+       setMydata(mydata);
+      console.log(mydata);
+
     } catch (error) {
       console.log(error); 
       toast.error(error.responce.data.message) 
     }
+
   };
  
    
@@ -78,7 +96,25 @@ return (
   <div className="min-h-screen bg-gradient-to-br from-blue-100 via-teal-100 to-purple-100 py-8 px-2">
     <div className="max-w-6xl mx-auto flex flex-col-reverse md:flex-row gap-8 md:gap-12 items-center justify-center">
       {/* Attendance Table */}
-      <div className="w-full md:w-2/3 bg-white rounded-2xl shadow-xl p-6 md:p-8">
+
+     <div className="flex flex-col   gap-8 w-full mt-5">
+       <div className="w-full h-90 p-4 bg-white rounded-2xl shadow-md">
+              <h2 className="text-2xl font-semibold text-gray-800 text-center mb-4">
+        {`${mydata.length===0 ?" No Data Available":"Attendance Overview"}`}
+      </h2>
+      <ResponsiveContainer width="100%" height="80%">
+        <AreaChart data={mydata.length===0?data:mydata} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="subject" />
+          <YAxis />
+          <Tooltip />
+          {/* Stack with same `stackId` */}
+          <Area type="monotone" dataKey="lectureAttended" stackId="1" stroke="#3b82f6" fill="#3b82f6" />
+          <Area type="monotone" dataKey="Required" stackId="1" stroke="#22c55e" fill="#22c55e" />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+      <div className="w-full   bg-white rounded-2xl shadow-xl p-6 md:p-8">
         <h1 className="text-center text-3xl md:text-4xl font-bold text-teal-700 mb-6 tracking-wide">
           Attendance
         </h1>
@@ -105,6 +141,7 @@ return (
           </table>
         </div>
       </div>
+     </div>
       {/* Calendar Section */}
       <div className="w-full md:w-1/3 flex flex-col items-center bg-white rounded-2xl shadow-xl p-6 md:p-8">
         <h2 className="text-2xl md:text-3xl text-teal-700 font-bold mb-4">Select Date</h2>

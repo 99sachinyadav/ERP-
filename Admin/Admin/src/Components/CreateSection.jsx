@@ -25,13 +25,16 @@ const CreateSection = () => {
           }
         }
         )
-        //  console.log(responce)
+         console.log(responce.data.message)
         if(responce.data.sucess){
           toast.success(responce.data.message)
           setsection("")
           setyear("")
           setbatch("")
           setteacheremail("")
+        }
+        else{
+          toast.error(responce.data.message)
         }
       } catch (error) {
         console.log(error)

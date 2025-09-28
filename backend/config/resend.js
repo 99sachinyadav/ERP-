@@ -2,6 +2,8 @@
 import { Resend } from "resend";
 import fs from "fs";
 import axios from "axios";
+import { Teacher } from "../model/teachermodel.js";
+import { Section } from "../model/sectionmodel.js";
  
  
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -14,6 +16,8 @@ const sendEmail = async (email, name, attendance, fatherName, rollNo, semester, 
 
 
   try {
+
+   
  
 
 let htmlTemplate = fs.readFileSync("config/Resend.html", "utf8");
@@ -57,7 +61,7 @@ const html = htmlTemplate
   .replace(/{{records_rows}}/g, rows)
   //  .replace(/{{list}}/g, list)
   .replace(/{{attendance_portal_url}}/g, "https://erp.example.com/attendance")
-  .replace(/{{sender_name}}/g, "Academic Office")
+  .replace(/{{sender_name}}/g, "Class counsellor")
   .replace(/{{sender_position}}/g, "Attendance Coordinator")
   .replace(/{{institution_name}}/g, " Raj Kumar Goel Institute of Technology & Management")
   
@@ -80,9 +84,21 @@ const html = htmlTemplate
 
 const sendEmailStudent = async (req, res) => {
    try {
-       const {year, batch, section} = req.body;
-       const adminToken  = req.headers;
-       console.log(adminToken.admintoken)
+       const {year, batch, teacherId} = req.body;
+       let {section} = req.body;
+        section = section.toUpperCase().trim();
+       const teacherToken  = req.headers;
+       console.log(teacherToken.teachertoken, section, year, batch,teacherId);
+
+        const teacher = await Teacher.findById(teacherId);
+        const sectionName=section + year + "_" + batch;
+        const sectionfind= await Section.findOne({name:sectionName });
+        if(!sectionfind){
+          return res.json({success:false,message:"section not found with this details"})
+        }
+        if(!teacher.section.includes(sectionfind._id)){
+          return res .json({success:false,message:"you are not authorized to send email to this section"})
+        }
       const responce = await axios.get(
         "http://localhost:4000/api/gelStudentBySection",
         {
@@ -92,7 +108,7 @@ const sendEmailStudent = async (req, res) => {
             batch,
           },
           headers: {
-            admintoken: adminToken.admintoken  ? adminToken.admintoken : null,
+            teachertoken: teacherToken.teachertoken ? teacherToken.teachertoken : null,
           },
         }
       );

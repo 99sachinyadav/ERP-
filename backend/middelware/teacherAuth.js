@@ -4,17 +4,17 @@ const authTeacher = (req,res,next)=>{
         const {teachertoken ,admintoken} = req.headers;
         // console.log(req.headers); // Log the entire headers object to debug
     //    console.log(teachertoken , admintoken)
-        if(!teachertoken && !admintoken){
-          return res.status(402).json({sucess:false,message:"teacher or admin credentials is not available"})
+        if(!teachertoken&& !admintoken ){
+          return res.status(402).json({sucess:false,message:"teacher credentials is not available"})
         }
-       if(!teachertoken){
+       if(!teachertoken ){
    const adminDecodedToken = jwt.verify(admintoken, process.env.JWT_SECRET);
      if(adminDecodedToken.id!==process.env.ADMIN_EMAIL+process.env.ADMIN_PASSWORD){
             return res.status(403).json({sucess:false,message:" invalid token"})
          }
-         console.log("hello")
+        //  console.log("hello")
          req.body.adminID = adminDecodedToken.id;
-       }
+       } 
        else{
          const decodedToken = jwt.verify(teachertoken, process.env.JWT_SECRET);
          req.body.teacherId = decodedToken.id;

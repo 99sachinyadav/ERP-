@@ -131,12 +131,12 @@ const AdminMenu = (props) => {
             </div>
           </div>
 
-           <div  onClick={()=>{props.setActiveComponent("ChangeStudentpassword"), props.setIsOpen(true)}} className="flex flex-col gap-0 h-55 w-70 md:h-50 md:w-50">
+           <div  onClick={()=>{props.setActiveComponent("ChangeStudentSection"), props.setIsOpen(true)}} className="flex flex-col gap-0 h-55 w-70 md:h-50 md:w-50">
             <div className="bg-[#0fe4f3] rounded-t-lg rounded-b-none p-4 flex flex-col items-center">
-              <i className="ri-lock-unlock-line text-white text-4xl mb-2"></i>
+              <i className="ri-book-shelf-fill text-white text-4xl mb-2"></i>
             </div>
             <div className="bg-[#e0e7ff] h-20 rounded-b-lg rounded-t-none p-4 flex flex-col items-center">
-              <h1 className="text-md font-semibold">Change Student Password</h1>
+              <h1 className="text-md font-semibold">Change Student Section</h1>
             </div>
           </div>
 

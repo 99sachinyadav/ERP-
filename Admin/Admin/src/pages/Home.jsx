@@ -15,6 +15,7 @@ import ChangeTeacherpassword from "../Components/ChangeTeacherpassword";
 import ChangeStudentpassword from "../Components/ChangeStudentpassword";
 import { useNavigate } from "react-router-dom";
 import ChangeSemesterOrSection from "../Components/ChangeSemesterOrSection";
+import ChangeStudentSection from "../Components/ChangeStudentSection";
 const Home = () => {
   const [activeComponent, setActiveComponent] = useState("AdminMenu");
   const [isOpen, setIsOpen] = useState(false);
@@ -24,6 +25,8 @@ const Home = () => {
 
     navigate("/");
   };
+
+
 
   return (
     <div>
@@ -203,6 +206,7 @@ const Home = () => {
           {activeComponent === "CreateSection" && <CreateSection />}
           {activeComponent === "ChangeYear" && <ChangeYear />}
           {activeComponent === "AddSubjects" && <AddSubjects />}
+          {activeComponent === "ChangeStudentSection" && <ChangeStudentSection />}
           {activeComponent === "ChangeTeacherpassword" && (
             <ChangeTeacherpassword />
           )}
