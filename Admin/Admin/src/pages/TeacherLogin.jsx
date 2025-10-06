@@ -3,7 +3,7 @@ import React from 'react'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
-
+import { backendUrl } from '@/App';
 const TeacherLogin = () => {
    
     const [email,setemail] = useState('')
@@ -16,7 +16,7 @@ const TeacherLogin = () => {
       e.preventDefault()
       try {
 
-        const responce = await axios.post('http://localhost:4000/api/loginTeacher',{
+        const responce = await axios.post(backendUrl + '/api/loginTeacher',{
           email:email,
           password:password,
         })

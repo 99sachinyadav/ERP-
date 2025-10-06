@@ -1,7 +1,7 @@
 import axios from 'axios'
 import React, { useState } from 'react'
 import toast from 'react-hot-toast'
-
+import { backendUrl } from '@/App'
 const ChangeSemesterOrSection = () => {
 
   // currentSection,currentYear,currentBatch,newSemester,newSection
@@ -16,7 +16,7 @@ const ChangeSemesterOrSection = () => {
     e.preventDefault();
      
      try {
-       const responce = await axios.put('http://localhost:4000/api/updateSectionorSemester',{
+       const responce = await axios.put(backendUrl + '/api/updateSectionorSemester',{
          currentSection,
          currentYear,
          currentBatch,

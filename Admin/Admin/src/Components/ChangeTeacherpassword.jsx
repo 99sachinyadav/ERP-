@@ -2,6 +2,7 @@ import React from 'react'
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { backendUrl } from '@/App';
 const ChangeTeacherpassword = () => {
    const [teacheremail, setemail] = useState('');
      const [newPassword, setpassword] = useState('')
@@ -10,7 +11,7 @@ const ChangeTeacherpassword = () => {
      e.preventDefault();
 
      try {
-       const responce = await axios.put('http://localhost:4000/api/updateTeacherPassword',{
+       const responce = await axios.put(backendUrl + '/api/updateTeacherPassword',{
        teacheremail,
        newPassword
        },{

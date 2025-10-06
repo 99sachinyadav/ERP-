@@ -15,7 +15,7 @@ import { Toaster } from "react-hot-toast";
 import AttendenceUI from "./Components/AttendenceUI";
 import Attendence from "./Components/Attendence";
 import StudentProtect from "./Components/StudentProtect";
-
+export const backendUrl= import.meta.env.VITE_BACKEND_URL
 const App = () => {
   return (
     <>

@@ -3,6 +3,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from 'axios'
 import toast from "react-hot-toast";
+import { backendUrl } from "@/App";
 
 function Dashboard() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -28,7 +29,7 @@ function formatDate(date) {
     try {
      
         // console.log(localStorage.getItem('teacherToken'), localStorage.getItem('adminToken'));
-        const responce = await axios.get('http://localhost:4000/api/gelStudentBySection', {
+        const responce = await axios.get(backendUrl + '/api/gelStudentBySection', {
             headers: {
                 teachertoken: localStorage.getItem('teacherToken')? localStorage.getItem('teacherToken') : null,
                 // adminToken: localStorage.getItem('adminToken')? localStorage.getItem('adminToken') : null,
@@ -65,7 +66,7 @@ function formatDate(date) {
  const markAttendance = async (rollno) => {
     try {
         // console.log(localStorage.getItem('teacherToken'), localStorage.getItem('adminToken'));
-        const response = await axios.post('http://localhost:4000/api/markAttendance', {
+        const response = await axios.post(backendUrl + '/api/markAttendance', {
             rollno: rollno,
             date: formatDate(selectedDate),
             subject: singleSubject,

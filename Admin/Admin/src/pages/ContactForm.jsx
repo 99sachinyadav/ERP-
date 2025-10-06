@@ -1,3 +1,4 @@
+import { backendUrl } from "@/App";
 import axios from "axios";
 import { useState } from "react";
 
@@ -8,7 +9,7 @@ function ContactForm() {
   const handleSend = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:4000/api/send-email", {
+      await axios.post(backendUrl + "/api/send-email", {
         to: email,
         subject: "Test Email from Resend + React",
         message,

@@ -2,7 +2,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
+import { backendUrl } from "@/App";
 
 const Studentsignup = () => {
   const [image, setimage] = useState(null);
@@ -32,7 +32,7 @@ const Studentsignup = () => {
     try {
 
      // Retrieve token from localStorage or other storage
-    const responce = await axios.post('http://localhost:4000/api/registerStudent', {
+    const responce = await axios.post(backendUrl + '/api/registerStudent', {
         name,
         email,
         password,

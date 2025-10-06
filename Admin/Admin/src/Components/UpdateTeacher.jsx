@@ -3,6 +3,7 @@ import React from 'react'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
+import { backendUrl } from '@/App';
 const UpdateTeacher = () => {
      
   const Navigate = useNavigate()
@@ -15,7 +16,7 @@ const UpdateTeacher = () => {
     e.preventDefault();
     // console.log(section,year,batch,newteacheremail)
     try {
-       const responce = await axios.put('http://localhost:4000/api/updateTeacher',{
+       const responce = await axios.put(backendUrl + '/api/updateTeacher',{
         section,
         year, 
         batch,

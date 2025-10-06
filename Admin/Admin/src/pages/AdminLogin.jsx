@@ -1,3 +1,4 @@
+import { backendUrl } from '@/App'
 import axios from 'axios'
 import React, { useState } from 'react'
 import toast from 'react-hot-toast'
@@ -12,7 +13,7 @@ const AdminLogin = () => {
     const handelSubmit = async(e) => {
         e.preventDefault()
         try {
-         const responce =  await axios.post('http://localhost:4000/api/loginAdmin',{
+         const responce =  await axios.post(backendUrl + '/api/loginAdmin',{
             email,
             password
          })

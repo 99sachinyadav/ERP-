@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import toast from "react-hot-toast";
 import React from "react";
 import {  AreaChart,  Area, XAxis,  YAxis, CartesianGrid,Tooltip,ResponsiveContainer} from "recharts";
-import { set } from "date-fns";
+import { backendUrl } from "@/App";
 const attendanceData = {
   "2025-05-01": "leave",
   "2025-05-02": "today",
@@ -46,48 +46,51 @@ function formatDate(date) {
   return date.toLocaleDateString('en-CA');
 }
 
-  const getProfile = async (dateStr) => {
-   
-    try {
-      //  console.log(localStorage.getItem("token"));
-      const responce = await axios.get("http://localhost:4000/api/getStudentAttendance", {
-        params: {
-          date: dateStr,
-        },
-        headers: {
-          token: localStorage.getItem("token"),
-        },
-      });
-      
-      console.log(responce.data);
-
-      if(responce.data.sucess) {
-        setresponce(responce.data.attendance);
-        setSemester(responce.data.semester)
-        toast.success(responce.data.message);
+    const getProfile = React.useCallback(async (dateStr) => {
+      try {
+        const responce = await axios.get(backendUrl+"/api/getStudentAttendance", {
+          params: {
+            date: dateStr,
+          },
+          headers: {
+            token: localStorage.getItem("token"),
+          },
+        });
+  
+        console.log(responce.data);
+  
+        if (responce.data.sucess) {
+          setresponce(responce.data.attendance);
+          setSemester(responce.data.semester);
+          toast.success(responce.data.message);
+  
+          // Build a new array for chart data
+          const newData = responce.data.attendance
+            .filter(element => element.subject.includes(responce.data.semester))
+            .map(element => ({
+              subject: element.subject,
+              Required: element.totalLecture,
+              lectureAttended: element.lectureAttended
+            }));
+          setMydata(newData);
+          console.log(newData);
+        } else {
+          setMydata([]);
+        }
+      } catch (error) {
+        console.log(error);
+        toast.error(error.response?.data?.message || "Error fetching attendance");
+        setMydata([]);
       }
-      responce.data.attendance.forEach(element => {
-      element.subject.includes(responce.data.semester) && (
-        mydata.push({subject:element.subject,Required:element.totalLecture,lectureAttended:element.lectureAttended})
-      )
-      });
-       setMydata(mydata);
-      console.log(mydata);
-
-    } catch (error) {
-      console.log(error); 
-      toast.error(error.responce.data.message) 
-    }
-
-  };
- 
-   
-  useEffect(() => {
-    if (selectedDate) {
-      const dateStr = formatDate(selectedDate);
-        getProfile(dateStr)
-    }
-  }, [selectedDate]);
+    }, []);
+  
+  // Move useEffect to the top level of the component
+    useEffect(() => {
+      if (selectedDate) {
+        const dateStr = formatDate(selectedDate);
+        getProfile(dateStr);
+      }
+    }, [selectedDate, getProfile]);
  
 
  

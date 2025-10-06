@@ -1,7 +1,7 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast';
-
+import { backendUrl } from '@/App';
 const SeeALLTeachers = () => {
    const [teachers, setteachers] = useState([])
 //   const teachers = [
@@ -14,7 +14,7 @@ const SeeALLTeachers = () => {
         
        try {
 
-        const responce = await axios.get('http://localhost:4000/api/getAllTeacher',
+        const responce = await axios.get(backendUrl + '/api/getAllTeacher',
           {
             headers:{
               adminToken : localStorage.getItem('adminToken')

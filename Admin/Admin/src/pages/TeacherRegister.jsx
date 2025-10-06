@@ -4,6 +4,7 @@ import React from 'react'
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { backendUrl } from '@/App';
 
 const TeacherRegister = (props) => {
     const [name, setname] = React.useState(""); 
@@ -17,7 +18,7 @@ const TeacherRegister = (props) => {
 
         try {
                 // console.log(name,email,password , localStorage.getItem('adminToken'))
-            const responce = await axios.post('http://localhost:4000/api/registerTeacher', 
+            const responce = await axios.post(backendUrl + '/api/registerTeacher', 
               {
                 name: name,
                 email: email,

@@ -1,5 +1,6 @@
 import axios from "axios";
 import {   User } from "../assets/assets";
+import { backendUrl } from "@/App";
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -16,7 +17,7 @@ function Profile() {
   const getProfile = async () => {
     try {
       const token = localStorage.getItem("token"); // Retrieve token from localStorage
-      const response = await axios.get("http://localhost:4000/api/getProfile", {
+      const response = await axios.get(backendUrl + "/api/getProfile", {
         headers: {
           token: token,
         },

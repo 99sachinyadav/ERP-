@@ -1,7 +1,7 @@
 import axios from 'axios';
 import React, { useState } from 'react'
 import toast from 'react-hot-toast';
-
+import { backendUrl } from '@/App';
 const ChangeYear = () => {
 
    const [section, setsection] = useState("")
@@ -12,7 +12,7 @@ const ChangeYear = () => {
            e.preventDefault();
            console.log(section,year,batch,newyear)
            try {
-            const responce = await axios.post('http://localhost:4000/api/changeYear',{
+            const responce = await axios.post(backendUrl + '/api/changeYear',{
               section,
               year,
               batch,

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import React, { useState } from 'react'
 import toast from 'react-hot-toast';
+import { backendUrl } from '@/App';
 
 const SeeAllStudent = () => {
 //     const teachers = [
@@ -17,7 +18,7 @@ const SeeAllStudent = () => {
 const getStudent = async ()=>{
    try {
     console.log(localStorage.getItem('teacherToken'))
-    const responce = await axios.get('http://localhost:4000/api/gelStudentBySection',{
+    const responce = await axios.get(backendUrl + '/api/gelStudentBySection',{
       params:{
         section,
         year,

@@ -2,6 +2,7 @@ import React from 'react'
 import { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { backendUrl } from '@/App';
 
 const ChangeStudentSection = () => {
     const [year, setyear] = React.useState('');
@@ -18,7 +19,7 @@ const ChangeStudentSection = () => {
         //    console.log(newSection[studentId] , studentId,newYear[studentId]);
            try {
 
-            const response = await axios.put('http://localhost:4000/api/changeStudentSection',{
+            const response = await axios.put(backendUrl + '/api/changeStudentSection',{
                 year,
                 batch,
                 section,
@@ -59,8 +60,8 @@ const ChangeStudentSection = () => {
     try {
      
         // console.log(localStorage.getItem('teacherToken'), localStorage.getItem('adminToken'));
-         
-        const responce = await axios.get('http://localhost:4000/api/gelStudentBySection', {
+
+        const responce = await axios.get(backendUrl + '/api/gelStudentBySection', {
             headers: {
                 // teachertoken: localStorage.getItem('teacherToken')? localStorage.getItem('teacherToken') : null,
                 adminToken: localStorage.getItem('adminToken')? localStorage.getItem('adminToken') : null,

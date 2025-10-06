@@ -16,6 +16,7 @@ import MonitorAttendence from "./Components/MonitorAttendence"
  import ContactForm from "./pages/ContactForm"
 import SendEmail from "./Components/SendEmail"
  
+export const backendUrl= import.meta.env.VITE_BACKEND_URL
 
 function App() {
  

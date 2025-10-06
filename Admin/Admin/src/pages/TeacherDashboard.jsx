@@ -9,6 +9,7 @@ import {toast} from "react-hot-toast";
 
 import { Button } from "@/Components/ui/button";
 import axios from "axios";
+import { backendUrl } from "@/App";
  
 
 
@@ -35,7 +36,7 @@ const TeacherDashboard = () => {
 
   const sendEmailStudents = async() => {
     try {
-      const response = await axios.post("http://localhost:4000/api/send-email", {
+      const response = await axios.post(backendUrl + "/api/send-email", {
       
         year,
         section,
@@ -70,7 +71,7 @@ const TeacherDashboard = () => {
     
  
 
-      const response = await axios.get("http://localhost:4000/api/gelStudentBySection", {
+      const response = await axios.get(backendUrl + "/api/gelStudentBySection", {
         params: { section: sectionVal, year: yearVal, batch: batchVal },
         headers: { teachertoken: localStorage.getItem("teacherToken") }
       });

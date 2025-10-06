@@ -2,6 +2,7 @@
  import {useState} from 'react'
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { backendUrl } from '@/App';
 
 function StudentLogin() {
 
@@ -13,7 +14,7 @@ function StudentLogin() {
 
       try {
 
-        const responce  = await axios.post('http://localhost:4000/api/loginStudent',{
+        const responce  = await axios.post(backendUrl + '/api/loginStudent',{
            email,password
         })
         console.log(responce.data);

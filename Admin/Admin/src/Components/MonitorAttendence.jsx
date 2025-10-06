@@ -2,6 +2,7 @@ import React from "react";
 import axios from "axios";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { backendUrl } from '@/App';
 const MonitorAttendence = () => {
   const [popupStudent, setPopupStudent] = useState(null);
   const [section, setsection] = useState("");
@@ -14,7 +15,7 @@ const MonitorAttendence = () => {
     try {
       // console.log(localStorage.getItem("teacherToken"));
       const responce = await axios.get(
-        "http://localhost:4000/api/gelStudentBySection",
+        backendUrl + "/api/gelStudentBySection",
         {
           params: {
             section,

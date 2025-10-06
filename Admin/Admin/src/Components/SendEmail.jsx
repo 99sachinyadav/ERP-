@@ -1,17 +1,18 @@
 import React from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
-
+import { useState } from 'react'
+import { backendUrl } from '@/App';
 const SendEmail = () => {
-    const [section, setsection] = React.useState("")
-    const [year, setyear] = React.useState("")
-     const [batch, setbatch] = React.useState("")
+    const [section, setsection] = useState("")
+    const [year, setyear] = useState("")
+    const [batch, setbatch] = useState("")
 
 
      const sendMail = async (e)=>{
         e.preventDefault();
         try {
-            const responce = await axios.post('http://localhost:4000/api/send-email',{
+            const responce = await axios.post(backendUrl + '/api/send-email',{
               section,
               year,
               batch

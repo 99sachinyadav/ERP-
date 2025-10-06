@@ -1,6 +1,7 @@
 import React from 'react'
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { backendUrl } from '@/App';
 const AddSubjects = () => {
 
     const [section, setSection] = React.useState("");
@@ -13,7 +14,7 @@ const AddSubjects = () => {
      const addSubject = async (e)=>{
       e.preventDefault();
       try {
-          const responce = await axios.post('http://localhost:4000/api/addSubjects',{
+          const responce = await axios.post(backendUrl + '/api/addSubjects',{
             section,
             year, 
             batch,
