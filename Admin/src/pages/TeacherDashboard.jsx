@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
-import {Dialog,  DialogContent,DialogDescription,  DialogHeader,DialogTitle,DialogTrigger,} from "@/components/ui/dialog"
+import {Dialog,  DialogContent,DialogDescription,  DialogHeader,DialogTitle,DialogTrigger,} from "@/Components/ui/dialog"
 import { Teacher } from "../assets/assetes";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input"
+import { Input } from "@/Components/ui/input"
 import {toast} from "react-hot-toast";
 
 import { Button } from "@/Components/ui/button";
