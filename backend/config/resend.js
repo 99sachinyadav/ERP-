@@ -7,7 +7,7 @@ import { Section } from "../model/sectionmodel.js";
  
  
 const resend = new Resend(process.env.RESEND_API_KEY);
-
+const backendUrl = process.env.BACKEND_URL || "https://erpbackendnew.vercel.app";
 
 const sendEmail = async (email, name, attendance, fatherName, rollNo, semester, attendancePercent,year) => {
    const subject = `Attendance Alert: ${attendancePercent}% in ${semester}`;
@@ -99,8 +99,9 @@ const sendEmailStudent = async (req, res) => {
         if(!teacher.section.includes(sectionfind._id)){
           return res .json({success:false,message:"you are not authorized to send email to this section"})
         }
+
       const responce = await axios.get(
-        "http://localhost:4000/api/gelStudentBySection",
+      backendUrl + "/api/gelStudentBySection",
         {
           params: {
             section,
