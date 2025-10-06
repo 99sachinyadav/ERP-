@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardContent } from "@/Components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
 import {Dialog,  DialogContent,DialogDescription,  DialogHeader,DialogTitle,DialogTrigger,} from "@/Components/ui/dialog"
 import { Teacher } from "../assets/assetes";
