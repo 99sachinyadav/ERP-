@@ -20,7 +20,7 @@ import  cors from 'cors'
 
  
  app.use('/',(req,res)=>{
-    res.send("hello server ");
+    res.send("hello server");
  })
 
 app.listen(port,()=>{
