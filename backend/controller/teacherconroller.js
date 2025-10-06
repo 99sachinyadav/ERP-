@@ -3,7 +3,7 @@ import { Teacher } from "../model/teachermodel.js";
 import { generateToken, hashpasssword } from "./studentcontroller.js";
 
 import { Student } from "../model/studentmodel.js";
-import bcrypt from "bcrypt";
+ import bcrypt from "bcryptjs";
 
 const registerTeacher = async (req, res) => {
   try {

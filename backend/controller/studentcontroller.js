@@ -1,6 +1,7 @@
 import { Section } from "../model/sectionmodel.js";
 import { Student } from "../model/studentmodel.js";
-import bcrypt, { genSalt } from "bcrypt";
+import bcrypt  ,{ genSalt } from "bcryptjs";
+ 
 import jwt from "jsonwebtoken";
 
 const hashpasssword = async (password) => {
