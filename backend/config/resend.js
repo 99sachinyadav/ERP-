@@ -113,7 +113,7 @@ const sendEmailStudent = async (req, res) => {
           },
         }
       );
-      // console.log("my responce",responce.data);
+      console.log("my responce",responce.data);
      let students = [];
       let semester = "";
       if (responce.data.sucess) {
