@@ -130,7 +130,7 @@ const attendancebyTeacher = async (req, res) => {
     section = section.toUpperCase();
     //
     // console.log(adminID)
-      console.log(subject, rollno, date, noofLecAttended, totalnoLec, section, year, batch, semester);
+     // console.log(subject, rollno, date, noofLecAttended, totalnoLec, section, year, batch, semester);
     if (!subject || !rollno || !date || !noofLecAttended || !totalnoLec || !section || !year || !batch || !semester) {
       return res
         .status(403)
@@ -162,7 +162,7 @@ const attendancebyTeacher = async (req, res) => {
         .json({ sucess: false, message: "Teacher   not found in database " });
     }
     const MySubject =    subject + "_" + section+ year+ "_" + batch  ;
-    console.log(MySubject)
+    // console.log(MySubject)
     if(!findTeacherbyAuth.subjects.includes(MySubject)){
       return res
       .status(401)
@@ -279,7 +279,7 @@ const updateTeacherInSection = async (req, res) => {
      let{section} = req.body;
 
       section=section.toUpperCase();
-        console.log(section, year, batch, newteacheremail);
+        // console.log(section, year, batch, newteacheremail);
     if (!section || !year || !batch || !newteacheremail) {
       return res
         .status(403)

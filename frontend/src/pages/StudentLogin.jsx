@@ -17,7 +17,7 @@ function StudentLogin() {
         const responce  = await axios.post(backendUrl + '/api/loginStudent',{
            email,password
         })
-        console.log(responce.data);
+        // console.log(responce.data);
         if(responce.data.sucess){
           localStorage.setItem('token',responce.data.refreshToken )
           localStorage.setItem('studentname',responce.data.name )
@@ -29,7 +29,7 @@ function StudentLogin() {
           toast.error(responce.data.message)
         }
         window.addEventListener('resize', () => {
-          console.log(`Window resized to: ${window.innerWidth}x${window.innerHeight}`);
+          // console.log(`Window resized to: ${window.innerWidth}x${window.innerHeight}`);
         });
       } catch (error) {
          console.log(error.message);

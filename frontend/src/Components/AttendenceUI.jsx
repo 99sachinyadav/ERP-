@@ -57,7 +57,7 @@ function formatDate(date) {
           },
         });
   
-        console.log(responce.data);
+        // console.log(responce.data);
   
         if (responce.data.sucess) {
           setresponce(responce.data.attendance);
@@ -73,7 +73,7 @@ function formatDate(date) {
               lectureAttended: element.lectureAttended
             }));
           setMydata(newData);
-          console.log(newData);
+          // console.log(newData);
         } else {
           setMydata([]);
         }
@@ -94,7 +94,7 @@ function formatDate(date) {
  
 
  
-  console.log(semester);
+  // console.log(semester);
 return (
   <div className="min-h-screen bg-gradient-to-br from-blue-100 via-teal-100 to-purple-100 py-8 px-2">
     <div className="max-w-6xl mx-auto flex flex-col-reverse md:flex-row gap-8 md:gap-12 items-center justify-center">

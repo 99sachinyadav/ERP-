@@ -21,7 +21,7 @@ const TeacherLogin = () => {
           password:password,
         })
 
-        console.log(responce.data)
+        // console.log(responce.data)
         if(responce.data.success){
            localStorage.setItem('teacherToken',responce.data.refeshTeacherToken)
            localStorage.setItem('teachername',responce.data.findTeacher.name)

@@ -27,8 +27,8 @@ const ChangeSemesterOrSection = () => {
             adminToken: localStorage.getItem('adminToken') ? localStorage.getItem('adminToken') : null
          }
        })
-       console.log("hello")
-       console.log(responce.data)
+      //  console.log("hello")
+      //  console.log(responce.data)
        if(responce.data.success === true){
          toast.success(responce.data.message)
        }

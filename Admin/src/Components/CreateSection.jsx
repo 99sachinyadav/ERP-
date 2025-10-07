@@ -26,7 +26,7 @@ const CreateSection = () => {
           }
         }
         )
-         console.log(responce.data.message)
+        //  console.log(responce.data.message)
         if(responce.data.sucess){
           toast.success(responce.data.message)
           setsection("")

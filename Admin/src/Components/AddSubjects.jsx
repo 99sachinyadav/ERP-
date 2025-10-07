@@ -27,7 +27,7 @@ const AddSubjects = () => {
               admintoken: localStorage.getItem('adminToken')? localStorage.getItem('adminToken') : null
             }
           })
-          console.log(responce.data);
+          // console.log(responce.data);
           if(responce.data.sucess){
             toast.success(responce.data.message)
             setSection("");

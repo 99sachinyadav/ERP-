@@ -10,7 +10,7 @@ const ChangeYear = () => {
       const [newyear, setnewyear] = useState("")
         const changeYear = async (e)=>{
            e.preventDefault();
-           console.log(section,year,batch,newyear)
+          //  console.log(section,year,batch,newyear)
            try {
             const responce = await axios.post(backendUrl + '/api/changeYear',{
               section,

@@ -40,14 +40,14 @@ function formatDate(date) {
                 section: section,
             },
         });
-             console.log(responce.data)
+            //  console.log(responce.data)
        // console.log(responce.data.findSection.students);
         if(responce.data.sucess === false){
             toast.error(responce.data.message)
-            console.log(responce.data.message)
+            // console.log(responce.data.message)
         }
         else{
-            console.log(localStorage.getItem('teacherName'))
+            // console.log(localStorage.getItem('teacherName'))
            setstudent(responce.data.findSection.students)
            setsubjects(responce.data.findSection.subjects)
            setsingleSubject(responce.data.findSection.subjects[0])
@@ -82,7 +82,7 @@ function formatDate(date) {
                 adminToken: localStorage.getItem('adminToken'),
             },
         });
-        console.log(response.data);
+        // console.log(response.data);
         toast.success(response.data.message);
     } catch (error) {
         console.log(error);

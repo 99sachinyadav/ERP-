@@ -33,7 +33,7 @@ const ChangeStudentSection = () => {
                 }
             })
 
-            console.log(response );
+            // console.log(response );
               if(response.data.sucess===true){
                 toast.success(response.data.message);
                 setchanged(prev=>({...prev, [studentId]: true}));
@@ -72,13 +72,13 @@ const ChangeStudentSection = () => {
                 section: section,
             },
         });
-             console.log(responce.data)
+            //  console.log(responce.data)
 
            
        // console.log(responce.data.findSection.students);
         if(responce.data.sucess === false){
             toast.error(responce.data.message)
-            console.log(responce.data.message)
+            // console.log(responce.data.message)
         }
         else{
            setstudent(responce.data.findSection.students)

@@ -44,7 +44,7 @@ const TeacherDashboard = () => {
       }, {
         headers: { teachertoken: localStorage.getItem("teacherToken") }
       });
-          console.log(response );
+          // console.log(response );
       if (response.data.success) {
         toast.success(response.data.message || "Emails sent successfully");
       } else {
@@ -67,7 +67,7 @@ const TeacherDashboard = () => {
       const sectionVal = str[0];
       const batchVal = str.substring(underscoreIndex + 1).trim();
       const yearVal = str.substring(1, underscoreIndex).trim();
-      console.log(sectionVal, yearVal, batchVal);
+      // console.log(sectionVal, yearVal, batchVal);
     
  
 
@@ -78,7 +78,7 @@ const TeacherDashboard = () => {
 
       if (response.data.sucess) {
         const studentsFromResponse = response.data.findSection.students;
-        console.log(studentsFromResponse);
+        // console.log(studentsFromResponse);
         setstudents(studentsFromResponse);
         setAttendance(response.data.attendance);
         setsemester(response.data.findSection.semester);
@@ -113,7 +113,7 @@ const TeacherDashboard = () => {
 
   getAttendanceData();
 }, []);
- console.log(mydata);
+//  console.log(mydata);
   
      const data = [
   { name: "Jhon", attendance: 40 },
@@ -122,7 +122,7 @@ const TeacherDashboard = () => {
   { name: "Sachin", attendance: 27 },
   { name: "Jack", attendance: 18 },
 ]
-console.log(mydata.length)
+// console.log(mydata.length)
   return (
     <div className="relative h-full overflow-y-hidden bg-gradient-to-br from-blue-100 via-white to-blue-300">
       <div className="text-2xl text-center pt-8 border-t">

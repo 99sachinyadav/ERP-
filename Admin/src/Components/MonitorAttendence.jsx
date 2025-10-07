@@ -32,7 +32,7 @@ const MonitorAttendence = () => {
           },
         }
       );
-      console.log(responce.data);
+      // console.log(responce.data);
       if (responce.data.sucess) {
         setstudents(responce.data.findSection.students);
         setAttendance(responce.data.attendance);

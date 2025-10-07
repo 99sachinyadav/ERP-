@@ -50,7 +50,7 @@ const Studentsignup = () => {
        
       })
       
-   console.log(responce);
+  //  console.log(responce);
       if (responce.data.sucess) {
          localStorage.setItem('token', responce.data.studentToken);
          localStorage.setItem('studentname',responce.data.name );

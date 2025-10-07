@@ -94,7 +94,7 @@ const sendEmailStudent = async (req, res) => {
        let {section} = req.body;
         section = section.toUpperCase().trim();
        const teacherToken  = req.headers;
-       console.log(teacherToken.teachertoken, section, year, batch,teacherId);
+      //  console.log(teacherToken.teachertoken, section, year, batch,teacherId);
 
         const teacher = await Teacher.findById(teacherId);
         const sectionName=section + year + "_" + batch;
@@ -119,7 +119,7 @@ const sendEmailStudent = async (req, res) => {
           },
         }
       );
-      console.log("my responce",responce.data);
+      // console.log("my responce",responce.data);
      let students = [];
       let semester = "";
       if (responce.data.sucess) {
@@ -128,7 +128,7 @@ const sendEmailStudent = async (req, res) => {
          semester = responce.data.findSection.semester;
         // Now you can use students, attendance, and semester variables directly
       }
-     console.log(students, semester);
+    //  console.log(students, semester);
       if (students && Array.isArray(students)) {
         for (const student of students) {
           // Calculate total lectures and attendance
@@ -147,7 +147,7 @@ const sendEmailStudent = async (req, res) => {
             }
           }
           const attendancePercent = ((totalAttend / totalLec) * 100 || 0).toFixed(2);
-          console.log(attendancePercent);
+          // console.log(attendancePercent);
           if (attendancePercent < 75) {
             const response = await sendEmail(
               student?.email,
@@ -159,7 +159,7 @@ const sendEmailStudent = async (req, res) => {
               attendancePercent,
               student?.year
             );
-             console.log( student.attendance );
+            //  console.log( student.attendance );
             if (!response.success) {
               return res.status(500).json({ success: false, message: `Failed to send email to ${student?.email}: ${response.error}` });
             }

@@ -228,8 +228,8 @@ const changeStudentSection =  async (req,res)=>{
      const newSubjects = targetSection.subjects;
      // Remove old subjects
 
-     console.log("Old Subjects:", oldSubjects);
-     console.log("New Subjects:", newSubjects);
+    //  console.log("Old Subjects:", oldSubjects);
+    //  console.log("New Subjects:", newSubjects);
      student.subjects = student.subjects.filter(sub => !oldSubjects.includes(sub));
      // Add new subjects
      newSubjects.forEach(sub => {

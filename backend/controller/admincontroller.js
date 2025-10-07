@@ -4,7 +4,7 @@ import {Student} from "../model/studentmodel.js";
 const updateTeacherPassword = async (req,res)=>{
     try {
         const { teacheremail, newPassword } = req.body;
-            console.log(teacheremail ,newPassword)
+            // console.log(teacheremail ,newPassword)
         // Validate input
         if (!teacheremail || !newPassword) {
             return res.status(400).json({sucess:false, message: "Teacher email or new password are required." });

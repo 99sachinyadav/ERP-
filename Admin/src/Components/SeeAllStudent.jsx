@@ -17,7 +17,7 @@ const SeeAllStudent = () => {
   const [Attendance, setAttendance] = useState([]);
 const getStudent = async ()=>{
    try {
-    console.log(localStorage.getItem('teacherToken'))
+    // console.log(localStorage.getItem('teacherToken'))
     const responce = await axios.get(backendUrl + '/api/gelStudentBySection',{
       params:{
         section,
@@ -31,7 +31,7 @@ const getStudent = async ()=>{
     }
      
     )
-    console.log(responce.data)
+    // console.log(responce.data)
     if(responce.data.sucess){
       setstudents(responce.data.findSection.students)
          setAttendance(responce.data.attendance);

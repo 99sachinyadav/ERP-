@@ -38,7 +38,7 @@ const registerStudent = async (req, res) => {
     } = req.body;
     let { section } = req.body; // Destructure section from req.body
     const { address, phoneNO } = contactinfo || {};
-    console.log(name  , father_name,email,password,rollno,section,year,dob,address,semester )
+    // console.log(name  , father_name,email,password,rollno,section,year,dob,address,semester )
     if (
       !name ||
       !email ||
@@ -278,7 +278,7 @@ const changeYear = async (req, res) => {
 const getAllStudentBySection = async (req, res) => {
   try {
     let { year, batch, section } = req.query;
-    console.log(year, batch , section)
+    // console.log(year, batch , section)
     section = section.toUpperCase();
     if (!year || !batch || !section) {
       return res
@@ -317,7 +317,7 @@ const viewAttendance = async (req, res) => {
       
     const { studentId  } = req.body;
     const { date } = req.query;
-    console.log('DAT:', date, 'studentId:', studentId);
+    // console.log('DAT:', date, 'studentId:', studentId);
 
     if (!studentId || !date) {
       return res
