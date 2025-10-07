@@ -4,7 +4,13 @@ import fs from "fs";
 import axios from "axios";
 import { Teacher } from "../model/teachermodel.js";
 import { Section } from "../model/sectionmodel.js";
- 
+import path from "path";
+import { fileURLToPath } from "url"; 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// use absolute path
+const htmlPath = path.join(__dirname, "Resend.html");
  
 const resend = new Resend(process.env.RESEND_API_KEY);
 const backendUrl = process.env.BACKEND_URL || "https://erpbackendnew.vercel.app";
@@ -20,7 +26,7 @@ const sendEmail = async (email, name, attendance, fatherName, rollNo, semester, 
    
  
 
-let htmlTemplate = fs.readFileSync("config/Resend.html", "utf8");
+let htmlTemplate = fs.readFileSync(htmlPath, "utf8");
 
 // Build table rows
 const rows = attendance.map(attend => {
@@ -60,7 +66,7 @@ const html = htmlTemplate
   .replace(/{{required_percent}}/g, "75")
   .replace(/{{records_rows}}/g, rows)
   //  .replace(/{{list}}/g, list)
-  .replace(/{{attendance_portal_url}}/g, "https://erp.example.com/attendance")
+  .replace(/{{attendance_portal_url}}/g, "https://erpfrontend-bice.vercel.app/attendance")
   .replace(/{{sender_name}}/g, "Class counsellor")
   .replace(/{{sender_position}}/g, "Attendance Coordinator")
   .replace(/{{institution_name}}/g, " Raj Kumar Goel Institute of Technology & Management")

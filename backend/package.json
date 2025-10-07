@@ -19,6 +19,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.12.1",
     "nodemon": "^3.1.9",
-    "resend": "^6.1.0"
+    "path": "^0.12.7",
+    "resend": "^6.1.0",
+    "url": "^0.11.4"
   }
 }
