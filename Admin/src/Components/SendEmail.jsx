@@ -12,7 +12,7 @@ const SendEmail = () => {
      const sendMail = async (e)=>{
         e.preventDefault();
         try {
-            const responce = await axios.post(backendUrl + '/api/send-email',{
+            const response = await axios.post(backendUrl + '/api/send-email',{
               section,
               year,
               batch
@@ -21,10 +21,12 @@ const SendEmail = () => {
                     teacherToken:localStorage.getItem('teachertoken')
                 }
             });
-            toast.success(responce.data.message);
+           
+            toast.success(response.data.message);
+            //  console.log("sachin");
         } catch (error) {
             console.log(error);
-            toast.error(error.response.data.message)
+            toast.error(error.response?.data?.message || 'An error occurred')
         }
      }
     

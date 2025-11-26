@@ -41,47 +41,47 @@ function Profile() {
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-amber-50 to-blue-50">
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 p-4 lg:p-12 w-full max-w-7xl mx-auto">
-        {/* Profile Card */}
-        <div className="flex flex-col w-full lg:w-1/3 rounded-xl border shadow-lg bg-white p-6">
-          <h1 className="text-2xl lg:text-4xl text-center font-bold text-blue-900 mb-6">
-            Student <span className="text-red-500">Profile</span>
-          </h1>
-          <div className="flex flex-col items-center gap-4">
-            <img
-              src={User}
-              className="w-32 h-32 lg:w-40 lg:h-40 rounded-full border-4 border-blue-200 shadow"
-              alt="User"
-            />
-            <div className="text-center">
-              <h2 className="text-xl lg:text-2xl font-semibold">{response?.name}</h2>
-              <p className="text-md lg:text-lg text-gray-700">{response?.rollno}</p>
-              <p className="text-sm lg:text-md text-gray-500">{response?.email}</p>
+ 
+          <div className="flex flex-col w-full lg:w-1/3 rounded-xl border shadow-lg bg-white p-6">
+            <h1 className="text-2xl lg:text-4xl text-center font-bold text-blue-900 mb-6">
+              Student <span className="text-red-500">Profile</span>
+            </h1>
+            <div className="flex flex-col items-center gap-4">
+              <img
+                src={ response?.avtar ? `data:image/${response.imageType};base64,${response.avtar}` : User  }
+                className="w-32 h-32 lg:w-40 lg:h-40 rounded-full border-4 border-blue-200  shadow"
+                alt="User"
+              />
+              <div className="text-center">
+                <h2 className="text-xl lg:text-2xl font-semibold">{response?.name}</h2>
+                <p className="text-md lg:text-lg text-gray-700">{response?.rollno}</p>
+                <p className="text-sm lg:text-md text-gray-500">{response?.email}</p>
+              </div>
             </div>
+            <table className="w-full mt-6 text-center">
+              <tbody>
+                <tr>
+            <td className="text-lg font-bold py-2">Section</td>
+            <td className="text-lg font-semibold py-2">{response?.section}</td>
+                </tr>
+                <tr>
+            <td className="text-lg font-bold py-2">Semester</td>
+            <td className="text-lg font-semibold py-2">{response?.semester}</td>
+                </tr>
+                <tr>
+            <td className="text-lg font-bold py-2">Year</td>
+            <td className="text-lg font-semibold py-2">{response?.year}</td>
+                </tr>
+              </tbody>
+            </table>
+            <button
+              onClick={() => setisOpen(!isOpen)}
+              className="bg-blue-600 hover:bg-blue-700 transition w-full mt-6 text-white py-2 rounded-lg font-semibold shadow"
+            >
+              {isOpen ? "Hide Attendance" : "View Attendance"}
+            </button>
           </div>
-          <table className="w-full mt-6 text-center">
-            <tbody>
-              <tr>
-                <td className="text-lg font-bold py-2">Section</td>
-                <td className="text-lg font-semibold py-2">{response?.section}</td>
-              </tr>
-              <tr>
-                <td className="text-lg font-bold py-2">Semester</td>
-                <td className="text-lg font-semibold py-2">{response?.semester}</td>
-              </tr>
-              <tr>
-                <td className="text-lg font-bold py-2">Year</td>
-                <td className="text-lg font-semibold py-2">{response?.year}</td>
-              </tr>
-            </tbody>
-          </table>
-          <button
-            onClick={() => setisOpen(!isOpen)}
-            className="bg-blue-600 hover:bg-blue-700 transition w-full mt-6 text-white py-2 rounded-lg font-semibold shadow"
-          >
-            {isOpen ? "Hide Attendance" : "View Attendance"}
-          </button>
-        </div>
-        {/* Details & Attendance */}
+          {/* Details & Attendance */}
         <div className="flex-1 flex flex-col gap-6">
           <div className="flex flex-col sm:flex-row items-center justify-between bg-white border shadow rounded-lg p-4">
             <h1 className="text-xl lg:text-2xl font-semibold text-blue-800">Profile Details</h1>

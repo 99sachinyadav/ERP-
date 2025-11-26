@@ -5,6 +5,7 @@ import axios from "axios";
 import { Teacher } from "../model/teachermodel.js";
 import { Section } from "../model/sectionmodel.js";
 import path from "path";
+import nodemailer from "nodemailer";
 import { fileURLToPath } from "url"; 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -73,12 +74,35 @@ const html = htmlTemplate
   
   .replace(/{{support_email}}/g, "director@rkgitm.ac.in ");
       // console.log("Generated HTML:", html,to ,subject);
-    const response = await resend.emails.send({
-      from: "Your App <onboarding@resend.dev>",  // must be a verified email/domain
-      to:email,
-      subject,
-      html : html,
+    // const response = await resend.emails.send({
+    //   from: 'noreply@resend.dev',  // must be a verified email/domain
+    //   to:email,
+    //   subject,
+    //   html : html,
+    // });
+
+
+    
+    // Setup SMTP transport
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.GMAIL_USER, // your Gmail address
+        pass: process.env.GMAIL_PASS
+      }
+
     });
+
+    // Send mail
+    const response = await transporter.sendMail({
+      from: '"RKGITM ERP" <sy7841846@gmail.com>',
+      to: email,
+      subject,
+      html
+    });
+
 
      return  ({ success: true, data: response });
   } catch (error) {

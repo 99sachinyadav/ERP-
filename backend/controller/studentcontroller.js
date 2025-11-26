@@ -24,6 +24,13 @@ const generateToken = (id) => {
 
 const registerStudent = async (req, res) => {
   try {
+    // -----------------------------
+    // 📌 FormData does NOT send objects
+    // So contactinfo comes flat:
+    // req.body.address
+    // req.body.phoneNO
+    // -----------------------------
+
     const {
       name,
       father_name,
@@ -33,12 +40,41 @@ const registerStudent = async (req, res) => {
       year,
       batch,
       dob,
-      contactinfo,
-      semester,
+      semester
     } = req.body;
-    let { section } = req.body; // Destructure section from req.body
-    const { address, phoneNO } = contactinfo || {};
-    // console.log(name  , father_name,email,password,rollno,section,year,dob,address,semester )
+
+    let { section } = req.body;
+
+    // form-data file
+    const image1 = req.file;
+
+    // Read contactinfo manually (because formdata cannot send nested object)
+    const address = req.body.address;
+    const phoneNO = req.body.phoneNO;
+
+    // Convert image to base64
+    let imageBase64 = null;
+    if (image1) {
+      imageBase64 = image1.buffer.toString("base64");
+    }
+
+    // console.log(
+    //   name,
+    //   father_name,
+    //   email,
+    //   password,
+    //   rollno,
+    //   section,
+    //   year,
+    //   dob,
+    //   address,
+    //   semester,
+    //   imageBase64
+    // );
+
+    // -----------------------------
+    // VALIDATION – NO CHANGE
+    // -----------------------------
     if (
       !name ||
       !email ||
@@ -49,29 +85,29 @@ const registerStudent = async (req, res) => {
       !dob ||
       !address ||
       !batch ||
-      !semester   
+      !semester
     ) {
       return res
         .status(401)
         .json({ success: false, message: "Please enter the full data" });
     }
+
     if (password.length < 6) {
-      return res
-        .status(401)
-        .json({
-          success: false,
-          message: "Password must be at least 6 characters",
-        });
-    } //console.log(phoneNO)
+      return res.status(401).json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
+    }
+
     if (phoneNO && phoneNO.length !== 10) {
-      return res
-        .status(401)
-        .json({
-          success: false,
-          message: "Phone number must be exactly 10 digits",
-        });
-    } // Check if student exists and convert it to ObjectId
-    section = section.toUpperCase(); // Convert section to uppercase
+      return res.status(401).json({
+        success: false,
+        message: "Phone number must be exactly 10 digits",
+      });
+    }
+
+    section = section.toUpperCase();
+
     const existedStudent = await Student.findOne({
       $or: [{ email: email }, { rollno: rollno }],
     });
@@ -79,66 +115,72 @@ const registerStudent = async (req, res) => {
     if (existedStudent) {
       return res.json({ sucess: false, message: "User already exist" });
     }
+
     const sectionYear = section + year + "_" + batch;
-    // console.log(sectionYear)
+
     const sectionExist = await Section.findOne({
       name: sectionYear,
       year: year,
       batch: batch,
-      
     });
+
     if (!sectionExist) {
-      return res
-        .status(401)
-        .json({
-          success: false,
-          message: `Section ${section} not found in year ${year} and batch ${batch}`,
-        });
-    }
-    if(sectionExist.semester !== semester){
-      return res
-        .status(401)
-        .json({
-          success: false,
-          message: `Section ${section} is not available for semester ${semester}`,
-        });
+      return res.status(401).json({
+        success: false,
+        message: `Section ${section} not found in year ${year} and batch ${batch}`,
+      });
     }
 
+    if (sectionExist.semester !== semester) {
+      return res.status(401).json({
+        success: false,
+        message: `Section ${section} is not available for semester ${semester}`,
+      });
+    }
+
+    // -----------------------------------
+    // 🟢 CREATE STUDENT (logic unchanged)
+    // -----------------------------------
     const student = await Student.create({
-      name: name,
-      email: email,
-      year: year,
-      father_name: father_name,
+      name,
+      email,
+      year,
+      father_name,
       password: await hashpasssword(password),
-      section: section,
-      rollno: rollno,
-      batch: batch,
-      dob: dob,
-      semester: semester,
-
+      section,
+      rollno,
+      batch,
+      dob,
+      semester,
+      avtar: imageBase64,
       contactinfo: {
-        address: address,
+        address,
         phoneNo: phoneNO,
       },
     });
 
     await Section.updateOne(
-      { _id: sectionExist._id }, // Ensure the correct section is targeted
-      { $push: { students: student._id } } // Push student ID into the student array
+      { _id: sectionExist._id },
+      { $push: { students: student._id } }
     );
 
-    student.subjects = sectionExist.subjects; // Assuming 'subjects' is the array in Section model
+    student.subjects = sectionExist.subjects;
     await student.save();
 
     const studentToken = generateToken(student._id);
-    return res
-      .status(200)
-      .json({ sucess: true, message: "student saved sucessfully", name: student.name, studentToken });
+
+    return res.status(200).json({
+      sucess: true,
+      message: "student saved successfully",
+      name: student.name,
+      studentToken,
+    });
   } catch (error) {
     console.log(error.message);
     res.json({ sucess: false, message: error.message });
   }
 };
+
 
 const studentLogin = async (req, res) => {
   try {

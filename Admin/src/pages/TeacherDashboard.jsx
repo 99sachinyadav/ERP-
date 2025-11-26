@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/Components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
-import {Dialog,  DialogContent,DialogDescription,  DialogHeader,DialogTitle,DialogTrigger,} from "@/Components/ui/dialog"
+import {Dialog,  DialogContent,DialogDescription,  DialogHeader,DialogTitle,DialogTrigger,DialogClose} from "@/Components/ui/dialog"
 import { Teacher } from "../assets/assetes";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/Components/ui/input"
@@ -18,6 +18,8 @@ const TeacherDashboard = () => {
   const [students, setstudents] = React.useState([]);
   const [attendance, setAttendance] = React.useState([]);
   const [semester, setsemester] = React.useState("");
+  const [sentEmail, setsentEmail] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
 
   const [year, setyear] = React.useState("");
   const [section, setsection] = React.useState("");
@@ -47,6 +49,8 @@ const TeacherDashboard = () => {
           // console.log(response );
       if (response.data.success) {
         toast.success(response.data.message || "Emails sent successfully");
+        setsentEmail(true);
+        
       } else {
         toast.error(response.data.message || "Failed to send emails");
       }
@@ -213,11 +217,18 @@ const TeacherDashboard = () => {
             </div>
           </div>
         <h5 className="text-lg md:text-xl sm:ml-17 font-semibold ml-5">Send Email to those whose Attendance is below the criteria</h5>
-          <Dialog>
+          <Dialog   open={open}
+  onOpenChange={(isOpen) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      setsentEmail(false); // Reset when dialog closes
+    }
+  }}>
   <DialogTrigger className="px-4 py-2 bg-blue-500 sm:w-35 sm:ml-17 sm:mt-5 mt-5 w-full m-2 text-white rounded hover:bg-blue-600">Send Email</DialogTrigger>
   <DialogContent>
     <DialogHeader>
       <DialogTitle>Send Email to students having less Attendance</DialogTitle>
+      
       <DialogDescription className={"flex flex-col gap-5 mt-5"}>
        
             <select
@@ -233,8 +244,8 @@ const TeacherDashboard = () => {
    
        <Input value={section} onChange={(e) => setsection(e.target.value)} type="text" placeholder="Enter section"  />
        <Input value={batch} onChange={(e) => setbatch(e.target.value)} type="text" placeholder="Enter batch"  />
-       <Button onClick={sendEmailStudents} className="bg-blue-500 hover:bg-blue-600">Send Email</Button>
-        This action will send Email to all students having less attendance of this section fill the section detail to send email.
+       <Button onClick={sendEmailStudents} className={`${sentEmail ? 'bg-green-500' : 'bg-blue-500'} hover:bg-blue-600`}>{sentEmail ? 'Email Sent' : 'Send Email'}</Button>
+       "This action will send emails to all students with low attendance. Do not click again until the button changes color and a confirmation message appears, as sending may take some time."
       </DialogDescription>
     </DialogHeader>
   </DialogContent>

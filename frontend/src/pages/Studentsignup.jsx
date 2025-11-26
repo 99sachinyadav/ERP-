@@ -6,88 +6,94 @@ import { backendUrl } from "@/App";
 
 const Studentsignup = () => {
   const [image, setimage] = useState(null);
-  const [name, setname] = useState('');
-  const [email, setemail] = useState('');   
-  const [password, setpassword] = useState('');
-  const [address, setaddress] = useState('');
-  const [mobile, setmobile] = useState('');
-  const [section, setsection] = useState('');
-  const [rollno, setrollno] = useState('');
-  const [dob, setdob] = useState('');
-  const [batch, setbatch] = useState('');
-  const [year, setyear] = useState('');
-  const [fathername, setfathername] = useState('');
-  const [semester, setsemester] = useState('');
-  
+  const [name, setname] = useState("");
+  const [email, setemail] = useState("");
+  const [password, setpassword] = useState("");
+  const [address, setaddress] = useState("");
+  const [mobile, setmobile] = useState("");
+  const [section, setsection] = useState("");
+  const [rollno, setrollno] = useState("");
+  const [dob, setdob] = useState("");
+  const [batch, setbatch] = useState("");
+  const [year, setyear] = useState("");
+  const [fathername, setfathername] = useState("");
+  const [semester, setsemester] = useState("");
+
   const navigate = useNavigate();
- 
 
-
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-   
-    // formData.append('image', image);
- 
-  
-    try {
 
-     // Retrieve token from localStorage or other storage
-    const responce = await axios.post(backendUrl + '/api/registerStudent', {
-        name,
-        email,
-        password,
-        section,
-        rollno,
-        dob,
-        batch,
-        year,
-        semester,
-        father_name: fathername,
-        contactinfo: {
-          address: address,
-          phoneNO:  mobile,
-        }
-       
-      })
-      
-  //  console.log(responce);
-      if (responce.data.sucess) {
-         localStorage.setItem('token', responce.data.studentToken);
-         localStorage.setItem('studentname',responce.data.name );
-         
-         navigate('/home');
-   toast.success(responce.data.message)
-      }  
-      else {
-        toast.error(responce.data.message)
-      }
-      
-    } catch (error) {
-       console.log(error);
-       toast.error(error.response.data.message);
+    // Optional guard: you had one in previous version; keep or remove as you like
+    if (!image) {
+      toast.error("Please upload profile image");
+      return;
     }
-    setname('');
-    setaddress('');
-    setbatch('');
-    setdob('');
-    setemail('');
-    setfathername('');
+
+    const formData = new FormData();
+    // File
+    formData.append("image", image);
+
+    // Simple fields
+    formData.append("name", name);
+    formData.append("email", email);
+    formData.append("password", password);
+    formData.append("section", section);
+    formData.append("rollno", rollno);
+    formData.append("dob", dob);
+    formData.append("batch", batch);
+    formData.append("year", year);
+    formData.append("semester", semester);
+    formData.append("father_name", fathername);
+
+    // Contact info (flat fields because FormData can't send nested objects)
+    formData.append("address", address);
+    formData.append("phoneNO", mobile);
+
+    try {
+      const response = await axios.post(
+        backendUrl + "/api/registerStudent",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.data.sucess) {
+        localStorage.setItem("token", response.data.studentToken);
+        localStorage.setItem("studentname", response.data.name);
+
+        toast.success(response.data.message);
+        navigate("/home");
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.response?.data?.message || "Something went wrong");
+    }
+
+    // Reset all fields (same resets as original)
+    setname("");
+    setaddress("");
+    setbatch("");
+    setdob("");
+    setemail("");
+    setfathername("");
     setimage(null);
-    setmobile('');
-   
-    setpassword('');
-    setrollno('');
-    setsection('');
-    setyear('');
-    // Reset the form fields after submission
-    
-         // Handle the form submission logic here (e.g., send the data to the server)
-  }
+    setmobile("");
+    setpassword("");
+    setrollno("");
+    setsection("");
+    setyear("");
+    setsemester("");
+  };
 
   const handlelogin = () => {
-    navigate('/login');
-  } 
-
+    navigate("/login");
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-blue-200 py-8 px-2">
@@ -95,16 +101,11 @@ const Studentsignup = () => {
         <h1 className="text-3xl sm:text-5xl font-extrabold text-blue-900 text-center mb-8">
           Registration <span className="text-red-500">Form</span>
         </h1>
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-2 gap-8"
-        >
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Left Side */}
           <div className="flex flex-col gap-6">
             <div className="mb-[20px] text-center">
-              <label className="block text-lg font-semibold text-blue-800 mb-2">
-                Profile Image
-              </label>
+              <label className="block text-lg font-semibold text-blue-800 mb-2">Profile Image</label>
               <div className="flex items-center  justify-center gap-4">
                 <label
                   htmlFor="image1"
@@ -115,7 +116,10 @@ const Studentsignup = () => {
                     hidden
                     type="file"
                     accept="image/*"
-                    onChange={(e) => setimage(e.target.files[0])}
+                    onChange={(e) => {
+                      const f = e.target.files && e.target.files[0];
+                      if (f) setimage(f);
+                    }}
                   />
                   {image ? (
                     <img
@@ -129,10 +133,9 @@ const Studentsignup = () => {
                 </label>
               </div>
             </div>
+
             <div>
-              <label className="block text-lg font-semibold text-blue-800 mb-2">
-                Student Name
-              </label>
+              <label className="block text-lg font-semibold text-blue-800 mb-2">Student Name</label>
               <input
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg"
                 type="text"
@@ -142,10 +145,9 @@ const Studentsignup = () => {
                 required
               />
             </div>
+
             <div>
-              <label className="block text-lg font-semibold text-blue-800 mb-2">
-                Roll No
-              </label>
+              <label className="block text-lg font-semibold text-blue-800 mb-2">Roll No</label>
               <input
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg"
                 type="text"
@@ -155,10 +157,9 @@ const Studentsignup = () => {
                 required
               />
             </div>
+
             <div>
-              <label className="block text-lg font-semibold text-blue-800 mb-2">
-                Father's Name
-              </label>
+              <label className="block text-lg font-semibold text-blue-800 mb-2">Father's Name</label>
               <input
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg"
                 type="text"
@@ -168,10 +169,9 @@ const Studentsignup = () => {
                 required
               />
             </div>
+
             <div>
-              <label className="block text-lg font-semibold text-blue-800 mb-2">
-                Semester
-              </label>
+              <label className="block text-lg font-semibold text-blue-800 mb-2">Semester</label>
               <select
                 value={semester}
                 onChange={(e) => setsemester(e.target.value)}
@@ -190,10 +190,8 @@ const Studentsignup = () => {
               </select>
             </div>
 
-             <div>
-              <label className="block text-lg font-semibold text-blue-800 mb-2">
-                Mobile
-              </label>
+            <div>
+              <label className="block text-lg font-semibold text-blue-800 mb-2">Mobile</label>
               <input
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg"
                 type="text"
@@ -203,14 +201,12 @@ const Studentsignup = () => {
                 required
               />
             </div>
-            
           </div>
+
           {/* Right Side */}
           <div className="flex flex-col gap-6">
             <div>
-              <label className="block text-lg font-semibold text-blue-800 mb-2">
-                Date of Birth
-              </label>
+              <label className="block text-lg font-semibold text-blue-800 mb-2">Date of Birth</label>
               <input
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg"
                 type="date"
@@ -219,10 +215,9 @@ const Studentsignup = () => {
                 required
               />
             </div>
+
             <div>
-              <label className="block text-lg font-semibold text-blue-800 mb-2">
-                Batch
-              </label>
+              <label className="block text-lg font-semibold text-blue-800 mb-2">Batch</label>
               <input
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg"
                 type="text"
@@ -232,10 +227,9 @@ const Studentsignup = () => {
                 required
               />
             </div>
+
             <div>
-              <label className="block text-lg font-semibold text-blue-800 mb-2">
-                Year
-              </label>
+              <label className="block text-lg font-semibold text-blue-800 mb-2">Year</label>
               <select
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg"
                 value={year}
@@ -249,10 +243,9 @@ const Studentsignup = () => {
                 <option value="IVth">IVth</option>
               </select>
             </div>
+
             <div>
-              <label className="block text-lg font-semibold text-blue-800 mb-2">
-                Section
-              </label>
+              <label className="block text-lg font-semibold text-blue-800 mb-2">Section</label>
               <input
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg"
                 type="text"
@@ -262,10 +255,9 @@ const Studentsignup = () => {
                 required
               />
             </div>
+
             <div>
-              <label className="block text-lg font-semibold text-blue-800 mb-2">
-                Email
-              </label>
+              <label className="block text-lg font-semibold text-blue-800 mb-2">Email</label>
               <input
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg"
                 type="email"
@@ -275,10 +267,9 @@ const Studentsignup = () => {
                 required
               />
             </div>
+
             <div>
-              <label className="block text-lg font-semibold text-blue-800 mb-2">
-                Password
-              </label>
+              <label className="block text-lg font-semibold text-blue-800 mb-2">Password</label>
               <input
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg"
                 type="password"
@@ -288,10 +279,9 @@ const Studentsignup = () => {
                 required
               />
             </div>
+
             <div>
-              <label className="block text-lg font-semibold text-blue-800 mb-2">
-                Address
-              </label>
+              <label className="block text-lg font-semibold text-blue-800 mb-2">Address</label>
               <input
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-lg"
                 type="text"
@@ -301,8 +291,8 @@ const Studentsignup = () => {
                 required
               />
             </div>
-           
           </div>
+
           {/* Submit Button */}
           <div className="md:col-span-2 flex flex-col items-center mt-4">
             <button
@@ -311,10 +301,7 @@ const Studentsignup = () => {
             >
               Register
             </button>
-            <p
-              onClick={handlelogin}
-              className="mt-4 text-blue-700 hover:underline cursor-pointer text-md"
-            >
+            <p onClick={handlelogin} className="mt-4 text-blue-700 hover:underline cursor-pointer text-md">
               Already have an account? Login here...
             </p>
           </div>
