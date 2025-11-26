@@ -130,7 +130,7 @@ const registerStudent = async (req, res) => {
         message: `Section ${section} not found in year ${year} and batch ${batch}`,
       });
     }
-
+  //  console.log("hello");
     if (sectionExist.semester !== semester) {
       return res.status(401).json({
         success: false,
