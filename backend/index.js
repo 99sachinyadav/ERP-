@@ -6,7 +6,7 @@ import { teacherRouter } from './routes/teacherRoute.js';
 import { adminRouter } from './routes/adminRoute.js';
 import  cors from 'cors'
 
- connectdb()
+ await connectdb()
 
  const app= express();
  app.use(cors())
