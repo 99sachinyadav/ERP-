@@ -90,6 +90,13 @@ const addSubjects = async (req, res) => {
 
     }
 
+       const teacherExists = await Teacher.findOne({ email: teacheremail });
+    if (!teacherExists) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Teacher not found" });
+    }
+
      const semsubject= sectionFind.semester + "_" + subject;
     const subjectExists = sectionFind.subjects.find((sub) => sub === semsubject);
     if (subjectExists) {
@@ -105,12 +112,7 @@ const addSubjects = async (req, res) => {
       student.save();
     });
 
-      const teacherExists = await Teacher.findOne({ email: teacheremail });
-    if (!teacherExists) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Teacher not found" });
-    }
+   
     const subjectWithSemAndYear = sectionFind.semester + "_" + subject+"_"+yearSection;
     teacherExists.subjects = teacherExists.subjects || [];
     if (!teacherExists.subjects.includes(subjectWithSemAndYear)) {
