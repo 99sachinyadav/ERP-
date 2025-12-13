@@ -26,9 +26,9 @@ const statusColors = {
 };
 
 const data = [
-  { subject: "Jan", Required: 65, lectureAttended: 50 },
-  { subject: "Jan", Required: 65, lectureAttended: 50 },
-  { subject: "Jan", Required: 65, lectureAttended: 50 },
+  { subject: "Nil", Required: 0, lectureAttended: 0 },
+  { subject: "Nil", Required: 0, lectureAttended: 0 },
+  { subject: "Nil", Required: 0, lectureAttended: 0 },
   
   
 ];
