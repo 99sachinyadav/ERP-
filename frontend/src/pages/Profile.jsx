@@ -103,13 +103,15 @@ function Profile() {
   }, [groupedMarks]);
 
   const totals = useMemo(() => {
+    // sum obtained marks per exam
     const st1Obt = groupedMarks.ST1.reduce((a, m) => a + Number(m.obtainedMarks || 0), 0);
     const st2Obt = groupedMarks.ST2.reduce((a, m) => a + Number(m.obtainedMarks || 0), 0);
     const putObt = groupedMarks.PUT.reduce((a, m) => a + Number(m.obtainedMarks || 0), 0);
 
-    const st1Max = subjectsForSemester.length * 50;
-    const st2Max = subjectsForSemester.length * 50;
-    const putMax = subjectsForSemester.length * 70;
+    // use uploaded totalMarks instead of fixed constants
+    const st1Max = groupedMarks.ST1.reduce((a, m) => a + Number(m.totalMarks || 0), 0);
+    const st2Max = groupedMarks.ST2.reduce((a, m) => a + Number(m.totalMarks || 0), 0);
+    const putMax = groupedMarks.PUT.reduce((a, m) => a + Number(m.totalMarks || 0), 0);
 
     const totalObt = st1Obt + st2Obt + putObt;
     const totalMax = st1Max + st2Max + putMax;
@@ -132,7 +134,7 @@ function Profile() {
       putPercentage,
       percentage,
     };
-  }, [groupedMarks, subjectsForSemester.length]);
+  }, [groupedMarks]);
  
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -181,9 +183,15 @@ function Profile() {
               <thead>
                 <tr>
                   <th className="border border-black p-1 text-left">Subject Name</th>
-                  <th className="border border-black p-1 text-center">ST1 (50)</th>
-                  <th className="border border-black p-1 text-center">ST2 (50)</th>
-                  <th className="border border-black p-1 text-center">PUT (70)</th>
+                  <th className="border border-black p-1 text-center">
+                    ST1 ({totals.st1Max})<br/>(obt/total)
+                  </th>
+                  <th className="border border-black p-1 text-center">
+                    ST2 ({totals.st2Max})<br/>(obt/total)
+                  </th>
+                  <th className="border border-black p-1 text-center">
+                    PUT ({totals.putMax})<br/>(obt/total)
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -198,9 +206,15 @@ function Profile() {
                   return (
                     <tr key={idx}>
                       <td className="border border-black p-1">{subj}</td>
-                      <td className="border border-black p-1 text-center">{st1 ? st1v : "-"}</td>
-                      <td className="border border-black p-1 text-center">{st2 ? st2v : "-"}</td>
-                      <td className="border border-black p-1 text-center">{put ? putv : "-"}</td>
+                      <td className="border border-black p-1 text-center">
+                        {st1 ? `${st1v}/${st1.totalMarks || "-"}` : "-"}
+                      </td>
+                      <td className="border border-black p-1 text-center">
+                        {st2 ? `${st2v}/${st2.totalMarks || "-"}` : "-"}
+                      </td>
+                      <td className="border border-black p-1 text-center">
+                        {put ? `${putv}/${put.totalMarks || "-"}` : "-"}
+                      </td>
                     </tr>
                   );
                 })}
