@@ -185,6 +185,12 @@ const TeacherDashboard = () => {
       className: "from-yellow-100 to-yellow-200 border-yellow-300",
     },
     {
+      title: "Monitor Marks",
+      icon: "ri-bar-chart-grouped-line",
+      onClick: () => navigate("/monitorMarks"),
+      className: "from-cyan-100 to-cyan-200 border-cyan-300",
+    },
+    {
       title: "Upload Marks",
       icon: "ri-file-list-3-line",
       onClick: () => navigate("/marks"),
@@ -342,3 +348,4 @@ const TeacherDashboard = () => {
 };
 
 export default TeacherDashboard;
+

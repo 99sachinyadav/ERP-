@@ -94,7 +94,10 @@ const ChangeStudentSection = () => {
             // console.log(responce.data.message)
         }
         else{
-           setstudent(responce.data.findSection.students)
+           const sortedStudents = [...(responce.data.findSection.students || [])].sort(
+             (a, b) => Number(a.rollno) - Number(b.rollno)
+           );
+           setstudent(sortedStudents)
            setsubjects(responce.data.findSection.subjects)
            setteacher(responce.data.findSection.teacher?.name || "Unknown Teacher")
            toast.success(responce.data.message)

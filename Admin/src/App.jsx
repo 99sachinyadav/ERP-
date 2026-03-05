@@ -1,86 +1,116 @@
-import { Route ,Routes} from "react-router-dom"
-import AdminLogin from "./pages/AdminLogin"
-import Attendence from "./pages/Attendence"
-import { Toaster} from "react-hot-toast"
- 
-import TeacherRegister from "./pages/TeacherRegister"
-import Dashboard from "./pages/Dashboard"
-import MarksDashboard from "./pages/MarksDashboard"
-import TeacherLogin from "./pages/TeacherLogin"
-import Home from "./pages/Home"
-import AdminProtect from "./Components/AdminProtect"
-import TeacherProTect from "./Components/TeacherProTect"
-import TeacherDashboard from "./pages/TeacherDashboard"
-import AddSubjects from "./Components/AddSubjects"
-import SeeAllStudent from "./Components/SeeAllStudent"
-import MonitorAttendence from "./Components/MonitorAttendence"
- import ContactForm from "./pages/ContactForm"
-import SendEmail from "./Components/SendEmail"
- 
-export const backendUrl= import.meta.env.VITE_BACKEND_URL
+import { Route, Routes } from "react-router-dom";
+import AdminLogin from "./pages/AdminLogin";
+import { Toaster } from "react-hot-toast";
+
+import TeacherRegister from "./pages/TeacherRegister";
+import Dashboard from "./pages/Dashboard";
+import MarksDashboard from "./pages/MarksDashboard";
+import TeacherLogin from "./pages/TeacherLogin";
+import Home from "./pages/Home";
+import AdminProtect from "./Components/AdminProtect";
+import TeacherProTect from "./Components/TeacherProTect";
+import TeacherDashboard from "./pages/TeacherDashboard";
+import AddSubjects from "./Components/AddSubjects";
+import SeeAllStudent from "./Components/SeeAllStudent";
+import MonitorAttendence from "./Components/MonitorAttendence";
+import MonitorMarks from "./Components/MonitorMarks";
+import ContactForm from "./pages/ContactForm";
+import SendEmail from "./Components/SendEmail";
+
+export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 function App() {
- 
-
   return (
     <div className=" w-full  ">
-
-    <Toaster/>
-       <Routes>
-          <Route path="/admindashboard" element={
+      <Toaster />
+      <Routes>
+        <Route
+          path="/admindashboard"
+          element={
             <AdminProtect>
               <Home />
             </AdminProtect>
           }
-           />
-          <Route path="/" element={ <AdminLogin />} />
-          <Route path="/teacherRegister" element={
+        />
+        <Route path="/" element={<AdminLogin />} />
+        <Route
+          path="/teacherRegister"
+          element={
             <AdminProtect>
-              <TeacherRegister/>
+              <TeacherRegister />
             </AdminProtect>
-          } />
-           <Route path="/email" element={<ContactForm />} />
-          <Route path="/teacherdashboard" element={
+          }
+        />
+        <Route path="/email" element={<ContactForm />} />
+        <Route
+          path="/teacherdashboard"
+          element={
             <TeacherProTect>
-              <TeacherDashboard/>
+              <TeacherDashboard />
             </TeacherProTect>
-          } />
-           <Route path = '/addSubjects' element ={
+          }
+        />
+        <Route
+          path="/addSubjects"
+          element={
             <TeacherProTect>
-            <AddSubjects/>
+              <AddSubjects />
             </TeacherProTect>
-          } />
-           <Route path = '/monitorStudents' element ={
+          }
+        />
+        <Route
+          path="/monitorStudents"
+          element={
             <TeacherProTect>
-            <MonitorAttendence/>
+              <MonitorAttendence />
             </TeacherProTect>
-          } />
-
-          <Route path = '/sendEmail' element ={
+          }
+        />
+        <Route
+          path="/monitorMarks"
+          element={
             <TeacherProTect>
-            <SendEmail/>
+              <MonitorMarks />
             </TeacherProTect>
-          } />
-           <Route path = '/seeStudent' element ={
+          }
+        />
+        <Route
+          path="/sendEmail"
+          element={
             <TeacherProTect>
-            <SeeAllStudent/>
+              <SendEmail />
             </TeacherProTect>
-          } />
-          <Route path="/dashboard" element={
+          }
+        />
+        <Route
+          path="/seeStudent"
+          element={
+            <TeacherProTect>
+              <SeeAllStudent />
+            </TeacherProTect>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
             <TeacherProTect>
               <Dashboard />
             </TeacherProTect>
-          } />
-          <Route path="/marks" element={
+          }
+        />
+        <Route
+          path="/marks"
+          element={
             <TeacherProTect>
               <MarksDashboard />
             </TeacherProTect>
-          } />
-          <Route path="/teacherlogin" element={<TeacherLogin />} />
-       </Routes>
-
+          }
+        />
+        <Route path="/teacherlogin" element={<TeacherLogin />} />
+      </Routes>
     </div>
-  )
+  );
 }
- 
-export default App
+
+export default App;
+

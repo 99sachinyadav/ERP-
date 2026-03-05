@@ -40,7 +40,10 @@ const getStudent = async ()=>{
     )
     // console.log(responce.data)
     if(responce.data.sucess){
-      setstudents(responce.data.findSection.students)
+      const sortedStudents = [...(responce.data.findSection.students || [])].sort(
+        (a, b) => Number(a.rollno) - Number(b.rollno)
+      );
+      setstudents(sortedStudents)
          setAttendance(responce.data.attendance);
       toast.success(responce.data.message)
     } else {
