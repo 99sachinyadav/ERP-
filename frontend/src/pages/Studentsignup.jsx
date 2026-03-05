@@ -3,9 +3,6 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { backendUrl } from "@/App";
-import * as faceapi from "face-api.js";
-
-import { useEffect } from "react";
 
 const Studentsignup = () => {
   const [image, setimage] = useState(null);
@@ -21,43 +18,9 @@ const Studentsignup = () => {
   const [year, setyear] = useState("");
   const [fathername, setfathername] = useState("");
   const [semester, setsemester] = useState("");
-  const [descriptor, setDescriptor] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
-
-
-  useEffect(() => {
-  const loadModels = async () => {
-    const MODEL_URL = "/models";
-    await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-    ]);
-    console.log("Face-api models loaded successfully");
-  };
-  loadModels();
-}, []);
-
-const captureFace = async (imageSrc) => {
- 
-  const img = await faceapi.fetchImage(imageSrc);
-
-  const detection = await faceapi
-    .detectSingleFace(
-      img,
-      new faceapi.TinyFaceDetectorOptions({ inputSize: 224 })
-    )
-    .withFaceLandmarks()
-    .withFaceDescriptor();
-
-  if (!detection) {
-    alert("No face detected. Please look at the camera.");
-    return;
-  }
-
-  setDescriptor(Array.from(detection.descriptor)); // 🔥 128 numbers
-};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -67,41 +30,30 @@ const captureFace = async (imageSrc) => {
       toast.error("Please upload profile image");
       return;
     }
+    setIsLoading(true);
 
    
-
-  try {
-    await captureFace(URL.createObjectURL(image));
-    console.log("Face descriptor captured successfully");
-  } catch (err) {
-    toast.error("Face not detected. Please upload a clear image.");
-    return;
-  }
-
-
-   console.log("Descriptor to be sent:", descriptor); // Debug log for descriptor
-    const formData = new FormData();
-    // File
-    formData.append("image", image);
-
-    // Simple fields
-    formData.append("name", name);
-    formData.append("email", email);
-    formData.append("password", password);
-    formData.append("section", section);
-    formData.append("rollno", rollno);
-    formData.append("dob", dob);
-    formData.append("batch", batch);
-    formData.append("year", year);
-    formData.append("semester", semester);
-    formData.append("father_name", fathername);
-    formData.append("faceDescriptors", JSON.stringify(descriptor)); // Send as JSON string
-    // Contact info (flat fields because FormData can't send nested objects)
-    formData.append("address", address);
-    formData.append("phoneNO", mobile);
-    console.log(formData)
-
     try {
+      const formData = new FormData();
+      // File
+      formData.append("image", image);
+
+      // Simple fields
+      formData.append("name", name);
+      formData.append("email", email);
+      formData.append("password", password);
+      formData.append("section", section);
+      formData.append("rollno", rollno);
+      formData.append("dob", dob);
+      formData.append("batch", batch);
+      formData.append("year", year);
+      formData.append("semester", semester);
+      formData.append("father_name", fathername);
+      // Contact info (flat fields because FormData can't send nested objects)
+      formData.append("address", address);
+      formData.append("phoneNO", mobile);
+      console.log(formData)
+
       const response = await axios.post(
         backendUrl + "/api/registerStudent",
         formData,
@@ -109,6 +61,7 @@ const captureFace = async (imageSrc) => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
+          timeout: 30000,
         }
       );
 
@@ -124,6 +77,8 @@ const captureFace = async (imageSrc) => {
     } catch (error) {
       console.error(error);
       toast.error(error?.response?.data?.message || "Something went wrong");
+    } finally {
+      setIsLoading(false);
     }
 
     // Reset all fields (same resets as original)
@@ -348,9 +303,10 @@ const captureFace = async (imageSrc) => {
           <div className="md:col-span-2 flex flex-col items-center mt-4">
             <button
               type="submit"
-              className="w-full sm:w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition text-lg shadow-lg"
+              disabled={isLoading}
+              className="w-full sm:w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition text-lg shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Register
+              {isLoading ? "Registering..." : "Register"}
             </button>
             <p onClick={handlelogin} className="mt-4 text-blue-700 hover:underline cursor-pointer text-md">
               Already have an account? Login here...
@@ -363,3 +319,4 @@ const captureFace = async (imageSrc) => {
 };
 
 export default Studentsignup;
+

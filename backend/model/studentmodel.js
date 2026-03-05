@@ -54,11 +54,6 @@ const studentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-       faceDescriptors: {
-      type: [[Number]],
-      default: [],
-      select: false,
-    },
     subjects: [
       {
         type: String,

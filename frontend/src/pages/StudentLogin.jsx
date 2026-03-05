@@ -9,8 +9,10 @@ function StudentLogin() {
    const navigate = useNavigate();
     const [email, setemail] = useState("");
     const [password, setpassword] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     const handleSubmit = async (e)=>{
       e.preventDefault();
+      setIsLoading(true);
 
       try {
 
@@ -34,6 +36,8 @@ function StudentLogin() {
       } catch (error) {
          console.log(error.message);
          toast.error(error.message);
+      } finally {
+         setIsLoading(false);
       }
     }
   return (
@@ -49,7 +53,13 @@ function StudentLogin() {
           <input value={password} onChange={(e) => setpassword(e.target.value)} type="password" id="password" className="border border-gray-300 rounded-md p-2" required />
 
          
-          <button type="submit" className="bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600">Login</button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "Logging in..." : "Login"}
+          </button>
             <p onClick={()=>navigate('/')} className="text-md sm:text-lg font-s text-center  text-blue-700">
                   <span className='text-red-500'>Don't have an account?</span> signup here...
                 </p>
