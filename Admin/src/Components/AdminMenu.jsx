@@ -1,146 +1,214 @@
 import React from "react";
- 
 
-const AdminMenu = (props) => {
+const coreActions = [
+  {
+    title: "Register Teacher",
+    description: "Add new faculty profiles and credentials.",
+    icon: "ri-user-add-line",
+    key: "TeacherRegister",
+    gradient: "from-sky-100 to-blue-100 border-sky-300",
+  },
+  {
+    title: "Update Teacher",
+    description: "Modify teacher records and assignments.",
+    icon: "ri-user-settings-line",
+    key: "UpdateTeacher",
+    gradient: "from-indigo-100 to-violet-100 border-indigo-300",
+  },
+  {
+    title: "All Teachers",
+    description: "View the full teacher list with details.",
+    icon: "ri-team-line",
+    key: "SeeALLTeachers",
+    gradient: "from-purple-100 to-fuchsia-100 border-purple-300",
+  },
+  {
+    title: "All Students",
+    description: "Browse and review enrolled student records.",
+    icon: "ri-graduation-cap-line",
+    key: "SeeALLStudents",
+    gradient: "from-yellow-100 to-amber-100 border-yellow-300",
+  },
+  {
+    title: "Create Section",
+    description: "Create and manage class sections quickly.",
+    icon: "ri-layout-grid-line",
+    key: "CreateSection",
+    gradient: "from-green-100 to-emerald-100 border-green-300",
+  },
+  {
+    title: "Change Year",
+    description: "Update academic year across records.",
+    icon: "ri-calendar-event-line",
+    key: "ChangeYear",
+    gradient: "from-teal-100 to-cyan-100 border-teal-300",
+  },
+  {
+    title: "Add Subjects",
+    description: "Assign curriculum subjects by year/section.",
+    icon: "ri-book-open-line",
+    key: "AddSubjects",
+    gradient: "from-orange-100 to-amber-100 border-orange-300",
+  },
+  {
+    title: "Semester / Section",
+    description: "Update semester and section mappings.",
+    icon: "ri-exchange-2-line",
+    key: "ChangeSemesterOrSection",
+    gradient: "from-rose-100 to-pink-100 border-rose-300",
+  },
+];
 
-  
+const controlActions = [
+  {
+    title: "Monitor Attendance",
+    description: "Track class attendance trends and stats.",
+    icon: "ri-bar-chart-box-line",
+    key: "MonitorAttendence",
+    gradient: "from-blue-100 to-indigo-100 border-blue-300",
+  },
+  {
+    title: "Teacher Password",
+    description: "Reset teacher credentials securely.",
+    icon: "ri-lock-password-line",
+    key: "ChangeTeacherpassword",
+    gradient: "from-slate-100 to-gray-200 border-slate-300",
+  },
+  {
+    title: "Student Password",
+    description: "Reset student login passwords.",
+    icon: "ri-shield-user-line",
+    key: "ChangeStudentpassword",
+    gradient: "from-cyan-100 to-sky-100 border-cyan-300",
+  },
+  {
+    title: "Student Section",
+    description: "Move students between sections in bulk.",
+    icon: "ri-git-branch-line",
+    key: "ChangeStudentSection",
+    gradient: "from-lime-100 to-green-100 border-lime-300",
+  },
+];
+
+const AdminMenu = ({ setActiveComponent, setIsOpen }) => {
+  const handleNavigate = (key) => {
+    setActiveComponent(key);
+    setIsOpen(true);
+  };
+
   return (
-    <div className =" "  >
-      <div
-        className="content flex flex-wrap mt-8 md:mt-2 p-2 md:p-0 pb-8 md:pb-0 justify-center">
-        <div
-          onClick={() => {
-            props.setActiveComponent("TeacherRegister");
-            props.setIsOpen(true);
-          }}
-          className="bg-sky-200 rounded-lg p-4 sm:p-0 h-55 w-70 md:h-50 md:w-50 text-center  m-1 md:m-8 flex items-center justify-center gap-4 md:gap-6 flex-col shadow-md cursor-pointer transition-transform hover:scale-105"
-        >
-          <i className="ri-registered-fill text-5xl md:text-5xl"></i>
-          <h1 className="text-lg md:text-xl font-semibold">Register Teacher</h1>
-        </div>
-
-        <div
-          onClick={() => {
-            props.setActiveComponent("UpdateTeacher");
-            props.setIsOpen(true);
-          }}
-          className="bg-indigo-200 rounded-lg p-4 sm:p-0 h-55 w-70  md:h-50 md:w-50 text-center   sm:m-4 md:m-8 flex items-center justify-center gap-3 sm:gap-4 md:gap-6 flex-col shadow-md cursor-pointer transition-transform hover:scale-105"
-        >
-          <i className="ri-presentation-line text-4xl sm:text-5xl md:text-5xl"></i>
-          <h1 className="text-base sm:text-lg md:text-xl font-semibold">
-            Update Teacher
-          </h1>
-        </div>
-
-        <div
-          onClick={() => {
-            props.setActiveComponent("SeeALLTeachers");
-            props.setIsOpen(true);
-          }}
-          className="bg-purple-200 rounded-lg p-4 sm:p-0 h-55 w-70 md:h-50 md:w-50 text-center m-1 md:m-8 flex items-center justify-center gap-4 md:gap-6 flex-col shadow-md cursor-pointer transition-transform hover:scale-105"
-        >
-          <i className="ri-presentation-fill text-5xl md:text-5xl"></i>
-          <h1 className="text-lg md:text-xl font-semibold">See ALL Teachers</h1>
-        </div>
-
-        <div
-          onClick={() => {
-            props.setActiveComponent("ChangeYear");
-            props.setIsOpen(true);
-          }}
-          className="bg-teal-200 rounded-lg p-4 sm:p-0 h-55 w-70 md:h-50 md:w-50 text-center m-1 md:m-8 flex items-center justify-center gap-4 md:gap-6 flex-col shadow-md cursor-pointer transition-transform hover:scale-105"
-        >
-          <i className="ri-arrow-up-down-line text-5xl md:text-5xl"></i>
-          <h1 className="text-lg md:text-xl font-semibold">Change Year</h1>
+    <div className="space-y-6">
+      <div className="rounded-3xl border border-slate-200/70 bg-gradient-to-r from-slate-900 via-blue-900 to-indigo-900 p-6 text-white shadow-xl sm:p-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold tracking-wide text-blue-100">
+              <i className="ri-verified-badge-line"></i>
+              ADMIN WORKSPACE
+            </p>
+            <h3 className="mt-3 text-2xl font-bold leading-tight sm:text-3xl">
+              Professional Control Center for Academic Operations
+            </h3>
+            <p className="mt-2 max-w-2xl text-sm text-blue-100/90 sm:text-base">
+              Manage faculty, students, sections, passwords, and attendance workflows from one modern dashboard.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="rounded-2xl bg-white/10 p-3 text-center backdrop-blur">
+              <p className="text-xs text-blue-100">Modules</p>
+              <p className="text-xl font-bold">{coreActions.length + controlActions.length}</p>
+            </div>
+            <div className="rounded-2xl bg-white/10 p-3 text-center backdrop-blur">
+              <p className="text-xs text-blue-100">Category</p>
+              <p className="text-xl font-bold">Admin</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="content flex flex-wrap   md:mt-0 p-2 md:p-2 pb-8 md:pb-0 justify-center">
-        <div
-          onClick={() => {
-            props.setActiveComponent("AddSubjects");
-            props.setIsOpen(true);
-          }}
-          className="bg-orange-200 rounded-lg  h-55 w-70 md:h-50 md:w-50 text-center m-1 md:m-8 flex items-center justify-center gap-4 md:gap-6 flex-col shadow-md cursor-pointer transition-transform hover:scale-105"
-        >
-          <i className="ri-apps-2-add-line text-5xl md:text-5xl"></i>
-          <h1 className="text-lg md:text-xl font-semibold">Add Subjects</h1>
+      <section className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur sm:p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h4 className="text-lg font-semibold text-slate-900 sm:text-xl">Core Management</h4>
+          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+            High Priority
+          </span>
         </div>
-        <div
-          onClick={() => {
-            props.setActiveComponent("SeeALLStudents");
-            props.setIsOpen(true);
-          }}
-          className="bg-yellow-200 rounded-lg  h-55 w-70 md:h-50 md:w-50 text-center m-1 md:m-8 flex items-center justify-center gap-4 md:gap-6 flex-col shadow-md cursor-pointer transition-transform hover:scale-105"
-        >
-          <i className="ri-graduation-cap-line text-5xl md:text-5xl"></i>
-          <h1 className="text-lg md:text-xl font-semibold">See ALL Student</h1>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {coreActions.map((action) => (
+            <button
+              key={action.key}
+              onClick={() => handleNavigate(action.key)}
+              className={`group rounded-2xl border bg-gradient-to-br p-5 text-left shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg ${action.gradient}`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 shadow-sm">
+                  <i className={`${action.icon} text-2xl text-slate-700`}></i>
+                </div>
+                <i className="ri-arrow-right-up-line text-lg text-slate-500 transition group-hover:text-slate-900"></i>
+              </div>
+              <h4 className="mt-4 text-lg font-semibold text-slate-900">{action.title}</h4>
+              <p className="mt-1 text-sm text-slate-700">{action.description}</p>
+            </button>
+          ))}
         </div>
-        <div
-          onClick={() => {
-            props.setActiveComponent("CreateSection");
-            props.setIsOpen(true);
-          }}
-          className="bg-green-200 rounded-lg  h-55 w-70 md:h-50 md:w-50 text-center m-1 md:m-8 flex items-center justify-center gap-4 md:gap-6 flex-col shadow-md cursor-pointer transition-transform hover:scale-105"
-        >
-          <i className="ri-book-shelf-fill text-5xl md:text-5xl"></i>
-          <h1 className="text-lg md:text-xl font-semibold">Create A Section</h1>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur sm:p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h4 className="text-lg font-semibold text-slate-900 sm:text-xl">Security & Controls</h4>
+          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+            Controlled Access
+          </span>
         </div>
-        <div
-          onClick={() => {
-            props.setActiveComponent("ChangeSemesterOrSection");
-            props.setIsOpen(true);
-          }}
-          className="bg-rose-200 rounded-lg  h-55 w-70 md:h-50 md:w-50 text-center m-1 md:m-8 flex items-center justify-center gap-4 md:gap-6 flex-col shadow-md cursor-pointer transition-transform hover:scale-105"
-        >
-          <i className="ri-exchange-2-line text-5xl md:text-5xl"></i>
-          <h1 className="text-lg md:text-xl font-semibold">Change Semester or Section</h1>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {controlActions.map((action) => (
+            <button
+              key={action.key}
+              onClick={() => handleNavigate(action.key)}
+              className={`group rounded-2xl border bg-gradient-to-br p-5 text-left shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg ${action.gradient}`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/70 shadow-sm">
+                  <i className={`${action.icon} text-2xl text-slate-700`}></i>
+                </div>
+                <i className="ri-arrow-right-up-line text-lg text-slate-500 transition group-hover:text-slate-900"></i>
+              </div>
+              <h4 className="mt-4 text-lg font-semibold text-slate-900">{action.title}</h4>
+              <p className="mt-1 text-sm text-slate-700">{action.description}</p>
+            </button>
+          ))}
         </div>
-      </div>
+      </section>
 
-      <div className=" content flex flex-wrap   md:mt-0 p-2 md:p-2 pb-8 md:pb-0 justify-evenly">
-        <div    onClick={
-          ()=>{props.setActiveComponent("MonitorAttendence")
-          props.setIsOpen(true)}
-        } className="flex flex-col gap-0 h-55 w-70 md:h-50 md:w-50">
-          <div className="bg-[#3b5998] rounded-t-lg rounded-b-none p-4 flex flex-col items-center">
-            <i className="ri-stack-line text-white text-4xl mb-2"></i>
-          </div>
-          <div className="bg-[#e0e7ff] h-20 rounded-b-lg rounded-t-none p-4 flex flex-col items-center">
-            <h1 className="text-md font-semibold">Monitor Attendance</h1>
-          </div>
-        </div>
-
-           <div  onClick={()=>{props.setActiveComponent("ChangeTeacherpassword"), props.setIsOpen(true)}} className="flex flex-col gap-0 h-55 w-70 md:h-50 md:w-50">
-            <div className="bg-[#ed8f42] rounded-t-lg rounded-b-none p-4 flex flex-col items-center">
-              <i className="ri-lock-unlock-line text-white text-4xl mb-2"></i>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {[
+          {
+            title: "Teacher Lifecycle",
+            text: "Onboard, update, and maintain teacher profiles with centralized controls.",
+            icon: "ri-user-star-line",
+          },
+          {
+            title: "Student Governance",
+            text: "Manage enrollment-related actions and section transitions without confusion.",
+            icon: "ri-group-line",
+          },
+          {
+            title: "Academic Integrity",
+            text: "Track attendance and secure credentials using dedicated admin modules.",
+            icon: "ri-shield-check-line",
+          },
+        ].map((item) => (
+          <button
+            key={item.title}
+            type="button"
+            className="rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:shadow-md"
+          >
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100">
+              <i className={`${item.icon} text-xl text-slate-700`}></i>
             </div>
-            <div className="bg-[#e0e7ff] h-20 rounded-b-lg rounded-t-none p-4 flex flex-col items-center">
-              <h1 className="text-md font-semibold">Change Teacher Password</h1>
-            </div>
-
-
-          </div>
-
-           <div  onClick={()=>{props.setActiveComponent("ChangeStudentpassword"), props.setIsOpen(true)}} className="flex flex-col gap-0 h-55 w-70 md:h-50 md:w-50">
-            <div className="bg-[#0fe4f3] rounded-t-lg rounded-b-none p-4 flex flex-col items-center">
-              <i className="ri-lock-unlock-line text-white text-4xl mb-2"></i>
-            </div>
-            <div className="bg-[#e0e7ff] h-20 rounded-b-lg rounded-t-none p-4 flex flex-col items-center">
-              <h1 className="text-md font-semibold">Change Student Password</h1>
-            </div>
-          </div>
-
-           <div  onClick={()=>{props.setActiveComponent("ChangeStudentSection"), props.setIsOpen(true)}} className="flex flex-col gap-0 h-55 w-70 md:h-50 md:w-50">
-            <div className="bg-[#0fe4f3] rounded-t-lg rounded-b-none p-4 flex flex-col items-center">
-              <i className="ri-book-shelf-fill text-white text-4xl mb-2"></i>
-            </div>
-            <div className="bg-[#e0e7ff] h-20 rounded-b-lg rounded-t-none p-4 flex flex-col items-center">
-              <h1 className="text-md font-semibold">Change Student Section</h1>
-            </div>
-          </div>
-
-
+            <h4 className="mt-3 text-base font-semibold text-slate-900">{item.title}</h4>
+            <p className="mt-1 text-sm text-slate-600">{item.text}</p>
+          </button>
+        ))}
       </div>
     </div>
   );

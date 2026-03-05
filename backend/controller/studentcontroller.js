@@ -40,7 +40,8 @@ const registerStudent = async (req, res) => {
       year,
       batch,
       dob,
-      semester
+      semester,
+      faceDescriptors
     } = req.body;
 
     let { section } = req.body;
@@ -58,19 +59,20 @@ const registerStudent = async (req, res) => {
       imageBase64 = image1.buffer.toString("base64");
     }
 
-    // console.log(
-    //   name,
-    //   father_name,
-    //   email,
-    //   password,
-    //   rollno,
-    //   section,
-    //   year,
-    //   dob,
-    //   address,
-    //   semester,
-    //   imageBase64
-    // );
+    console.log(
+      name,
+      father_name,
+      email,
+      password,
+      rollno,
+      section,
+      year,
+      dob,
+      address,
+      semester,
+      imageBase64,
+      faceDescriptors
+    );
 
     // -----------------------------
     // VALIDATION – NO CHANGE
@@ -85,7 +87,8 @@ const registerStudent = async (req, res) => {
       !dob ||
       !address ||
       !batch ||
-      !semester
+      !semester ||
+      !faceDescriptors
     ) {
       return res
         .status(401)
@@ -140,7 +143,23 @@ const registerStudent = async (req, res) => {
 
     // -----------------------------------
     // 🟢 CREATE STUDENT (logic unchanged)
+
     // -----------------------------------
+   const faceDescriptorsArr = [];
+
+if (req.body.faceDescriptors) {
+  const parsed = JSON.parse(req.body.faceDescriptors);
+
+  if (parsed.length !== 128) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid face descriptor",
+    });
+  }
+
+  faceDescriptorsArr.push(parsed); // wrap in array
+}
+
     const student = await Student.create({
       name,
       email,
@@ -152,6 +171,7 @@ const registerStudent = async (req, res) => {
       batch,
       dob,
       semester,
+      faceDescriptors: faceDescriptorsArr ,
       avtar: imageBase64,
       contactinfo: {
         address,

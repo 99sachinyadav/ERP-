@@ -5,9 +5,11 @@ import { useState } from "react";
 function ContactForm() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSend = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       await axios.post(backendUrl + "/api/send-email", {
         to: email,
@@ -18,6 +20,8 @@ function ContactForm() {
     } catch (err) {
       console.error(err);
       alert("Failed to send email");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -43,9 +47,10 @@ function ContactForm() {
       />
       <button
         type="submit"
-        className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors font-semibold"
+        disabled={isLoading}
+        className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        Send Email
+        {isLoading ? "Sending..." : "Send Email"}
       </button>
     </form>
   );

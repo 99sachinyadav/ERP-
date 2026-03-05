@@ -54,6 +54,11 @@ const studentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+       faceDescriptors: {
+      type: [[Number]],
+      default: [],
+      select: false,
+    },
     subjects: [
       {
         type: String,
@@ -72,8 +77,33 @@ const studentSchema = new mongoose.Schema(
         ],
       },
     ],
-
-
+    marks: [
+      {
+        exam: {
+          type: String,
+          required: true,
+          enum: ["ST1", "ST2", "PUT"],
+        },
+        semester: {
+          type: String,
+          required: true,
+        },
+        subject: {
+          type: String,
+          required: true,
+        },
+        obtainedMarks: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+        totalMarks: {
+          type: Number,
+          required: true,
+          min: 1,
+        },
+      },
+    ],
       semester: { 
         type: String,
          required: true,

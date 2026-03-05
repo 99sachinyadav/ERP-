@@ -8,12 +8,14 @@ const TeacherLogin = () => {
    
     const [email,setemail] = useState('')
     const [password,setpassword]= useState('')
+    const [isLoading, setIsLoading] = useState(false)
     let section = "";
   
     const navigate = useNavigate();
 
     const submithandle = async (e)=>{
       e.preventDefault()
+      setIsLoading(true)
       try {
 
         const responce = await axios.post(backendUrl + '/api/loginTeacher',{
@@ -36,6 +38,8 @@ const TeacherLogin = () => {
       } catch (error) {
         console.log(error)
         toast.error(error.response.data.message) 
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -53,7 +57,13 @@ const TeacherLogin = () => {
           <label className="text-gray-700 font-semibold" htmlFor="password">Password</label>
           <input  value={password} onChange={(e)=>setpassword(e.target.value)} type="password" id="password" className="border border-gray-300 rounded-md p-2" required />
 
-          <button type="submit" className="bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600">Login</button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "Logging in..." : "Login"}
+          </button>
 
           {/* <p onClick={()=>navigate('/teacherRegister')}  className='text-center mt-2 text-lg text-blue-900'>Sign Up...</p> */}
         </form>

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { backendUrl } from '@/App';
+import ModuleState from './ui/module-state';
 
 const ChangeStudentSection = () => {
     const [year, setyear] = React.useState('');
@@ -14,7 +15,12 @@ const ChangeStudentSection = () => {
     const [newSection, setNewSection] = React.useState({});
     const [newYear,setNewYear] = React.useState({})
     const [changed, setchanged] = useState({})
+    const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [hasFetched, setHasFetched] = useState(false);
+    const [changingStudentId, setChangingStudentId] = useState(null);
     const changeSection = async (studentId ) => {
+           setChangingStudentId(studentId);
 
         //    console.log(newSection[studentId] , studentId,newYear[studentId]);
            try {
@@ -49,6 +55,8 @@ const ChangeStudentSection = () => {
              setchanged(prev => ({ ...prev, [studentId]: false }));
              console.log(error.message);
              toast(error.response?.data?.message || "An error occurred while updating Section or Year.")
+           } finally {
+            setChangingStudentId(null);
            }
 
 
@@ -57,6 +65,9 @@ const ChangeStudentSection = () => {
 
 
    const showStudents = async ()=>{
+    setLoading(true);
+    setErrorMessage("");
+    setHasFetched(true);
     try {
      
         // console.log(localStorage.getItem('teacherToken'), localStorage.getItem('adminToken'));
@@ -77,6 +88,8 @@ const ChangeStudentSection = () => {
            
        // console.log(responce.data.findSection.students);
         if(responce.data.sucess === false){
+            setstudent([]);
+            setErrorMessage(responce.data.message || "Unable to fetch students.");
             toast.error(responce.data.message)
             // console.log(responce.data.message)
         }
@@ -91,7 +104,11 @@ const ChangeStudentSection = () => {
     } catch (error) {
           // Check if the error has a response and a message
         // console.error(error);
-        toast.error(error.response?.data?.message || "An error occurred while fetching students.");
+        const msg = error.response?.data?.message || "An error occurred while fetching students.";
+        setErrorMessage(msg);
+        toast.error(msg);
+    } finally {
+      setLoading(false);
     }
  }
 
@@ -137,9 +154,10 @@ return (
                                     setchanged({}); // Reset changed status on new showStudents call
                                     showStudents();
                                 }}
-                                className="bg-blue-600 text-white px-2 py-1 sm:px-4 sm:py-2 rounded hover:bg-blue-700 transition w-full text-xs sm:text-base"
+                                disabled={loading}
+                                className="bg-blue-600 text-white px-2 py-1 sm:px-4 sm:py-2 rounded hover:bg-blue-700 transition w-full text-xs sm:text-base disabled:opacity-60 disabled:cursor-not-allowed"
                             >
-                                Show Students
+                                {loading ? "Loading..." : "Show Students"}
                             </button>
                         </th>
                     </tr>
@@ -159,7 +177,38 @@ return (
                     </tr>
                 </thead>
                 <tbody>
-                    {students.length > 0 && students.map((student, idx) => (
+                    {loading && (
+                      <tr>
+                        <td colSpan={7} className="p-4">
+                          <ModuleState type="loading" title="Loading students" />
+                        </td>
+                      </tr>
+                    )}
+                    {!loading && errorMessage && (
+                      <tr>
+                        <td colSpan={7} className="p-4">
+                          <ModuleState
+                            type="error"
+                            title="Unable to load students"
+                            message={errorMessage}
+                            actionLabel="Retry"
+                            onAction={showStudents}
+                          />
+                        </td>
+                      </tr>
+                    )}
+                    {!loading && !errorMessage && hasFetched && students.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="p-4">
+                          <ModuleState
+                            type="empty"
+                            title="No students found"
+                            message="Try different filters and click Show Students."
+                          />
+                        </td>
+                      </tr>
+                    )}
+                    {!loading && !errorMessage && students.length > 0 && students.map((student, idx) => (
                         <tr key={idx} className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
                             <td className="p-1 sm:p-3 border w-1/4 min-w-[80px] sm:min-w-[100px] text-xs sm:text-base">{student.name}</td>
                             <td className="p-1 sm:p-3 border w-1/4 min-w-[80px] sm:min-w-[100px] text-xs sm:text-base">{student.rollno}</td>
@@ -187,9 +236,14 @@ return (
                             <td className="p-1 sm:p-3 border w-1/4 min-w-[80px] sm:min-w-[120px] text-xs sm:text-base">
                                 <button
                                     onClick={() => !changed[student._id] && changeSection(student._id)}
+                                    disabled={changingStudentId === student._id || changed[student._id]}
                                     className={`${changed[student._id] ? "bg-green-600" : "bg-blue-600"} text-white px-2 py-1 sm:px-4 sm:py-2 rounded hover:bg-green-700 transition w-full text-xs sm:text-base`}
                                 >
-                                    {changed[student._id] ? 'Changed' : 'Change'}
+                                    {changingStudentId === student._id
+                                      ? "Updating..."
+                                      : changed[student._id]
+                                      ? "Changed"
+                                      : "Change"}
                                 </button>
                             </td>
                         </tr>

@@ -10,8 +10,10 @@ const CreateSection = () => {
   const [batch, setbatch] = useState("")
   const [semester,setsemester] = useState("")
    const [teacheremail, setteacheremail] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
   const createSection = async (e)=>{
     e.preventDefault();
+    setIsLoading(true)
      try {
         const responce =  await axios.post(backendUrl + '/api/createSection',{
           section,
@@ -40,6 +42,8 @@ const CreateSection = () => {
       } catch (error) {
         console.log(error)
         toast.error(error.response.data.message)
+      } finally {
+        setIsLoading(false)
       }
   }
   return (
@@ -77,7 +81,14 @@ const CreateSection = () => {
           <label className="text-gray-700 font-semibold" htmlFor="Email">Class Counsellor Email</label>
           <input   value={teacheremail}  onChange={(e) => setteacheremail(e.target.value)} placeholder='Enter Class Counsellor Email here'   type="email" id="Email" className="border border-gray-300 rounded-md p-1" required />
 
-          <button onClick={createSection} type="submit" className="bg-blue-500 text-white font-semibold py-1 rounded-md hover:bg-blue-600">Create</button>
+          <button
+            onClick={createSection}
+            type="submit"
+            disabled={isLoading}
+            className="bg-blue-500 text-white font-semibold py-1 rounded-md hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "Creating..." : "Create"}
+          </button>
  
         </form>
 

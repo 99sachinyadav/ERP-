@@ -2,6 +2,7 @@ import axios from 'axios';
 import React, { useState } from 'react'
 import toast from 'react-hot-toast';
 import { backendUrl } from '@/App';
+import ModuleState from './ui/module-state';
 
 const SeeAllStudent = () => {
 //     const teachers = [
@@ -15,7 +16,13 @@ const SeeAllStudent = () => {
   const [batch, setbatch] = useState("")
   const [students, setstudents] = useState([])
   const [Attendance, setAttendance] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
 const getStudent = async ()=>{
+   setLoading(true);
+   setErrorMessage("");
+   setHasSearched(true);
    try {
     // console.log(localStorage.getItem('teacherToken'))
     const responce = await axios.get(backendUrl + '/api/gelStudentBySection',{
@@ -36,10 +43,17 @@ const getStudent = async ()=>{
       setstudents(responce.data.findSection.students)
          setAttendance(responce.data.attendance);
       toast.success(responce.data.message)
+    } else {
+      setstudents([]);
+      setErrorMessage(responce.data.message || "Unable to fetch students.");
     }
    } catch (error) {
     console.log(error)
-    toast.error(error.response.data.message)
+    const msg = error.response?.data?.message || "Unable to fetch students.";
+    setErrorMessage(msg);
+    toast.error(msg);
+   } finally {
+    setLoading(false);
    }
 }
 // console.log(students)
@@ -70,8 +84,38 @@ const getStudent = async ()=>{
           type="text"
           className="border border-gray-300 rounded sm:w-40 w-20 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
         />
-         <button onClick={()=>getStudent()} className='px-2 py-2 rounded-lg text-lg font-semibold text-white bg-blue-500 w-20 sm:w-40'>Track</button>
+         <button
+           onClick={()=>getStudent()}
+           disabled={loading}
+           className='px-2 py-2 rounded-lg text-lg font-semibold text-white bg-blue-500 w-20 sm:w-40 disabled:opacity-60 disabled:cursor-not-allowed'
+         >
+           {loading ? "Loading..." : "Track"}
+         </button>
        </div>
+      <div className="mt-5">
+        {loading ? (
+          <ModuleState type="loading" title="Fetching students" />
+        ) : errorMessage ? (
+          <ModuleState
+            type="error"
+            title="Unable to fetch students"
+            message={errorMessage}
+            actionLabel="Retry"
+            onAction={getStudent}
+          />
+        ) : hasSearched && students.length === 0 ? (
+          <ModuleState
+            type="empty"
+            title="No students found"
+            message="Try changing section, year, or batch filters."
+          />
+        ) : !hasSearched ? (
+          <ModuleState
+            type="empty"
+            title="Start by tracking a section"
+            message="Enter filters above and click Track to load student records."
+          />
+        ) : (
       <table className="w-full border-collapse mt-5">
     <thead>
       <tr>
@@ -92,6 +136,8 @@ const getStudent = async ()=>{
       ))}
     </tbody>
   </table>
+        )}
+      </div>
     </div>
   )
 }

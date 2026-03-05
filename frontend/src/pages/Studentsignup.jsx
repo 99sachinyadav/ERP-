@@ -3,6 +3,9 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { backendUrl } from "@/App";
+import * as faceapi from "face-api.js";
+
+import { useEffect } from "react";
 
 const Studentsignup = () => {
   const [image, setimage] = useState(null);
@@ -18,8 +21,43 @@ const Studentsignup = () => {
   const [year, setyear] = useState("");
   const [fathername, setfathername] = useState("");
   const [semester, setsemester] = useState("");
+  const [descriptor, setDescriptor] = useState(null);
 
   const navigate = useNavigate();
+
+
+  useEffect(() => {
+  const loadModels = async () => {
+    const MODEL_URL = "/models";
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+    ]);
+    console.log("Face-api models loaded successfully");
+  };
+  loadModels();
+}, []);
+
+const captureFace = async (imageSrc) => {
+ 
+  const img = await faceapi.fetchImage(imageSrc);
+
+  const detection = await faceapi
+    .detectSingleFace(
+      img,
+      new faceapi.TinyFaceDetectorOptions({ inputSize: 224 })
+    )
+    .withFaceLandmarks()
+    .withFaceDescriptor();
+
+  if (!detection) {
+    alert("No face detected. Please look at the camera.");
+    return;
+  }
+
+  setDescriptor(Array.from(detection.descriptor)); // 🔥 128 numbers
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,6 +68,18 @@ const Studentsignup = () => {
       return;
     }
 
+   
+
+  try {
+    await captureFace(URL.createObjectURL(image));
+    console.log("Face descriptor captured successfully");
+  } catch (err) {
+    toast.error("Face not detected. Please upload a clear image.");
+    return;
+  }
+
+
+   console.log("Descriptor to be sent:", descriptor); // Debug log for descriptor
     const formData = new FormData();
     // File
     formData.append("image", image);
@@ -45,10 +95,11 @@ const Studentsignup = () => {
     formData.append("year", year);
     formData.append("semester", semester);
     formData.append("father_name", fathername);
-
+    formData.append("faceDescriptors", JSON.stringify(descriptor)); // Send as JSON string
     // Contact info (flat fields because FormData can't send nested objects)
     formData.append("address", address);
     formData.append("phoneNO", mobile);
+    console.log(formData)
 
     try {
       const response = await axios.post(

@@ -10,9 +10,11 @@ const AddSubjects = () => {
     const [subject, setSubject] = React.useState("");
     const [semester, setSemester] = React.useState("");
     const [teacheremail, setTeacheremail] = React.useState("");
+    const [isLoading, setIsLoading] = React.useState(false);
     // console.log(section,year,batch,subject)
      const addSubject = async (e)=>{
       e.preventDefault();
+      setIsLoading(true);
       try {
           const responce = await axios.post(backendUrl + '/api/addSubjects',{
             section,
@@ -45,6 +47,8 @@ const AddSubjects = () => {
       } catch (error) {
         console.log(error);
         toast.error(error.response.data.message)
+      } finally {
+        setIsLoading(false);
       }
      }
   return (
@@ -83,7 +87,14 @@ const AddSubjects = () => {
           <label className="text-gray-700 font-semibold" htmlFor="Subject">Subject Teacher Email</label>
           <input value={teacheremail} onChange={(e) => setTeacheremail(e.target.value)} placeholder='Enter Subject Teacher Email'   type="email" id="teacheremail" className="border border-gray-300 rounded-md p-1" required />
 
-          <button onClick={addSubject} type="submit" className="bg-blue-500 text-white font-semibold py-1 rounded-md hover:bg-blue-600">ADD NEW ONE</button>
+          <button
+            onClick={addSubject}
+            type="submit"
+            disabled={isLoading}
+            className="bg-blue-500 text-white font-semibold py-1 rounded-md hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "Adding..." : "ADD NEW ONE"}
+          </button>
  
         </form>
 

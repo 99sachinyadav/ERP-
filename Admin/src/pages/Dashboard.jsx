@@ -18,6 +18,8 @@ const [teacher, setteacher] = useState("")
 const [totalnoLec, settotalLecture] = useState({})
 const [noofLecAttended, setlectureAttended] = useState({})
 const [semester, setsemester] = useState('')
+const [isLoadingStudents, setIsLoadingStudents] = useState(false)
+const [markingRollNo, setMarkingRollNo] = useState("")
     
   
 function formatDate(date) {
@@ -26,6 +28,7 @@ function formatDate(date) {
 
 
  const showStudents = async ()=>{
+    setIsLoadingStudents(true)
     try {
      
         // console.log(localStorage.getItem('teacherToken'), localStorage.getItem('adminToken'));
@@ -48,7 +51,31 @@ function formatDate(date) {
         }
         else{
             // console.log(localStorage.getItem('teacherName'))
-           setstudent(responce.data.findSection.students)
+const sortedStudents = [...(responce.data.findSection.students || [])].sort((a, b) => {
+  const aRoll = Number(a?.rollno);
+  const bRoll = Number(b?.rollno);
+
+  if (!Number.isNaN(aRoll) && !Number.isNaN(bRoll)) {
+    return aRoll - bRoll;
+  }
+
+  return String(a?.rollno || "").localeCompare(String(b?.rollno || ""), undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+});
+
+setstudent(sortedStudents);
+
+const defaultLectures = {};
+const defaultAttended = {};
+sortedStudents.forEach((item) => {
+  defaultLectures[item?.rollno] = 1;
+  defaultAttended[item?.rollno] = 1;
+});
+settotalLecture(defaultLectures);
+setlectureAttended(defaultAttended);
+
            setsubjects(responce.data.findSection.subjects)
            setsingleSubject(responce.data.findSection.subjects[0])
            setsemester(responce.data.findSection.semester)
@@ -60,10 +87,13 @@ function formatDate(date) {
           // Check if the error has a response and a message
         // console.error(error);
         toast.error(error.response?.data?.message || "An error occurred while fetching students.");
+    } finally {
+        setIsLoadingStudents(false)
     }
  }
 
  const markAttendance = async (rollno) => {
+    setMarkingRollNo(rollno)
     try {
         // console.log(localStorage.getItem('teacherToken'), localStorage.getItem('adminToken'));
         const response = await axios.post(backendUrl + '/api/markAttendance', {
@@ -87,6 +117,8 @@ function formatDate(date) {
     } catch (error) {
         console.log(error);
         toast.error(error.response?.data?.message || "An error occurred while marking attendance.");
+    } finally {
+        setMarkingRollNo("")
     }
  }
 
@@ -152,9 +184,10 @@ return (
                     </div>
                     <button
                         onClick={showStudents}
-                        className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition w-full sm:w-auto mt-2 sm:mt-0"
+                        disabled={isLoadingStudents}
+                        className="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition w-full sm:w-auto mt-2 sm:mt-0 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                        Find Students
+                        {isLoadingStudents ? "Loading..." : "Find Students"}
                     </button>
                 </div>
             </div>
@@ -177,7 +210,7 @@ return (
                             <input
                                 type="number"
                                 onClick={() => setrollno(item?.rollno)}
-                                value={totalnoLec[item?.rollno] || ""}
+                                value={totalnoLec[item?.rollno] ?? 1}
                                 onChange={(e) =>
                                     settotalLecture((prev) => ({
                                         ...prev,
@@ -190,7 +223,7 @@ return (
                             <input
                                 type="number"
                                 onClick={() => setrollno(item?.rollno)}
-                                value={noofLecAttended[item?.rollno] || ""}
+                                value={noofLecAttended[item?.rollno] ?? 1}
                                 onChange={(e) =>
                                     setlectureAttended((prev) => ({
                                         ...prev,
@@ -202,9 +235,10 @@ return (
                             />
                             <button
                                 onClick={() => markAttendance(item?.rollno)}
-                                className="bg-blue-500 text-white font-semibold rounded-lg px-4 py-1 hover:bg-blue-600 transition"
+                                disabled={markingRollNo === item?.rollno}
+                                className="bg-blue-500 text-white font-semibold rounded-lg px-4 py-1 hover:bg-blue-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
                             >
-                                Mark
+                                {markingRollNo === item?.rollno ? "Marking..." : "Mark"}
                             </button>
                         </div>
                     ))}

@@ -2,8 +2,11 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast';
 import { backendUrl } from '@/App';
+import ModuleState from './ui/module-state';
 const SeeALLTeachers = () => {
    const [teachers, setteachers] = useState([])
+   const [loading, setLoading] = useState(true);
+   const [errorMessage, setErrorMessage] = useState("");
 //   const teachers = [
 //   { name: "John Doe", email: "john.doe@example.com", section: "A", year: "2023" },
 //   { name: "Jane Smith", email: "jane.smith@example.com", section: "B", year: "2022" },
@@ -11,7 +14,8 @@ const SeeALLTeachers = () => {
 // ];
 
  const getAllTeacher = async ()=>{
-        
+       setLoading(true);
+       setErrorMessage("");
        try {
 
         const responce = await axios.get(backendUrl + '/api/getAllTeacher',
@@ -24,12 +28,18 @@ const SeeALLTeachers = () => {
         // console.log(responce.data)
          if(responce.data.sucess){
           setteachers(responce.data.findAllTeacher)
-          toast.success(responce.data.message)
+        } else {
+          setteachers([]);
+          setErrorMessage(responce.data.message || "Unable to load teachers.");
          }
         
        } catch (error) {
          console.log(error)
-         toast.error(error.response.data.message)
+         const msg = error.response?.data?.message || "Unable to load teachers.";
+         setErrorMessage(msg);
+         toast.error(msg);
+       } finally {
+         setLoading(false);
        }
     
  }
@@ -38,6 +48,36 @@ const SeeALLTeachers = () => {
     getAllTeacher()
  },[])
 //  console.log(teachers)
+  if (loading) {
+    return <div className="mt-5"><ModuleState type="loading" title="Loading teachers" /></div>;
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="mt-5">
+        <ModuleState
+          type="error"
+          title="Unable to fetch teacher list"
+          message={errorMessage}
+          actionLabel="Retry"
+          onAction={getAllTeacher}
+        />
+      </div>
+    );
+  }
+
+  if (!teachers?.length) {
+    return (
+      <div className="mt-5">
+        <ModuleState
+          type="empty"
+          title="No teachers available"
+          message="Teacher records will appear here once added."
+        />
+      </div>
+    );
+  }
+
   return (
  <table className="w-full border-collapse mt-5">
     <thead>
@@ -55,13 +95,13 @@ const SeeALLTeachers = () => {
           <td className="border border-gray-300 text-sm  sm:text-lg    sm:px-4 py-2">{teacher?.email}</td>
           <td className="border border-gray-300 text-sm  sm:text-lg  text-center   sm:px-4 py-2">
                <div className='flex flex-col'>
-                {teacher?.section.map((sec,idx)=>(
+                {teacher?.section?.map((sec,idx)=>(
                 <h3 key={idx}> {sec.name.split("_")[0]}</h3>
             ))}
            </div>
           </td>
           <td className="border border-gray-300 text-sm  sm:text-lg  text-center  sm:px-4 py-2">    <div className='flex flex-col'>
-                {teacher?.section.map((sec,idx)=>(
+                {teacher?.section?.map((sec,idx)=>(
                 <h3 key={idx}> {sec.name.split("_")[1]}</h3>
             ))}
            </div>

@@ -11,9 +11,11 @@ const UpdateTeacher = () => {
   const [year, setyear] = useState("")
   const [batch, setbatch] = useState("")
   const [newteacheremail, setnewteacheremail] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
   const updateTeacher = async (e)=>{
     e.preventDefault();
+    setIsLoading(true)
     // console.log(section,year,batch,newteacheremail)
     try {
        const responce = await axios.put(backendUrl + '/api/updateTeacher',{
@@ -39,6 +41,8 @@ const UpdateTeacher = () => {
     } catch (error) {
        console.log(error);
        toast.error(error.response.data.message)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -67,7 +71,14 @@ const UpdateTeacher = () => {
           <label className="text-gray-700 font-semibold" htmlFor="Email">New Teacher Email</label>
           <input value={newteacheremail} onChange={(e)=>setnewteacheremail(e.target.value)} placeholder='Enter New Teacher Email here'   type="email" id="Email" className="border border-gray-300 rounded-md p-1" required />
 
-          <button onClick={updateTeacher} type="submit" className="bg-blue-500 text-white font-semibold py-1 rounded-md hover:bg-blue-600">Update teacher</button>
+          <button
+            onClick={updateTeacher}
+            type="submit"
+            disabled={isLoading}
+            className="bg-blue-500 text-white font-semibold py-1 rounded-md hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "Updating..." : "Update teacher"}
+          </button>
  
         </form>
 

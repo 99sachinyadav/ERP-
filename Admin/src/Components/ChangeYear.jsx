@@ -8,8 +8,10 @@ const ChangeYear = () => {
     const [year, setyear] = useState("")
      const [batch, setbatch] = useState("")
       const [newyear, setnewyear] = useState("")
+      const [isLoading, setIsLoading] = useState(false)
         const changeYear = async (e)=>{
            e.preventDefault();
+           setIsLoading(true)
           //  console.log(section,year,batch,newyear)
            try {
             const responce = await axios.post(backendUrl + '/api/changeYear',{
@@ -33,6 +35,8 @@ const ChangeYear = () => {
            } catch (error) {
              console.log(error)
              toast.error(error.response.data.message)
+           } finally {
+             setIsLoading(false)
            }
         }
   return (
@@ -63,7 +67,14 @@ const ChangeYear = () => {
           <option value="IVth">4th Year</option>
           </select>
 
-          <button onClick={changeYear} type="submit" className="bg-blue-500 text-white font-semibold py-1 rounded-md hover:bg-blue-600">Update teacher</button>
+          <button
+            onClick={changeYear}
+            type="submit"
+            disabled={isLoading}
+            className="bg-blue-500 text-white font-semibold py-1 rounded-md hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "Updating..." : "Update teacher"}
+          </button>
  
         </form>
 

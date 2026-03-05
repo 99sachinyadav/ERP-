@@ -1,8 +1,7 @@
 import React, { useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/Components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
-import {Dialog,  DialogContent,DialogDescription,  DialogHeader,DialogTitle,DialogTrigger,DialogClose} from "@/Components/ui/dialog"
-import { Teacher } from "../assets/assetes";
+import {Dialog,  DialogContent,DialogDescription,  DialogHeader,DialogTitle,DialogTrigger} from "@/Components/ui/dialog"
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/Components/ui/input"
 import {toast} from "react-hot-toast";
@@ -19,11 +18,21 @@ const TeacherDashboard = () => {
   const [attendance, setAttendance] = React.useState([]);
   const [semester, setsemester] = React.useState("");
   const [sentEmail, setsentEmail] = React.useState(false);
+  const [isSendingEmail, setIsSendingEmail] = React.useState(false);
   const [open, setOpen] = React.useState(false);
 
   const [year, setyear] = React.useState("");
   const [section, setsection] = React.useState("");
   const [batch, setbatch] = React.useState("");
+  const [marksSection, setMarksSection] = React.useState("");
+  const [marksYear, setMarksYear] = React.useState("");
+  const [marksBatch, setMarksBatch] = React.useState("");
+  const [marksExam, setMarksExam] = React.useState("ST1");
+  const [marksSemester, setMarksSemester] = React.useState("");
+  const [marksSubject, setMarksSubject] = React.useState("");
+  const [marksRollNo, setMarksRollNo] = React.useState("");
+  const [marksObtained, setMarksObtained] = React.useState("");
+  const [marksTotal, setMarksTotal] = React.useState("");
    
   const [mydata,setmydata]= React.useState([]);
   const logout = () => {
@@ -37,6 +46,7 @@ const TeacherDashboard = () => {
 
 
   const sendEmailStudents = async() => {
+    setIsSendingEmail(true);
     try {
       const response = await axios.post(backendUrl + "/api/send-email", {
       
@@ -58,6 +68,8 @@ const TeacherDashboard = () => {
       // console.log(error)
       console.log(error.response?.data?.message || error.message);
       toast.error("Error in sending emails");
+    } finally {
+      setIsSendingEmail(false);
     }
   }
 
@@ -127,163 +139,203 @@ const TeacherDashboard = () => {
   { name: "Jack", attendance: 18 },
 ]
 // console.log(mydata.length)
+
+  const uploadMarks = async () => {
+    try {
+      const response = await axios.post(
+        backendUrl + "/api/uploadMarks",
+        {
+          section: marksSection,
+          year: marksYear,
+          batch: marksBatch,
+          semester: marksSemester,
+          subject: marksSubject,
+          exam: marksExam,
+          rollno: marksRollNo,
+          obtainedMarks: marksObtained,
+          totalMarks: marksTotal,
+        },
+        {
+          headers: {
+            teachertoken: localStorage.getItem("teacherToken"),
+          },
+        }
+      );
+      if (response.data.sucess) {
+        toast.success(response.data.message);
+      } else {
+        toast.error(response.data.message || "Failed to upload marks");
+      }
+    } catch (error) {
+      console.log(error.response?.data?.message || error.message);
+      toast.error(error.response?.data?.message || "Failed to upload marks");
+    }
+  };
+  const quickActions = [
+    {
+      title: "Mark Attendance",
+      icon: "ri-stack-line",
+      onClick: () => navigate("/dashboard"),
+      className: "from-orange-100 to-orange-200 border-orange-300",
+    },
+    {
+      title: "Monitor Students",
+      icon: "ri-graduation-cap-line",
+      onClick: () => navigate("/monitorStudents"),
+      className: "from-yellow-100 to-yellow-200 border-yellow-300",
+    },
+    {
+      title: "Upload Marks",
+      icon: "ri-file-list-3-line",
+      onClick: () => navigate("/marks"),
+      className: "from-green-100 to-green-200 border-green-300",
+    },
+  ];
+
   return (
-    <div className="relative h-full overflow-y-hidden bg-gradient-to-br from-blue-100 via-white to-blue-300">
-      <div className="text-2xl text-center pt-8 border-t">
-        <div
-          onClick={logout}
-          className="flex items-center w-28 sm:w-35 absolute py-2 sm:right-6 right-2 justify-center p-2 px-4 rounded-4xl cursor-pointer bg-blue-500 text-white m-1 top-6 hover:bg-blue-600 transition-all"
-        >
-          <i className="ri-arrow-left-line text-xl sm:text-3xl"></i>
-          <span className="ml-2 font-semibold text-xs sm:text-md">LOG OUT</span>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
+      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-10">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-2xl font-bold text-blue-900 sm:text-4xl">
+            Teacher <span className="text-red-500">Panel</span>
+          </h1>
+          <button
+            onClick={logout}
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 w-full sm:w-auto"
+          >
+            <i className="ri-logout-box-r-line text-lg"></i>
+            LOG OUT
+          </button>
         </div>
-        <h1 className="text-2xl sm:text-4xl md:text-5xl flex justify-center mt-10 font-bold text-blue-900 text-wrap">
-          Teacher <span className="text-red-500 ml-3">Pannel</span>
-        </h1>
-      </div>
-      <div className="flex flex-col md:flex-row items-center my-8 gap-8 md:gap-16 px-4 md:px-16">
-        {/* <img
-          src={Teacher}
-          className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl object-contain"
-          alt=""
-        /> */}
-     <Card className="w-full max-w-lg bg-black/5 shadow-md">
-  <CardHeader>
-    <CardTitle>Attendance % Data</CardTitle>
-  </CardHeader>
-  <CardContent>
-    {/* Scrollable wrapper */}
-    <div className="overflow-x-auto">
-      <div className={`h-64`} style={{ width: 400}}>
-        <BarChart
-          width={400}  // dynamic width based on number of students
-          height={256}                 // fixed height
-          data={mydata.length === 0 ? data : mydata}
-          
-          margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
-        >
-          {/* X-axis: student names */}
-          <XAxis dataKey="name" tick={{ fontSize: 12 }} angle={-45} textAnchor="end" />
-          
-          {/* Y-axis: attendance percentage */}
-          <YAxis />
-          
-          {/* Tooltip */}
-          <Tooltip />
-          
-          {/* Bars */}
-          <Bar className="w-10" dataKey="attendance" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-        </BarChart>
-      </div>
-    </div>
-  </CardContent>
-</Card>
 
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <Card className="lg:col-span-2 border-blue-100 shadow-md">
+            <CardHeader>
+              <CardTitle className="text-lg sm:text-xl">Attendance Overview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-72 w-full sm:h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={mydata.length === 0 ? data : mydata}
+                    margin={{ top: 12, right: 12, left: 0, bottom: 36 }}
+                  >
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-35} textAnchor="end" interval={0} />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="attendance" fill="#2563eb" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
 
-        <div className="flex flex-col justify-center  gap-0 w-full md:w-2/4 text-gray-600 mt-6 md:mt-0">
+          <Card className="border-blue-100 shadow-md">
+            <CardContent className="p-5 sm:p-6">
+              <h2 className="text-xl font-bold text-gray-800 sm:text-2xl">
+                Hi, <span className="text-blue-600">{localStorage.getItem("teachername") || "Teacher"}</span>
+              </h2>
+              <p className="mt-2 text-sm text-gray-600 sm:text-base">
+                {localStorage.getItem("teachersection")
+                  ? `Assigned Section: ${localStorage.getItem("teachersection")}`
+                  : "No section is assigned yet."}
+              </p>
 
-           {/* <h1 className="sm:text-4xl text-3xl sm:mt-5 ml-6 sm:ml-10 font-bold text-gray-800">Hii ! <span className="text-blue-500">{localStorage.getItem('teachername')}</span> Welcome to Attendance Portal</h1>
-            <h1 className="sm:text-2xl text-1xl sm:mt-4 ml-6 sm:ml-15 font-bold text-gray-500">{localStorage.getItem('teachersection')?`Your assigned Section is ${localStorage.getItem('teachersection')}`:`You haven't assigned  any section yet`}</h1> */}
-            <h1 className="sm:text-4xl text-3xl sm:mt-6 ml-6 sm:ml-10 font-bold text-gray-800">
-  Hii ! <span className="text-blue-600">{localStorage.getItem('teachername')}</span> Welcome to Attendance Portal
-</h1>
+              <div className="mt-6 rounded-xl bg-blue-50 p-4">
+                <h5 className="text-sm font-semibold text-blue-900 sm:text-base">
+                  Low Attendance Email Alert
+                </h5>
+                <p className="mt-1 text-xs text-gray-600 sm:text-sm">
+                  Send warning emails to students below attendance criteria.
+                </p>
+                <Dialog
+                  open={open}
+                  onOpenChange={(isOpen) => {
+                    setOpen(isOpen);
+                    if (!isOpen) {
+                      setsentEmail(false);
+                    }
+                  }}
+                >
+                  <DialogTrigger className="mt-3 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                    Send Email
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Send Email to Low Attendance Students</DialogTitle>
+                      <DialogDescription className="mt-4 flex flex-col gap-4">
+                        <select
+                          value={year}
+                          onChange={(e) => setyear(e.target.value)}
+                          className="border rounded-lg px-2 py-2 text-base font-semibold bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        >
+                          <option value="Ist">Ist</option>
+                          <option value="IInd">IInd</option>
+                          <option value="IIIrd">IIIrd</option>
+                          <option value="IVth">IVth</option>
+                        </select>
+                        <Input value={section} onChange={(e) => setsection(e.target.value)} type="text" placeholder="Enter section" />
+                        <Input value={batch} onChange={(e) => setbatch(e.target.value)} type="text" placeholder="Enter batch" />
+                        <Button
+                          onClick={sendEmailStudents}
+                          disabled={isSendingEmail || sentEmail}
+                          className={`${sentEmail ? "bg-green-500" : "bg-blue-500"} hover:bg-blue-600`}
+                        >
+                          {isSendingEmail ? "Sending..." : sentEmail ? "Email Sent" : "Send Email"}
+                        </Button>
+                        <p className="text-xs text-gray-500">
+                          Send once and wait for confirmation before sending again.
+                        </p>
+                      </DialogDescription>
+                    </DialogHeader>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-<h2 className="sm:text-2xl text-xl sm:mt-3 ml-6 sm:ml-10 font-medium text-gray-600">
-  {localStorage.getItem('teachersection')
-    ? `Assigned Section: ${localStorage.getItem('teachersection')}`
-    : `No section has been assigned to you yet`}
-</h2>
-          <div className="flex mt-0 flex-col items-center sm:flex-row sm:justify-center md:flex-row gap-4 md:gap-4 w-full">
-            <div
-              onClick={() => {
-                navigate("/dashboard");
-              }}
-              className="bg-gradient-to-br from-orange-200 to-orange-300 rounded-lg p-4 h-55 w-70 md:h-60 md:w-60 text-center m-4 md:m-8 flex items-center justify-center gap-4 md:gap-6 flex-col shadow-md cursor-pointer transition-transform hover:scale-105"
-            >
-              <i className="ri-stack-line text-5xl md:text-7xl"></i>
-              <h1 className="text-lg md:text-xl font-semibold">MARK ATTENDANCE</h1>
+        <section className="mt-8">
+          <h2 className="text-xl font-bold text-blue-900 sm:text-3xl">Quick Actions</h2>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {quickActions.map((action) => (
+              <button
+                key={action.title}
+                onClick={action.onClick}
+                className={`min-h-36 rounded-xl border bg-gradient-to-br p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md ${action.className}`}
+              >
+                <i className={`${action.icon} text-4xl text-gray-800`}></i>
+                <p className="mt-4 text-lg font-semibold text-gray-900">{action.title}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-10 pb-10">
+          <h2 className="text-xl font-bold text-blue-900 sm:text-3xl">
+            Activities <span className="text-red-500">to Monitor</span>
+          </h2>
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="rounded-xl border bg-white p-5 shadow-sm">
+              <b className="text-base text-gray-900">Student Monitor</b>
+              <p className="mt-2 text-sm text-gray-600">
+                Track low performers, irregular attendance, and student-wise progress in one place.
+              </p>
             </div>
-
-            <div
-              onClick={() => {
-                navigate("/monitorStudents");
-              }}
-              className="bg-gradient-to-br from-yellow-200 to-yellow-300 rounded-lg p-4 h-55 w-70 md:h-60 md:w-60 text-center m-4 md:m-8 flex items-center justify-center gap-4 md:gap-6 flex-col shadow-md cursor-pointer transition-transform hover:scale-105"
-            >
-              <i className="ri-graduation-cap-line text-5xl md:text-7xl"></i>
-              <h1 className="text-lg md:text-xl font-semibold">
-                 MONITOR STUDENTS
-              </h1>
+            <div className="rounded-xl border bg-white p-5 shadow-sm">
+              <b className="text-base text-gray-900">Mark Attendance</b>
+              <p className="mt-2 text-sm text-gray-600">
+                Capture lecture attendance quickly and keep records updated class by class.
+              </p>
+            </div>
+            <div className="rounded-xl border bg-white p-5 shadow-sm">
+              <b className="text-base text-gray-900">Upload Marks</b>
+              <p className="mt-2 text-sm text-gray-600">
+                Upload internal marks by exam and subject with clear validation and visibility.
+              </p>
             </div>
           </div>
-        <h5 className="text-lg md:text-xl sm:ml-17 font-semibold ml-5">Send Email to those whose Attendance is below the criteria</h5>
-          <Dialog   open={open}
-  onOpenChange={(isOpen) => {
-    setOpen(isOpen);
-    if (!isOpen) {
-      setsentEmail(false); // Reset when dialog closes
-    }
-  }}>
-  <DialogTrigger className="px-4 py-2 bg-blue-500 sm:w-35 sm:ml-17 sm:mt-5 mt-5 w-full m-2 text-white rounded hover:bg-blue-600">Send Email</DialogTrigger>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Send Email to students having less Attendance</DialogTitle>
-      
-      <DialogDescription className={"flex flex-col gap-5 mt-5"}>
-       
-            <select
-                            value={year}
-                            onChange={(e) => setyear(e.target.value)}
-                            className="border rounded-lg px-2 py-1 text-base font-semibold bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        >
-                            <option value="Ist">Ist</option>
-                            <option value="IInd">IInd</option>
-                            <option value="IIIrd">IIIrd</option>
-                            <option value="IVth">IVth</option>
-                        </select>
-   
-       <Input value={section} onChange={(e) => setsection(e.target.value)} type="text" placeholder="Enter section"  />
-       <Input value={batch} onChange={(e) => setbatch(e.target.value)} type="text" placeholder="Enter batch"  />
-       <Button onClick={sendEmailStudents} className={`${sentEmail ? 'bg-green-500' : 'bg-blue-500'} hover:bg-blue-600`}>{sentEmail ? 'Email Sent' : 'Send Email'}</Button>
-       "This action will send emails to all students with low attendance. Do not click again until the button changes color and a confirmation message appears, as sending may take some time."
-      </DialogDescription>
-    </DialogHeader>
-  </DialogContent>
-</Dialog>
-           
-        </div>
-      </div>
-      <div className="text-2xl py-4">
-        <h1 className=" text-3xl sm:text-3xl   flex justify-center sm:mt-10 mt-8 font-bold  text-blue-900   text-wrap ">
-          ACTIVITES <span className="text-red-500 ml-3">TO MONITOR </span>
-        </h1>
-      </div>
-
-      <div className="flex flex-col md:flex-row text-sm mb-20">
-        <div className="border px-10 md:px-16 py-8 sm:py-20 flex flex-col gap-5">
-          <b>STUDENT MONITOR</b>
-          <p className="text-gray-600">
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Illo
-            molestias, aliquam repellat laborum odit in ducimus perferendis quod
-            nihi
-          </p>
-        </div>
-        <div className="border px-10 md:px-16 py-8 sm:py-20 flex flex-col gap-5">
-          <b>MARK ATTENDENCE:</b>
-          <p className="text-gray-600">
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Illo
-            molestias, aliquam repellat laborum odit in ducimus perferendis quod
-            nihi
-          </p>
-        </div>
-        <div className="border px-10 md:px-16 py-8 sm:py-20 flex flex-col gap-5">
-          <b>ADD SUBJECT :</b>
-          <p className="text-gray-600">
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Illo
-            molestias, aliquam repellat laborum odit in ducimus perferendis quod
-            nihi
-          </p>
-        </div>
+        </section>
       </div>
     </div>
   );

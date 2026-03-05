@@ -390,6 +390,138 @@ const getAttendanceofAllStudent = async (req, res) => {
     return res.status(401).json({ sucess: false, message: error.message });
   }
 };
+
+// Only the class counsellor (section teacher) can upload or update marks
+const uploadMarks = async (req, res) => {
+  try {
+    const {
+      teacherId,
+      adminID,
+      rollno,
+      section,
+      year,
+      batch,
+      semester,
+      subject,
+      exam,
+      obtainedMarks,
+      totalMarks,
+    } = req.body;
+
+    if (adminID && !teacherId) {
+      return res
+        .status(403)
+        .json({ sucess: false, message: "Only class counsellor can upload marks" });
+    }
+
+    if (
+      !teacherId ||
+      !rollno ||
+      !section ||
+      !year ||
+      !batch ||
+      !semester ||
+      !subject ||
+      !exam ||
+      obtainedMarks === undefined
+    ) {
+      return res.status(403).json({
+        sucess: false,
+        message: "Please fill all required details for marks",
+      });
+    }
+
+    const upperSection = section.toUpperCase().trim();
+    const sectionName = upperSection + year.trim() + "_" + batch.trim();
+
+    const [teacher, sectionDoc, student] = await Promise.all([
+      Teacher.findById(teacherId),
+      Section.findOne({ name: sectionName, year: year.trim(), batch: batch.trim() }),
+      Student.findOne({ rollno: rollno }),
+    ]);
+
+    if (!teacher) {
+      return res
+        .status(401)
+        .json({ sucess: false, message: "Teacher not found" });
+    }
+
+    if (!sectionDoc) {
+      return res
+        .status(401)
+        .json({ sucess: false, message: "Section not found with these details" });
+    }
+
+    if (!teacher.section.includes(sectionDoc._id)) {
+      return res.status(403).json({
+        sucess: false,
+        message: "You are not class counsellor of this section",
+      });
+    }
+
+    if (!student) {
+      return res
+        .status(401)
+        .json({ sucess: false, message: "Student not found with this roll number" });
+    }
+
+    if (!student.subjects.includes(subject)) {
+      return res.status(401).json({
+        sucess: false,
+        message: "Subject not assigned to this student",
+      });
+    }
+
+    const numObtained = Number(obtainedMarks);
+
+    if (Number.isNaN(numObtained)) {
+      return res.status(401).json({
+        sucess: false,
+        message: "Obtained marks must be a valid number",
+      });
+    }
+
+    const maxTotal = exam === "PUT" ? 70 : 50;
+
+    if (numObtained < 0 || numObtained > maxTotal) {
+      return res.status(401).json({
+        sucess: false,
+        message: `Marks are not in valid range for ${exam}. Max allowed is ${maxTotal}`,
+      });
+    }
+
+    const existing = student.marks.find(
+      (m) =>
+        m.exam === exam &&
+        m.semester === semester &&
+        m.subject === subject
+    );
+
+    if (existing) {
+      existing.obtainedMarks = numObtained;
+      existing.totalMarks = maxTotal;
+    } else {
+      student.marks.push({
+        exam,
+        semester,
+        subject,
+        obtainedMarks: numObtained,
+        totalMarks: maxTotal,
+      });
+    }
+
+    await student.save();
+
+    return res.status(200).json({
+      sucess: true,
+      message: "Marks uploaded successfully",
+      marks: student.marks,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(401).json({ sucess: false, message: error.message });
+  }
+};
 export {
   registerTeacher,
   teacherLogin,
@@ -398,4 +530,5 @@ export {
   updateTeacherInSection,
   getAllTeacher,
   getAttendanceofAllStudent,
+  uploadMarks,
 };

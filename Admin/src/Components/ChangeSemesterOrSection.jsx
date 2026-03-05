@@ -10,10 +10,12 @@ const ChangeSemesterOrSection = () => {
   const [currentBatch, setcurrentBatch] = useState("")
   const [newSemester, setnewSemester] = useState("")
   const [newSection, setnewSection] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
   
 
   const handleSubmit = async(e) => {
     e.preventDefault();
+    setIsLoading(true)
      
      try {
        const responce = await axios.put(backendUrl + '/api/updateSectionorSemester',{
@@ -38,6 +40,8 @@ const ChangeSemesterOrSection = () => {
      } catch (error) {
        console.log(error)
        toast.error(error.response?.data?.message || "An error occurred while updating section/semester.")
+     } finally {
+       setIsLoading(false)
      }
   }
 
@@ -75,7 +79,14 @@ const ChangeSemesterOrSection = () => {
                     <label className="text-gray-700 font-semibold" htmlFor="Batch">New Section</label>
           <input  value={newSection} onChange={(e) => setnewSection(e.target.value)}  placeholder='Enter New Section'   type="batch" id="password" className="border border-gray-300 rounded-md p-1" required />
 
-          <button  onClick={handleSubmit} type="submit" className="bg-blue-500 text-white font-semibold py-1 rounded-md hover:bg-blue-600">Update section/semester</button>
+          <button
+            onClick={handleSubmit}
+            type="submit"
+            disabled={isLoading}
+            className="bg-blue-500 text-white font-semibold py-1 rounded-md hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "Updating..." : "Update section/semester"}
+          </button>
 
         </form>
 

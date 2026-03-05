@@ -10,11 +10,13 @@ const TeacherRegister = (props) => {
     const [name, setname] = React.useState(""); 
     const [email, setemail] = React.useState("");
     const [password, setpassword] = React.useState("");
+    const [isLoading, setIsLoading] = React.useState(false);
     
       const navigate = useNavigate();
   
     const handleSubmit = async (e)=>{
             e.preventDefault();
+        setIsLoading(true);
 
         try {
                 // console.log(name,email,password , localStorage.getItem('adminToken'))
@@ -42,6 +44,8 @@ const TeacherRegister = (props) => {
         } catch (error) {
             console.log(error);
             toast.error(error.response.data.message)
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -63,7 +67,13 @@ const TeacherRegister = (props) => {
           <label className="text-gray-700 font-semibold" htmlFor="password">Password</label>
           <input  value={password} onChange={(e)=>setpassword(e.target.value)} type="password" id="password" className="border border-gray-300 rounded-md p-2" required />
 
-          <button type="submit" className="bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600">Register</button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "Registering..." : "Register"}
+          </button>
 
           <p onClick={()=>navigate('/teacherlogin')}  className='text-center mt-2 text-lg text-blue-900'>Login here...</p>
         </form>

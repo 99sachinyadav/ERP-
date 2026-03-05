@@ -9,9 +9,11 @@ const AdminLogin = () => {
 
     const [email, setemail] = useState('')
     const [password, setpassword] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
     const navigate = useNavigate();
     const handelSubmit = async(e) => {
         e.preventDefault()
+        setIsLoading(true)
         try {
          const responce =  await axios.post(backendUrl + '/api/loginAdmin',{
             email,
@@ -37,6 +39,8 @@ const AdminLogin = () => {
             }
               
             
+        } finally {
+            setIsLoading(false)
         }
     }
 return (
@@ -73,9 +77,10 @@ return (
                     <button
                         //  onClick={()=>navigate('/admindashboard')}
                             type="submit"
-                            className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200"
+                            disabled={isLoading}
+                            className="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                            Login
+                            {isLoading ? "Logging in..." : "Login"}
                     </button>
                     <p  onClick={() => navigate('/teacherLogin')} className="mt-4 text-sm text-center text-blue-500">
                                 Login as Faculty.....  

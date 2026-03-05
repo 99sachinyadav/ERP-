@@ -1,64 +1,70 @@
- 
+import { about } from "../assets/assets";
 
-import { about, } from "../assets/assets"
- 
- 
-
- 
 const About = () => {
+  const values = [
+    {
+      title: "Academic Excellence",
+      text: "A focused curriculum and structured assessment flow to support strong student outcomes.",
+      icon: "ri-medal-line",
+    },
+    {
+      title: "Student-Centric System",
+      text: "Attendance, profile, and marks are accessible in one reliable digital experience.",
+      icon: "ri-user-heart-line",
+    },
+    {
+      title: "Operational Clarity",
+      text: "Clear workflows for faculty and administration with transparent progress tracking.",
+      icon: "ri-layout-grid-line",
+    },
+  ];
+
   return (
-    <div className="bg-white min-h-screen px-4 sm:px-8">
-      <div className="text-center pt-8 border-t">
-        <h1 className="text-3xl sm:text-6xl font-bold text-blue-900 flex justify-center items-center flex-wrap gap-2">
-          About <span className="text-red-500">Us</span>
-        </h1>
-      </div>
-      <div className="flex flex-col md:flex-row items-center my-8 gap-10 md:gap-20">
-        <img
-          src={about}
-          className="w-full md:max-w-[500px] rounded-xl shadow-lg object-cover"
-          alt="About Us"
-        />
-        <div className="flex flex-col justify-center gap-6 md:w-2/4 text-gray-700">
-          <p className="p-4 rounded-lg bg-gray-50 shadow">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Id veniam totam enim debitis porro quas obcaecati, odio minus eius repudiandae neque corporis, magni, rem veritatis soluta labore. Voluptate, debitis sint? Nobis iure exercitationem assumenda nihil quisquam officiis consequuntur ipsam molestia.
-          </p>
-          <p className="p-4 rounded-lg bg-gray-50 shadow">
-            Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quibusdam laboriosam, ipsa perspiciatis quae rerum aperiam cumque repellendus eveniet minima commodi numquam quos laborum id eaque quia consequuntur, officia facere veniam? Consequatur in repellat eaque? Laboriosam amet corporis facere. Opti.
-          </p>
-          <b className="text-gray-800 text-lg mt-2">Our Mission</b>
-          <p className="p-4 rounded-lg bg-gray-50 shadow">
-            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Error asperiores, et voluptatibus, porro recusandae nam voluptatem consequuntur corporis mollitia dignissimos quidem magnam necessitatibus illo? Earum eum enim aspernatur similique placeat!
-          </p>
-        </div>
-      </div>
-      <div className="text-center py-4">
-        <h1 className="text-2xl sm:text-4xl font-bold text-blue-900 flex justify-center items-center flex-wrap gap-2">
-          WHY <span className="text-red-500">CHOOSE US</span>
-        </h1>
-      </div>
-      <div className="flex flex-col md:flex-row gap-6 md:gap-10 mb-20">
-        <div className="border rounded-xl px-8 py-8 flex-1 bg-gradient-to-br from-blue-50 to-white shadow hover:shadow-lg transition">
-          <b className="text-blue-800 text-lg">Quality Assurance</b>
-          <p className="text-gray-600 mt-2">
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Illo molestias, aliquam repellat laborum odit in ducimus perferendis quod nihi
-          </p>
-        </div>
-        <div className="border rounded-xl px-8 py-8 flex-1 bg-gradient-to-br from-red-50 to-white shadow hover:shadow-lg transition">
-          <b className="text-red-800 text-lg">Convenience</b>
-          <p className="text-gray-600 mt-2">
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Illo molestias, aliquam repellat laborum odit in ducimus perferendis quod nihi
-          </p>
-        </div>
-        <div className="border rounded-xl px-8 py-8 flex-1 bg-gradient-to-br from-yellow-50 to-white shadow hover:shadow-lg transition">
-          <b className="text-yellow-800 text-lg">Exceptional Customer Service</b>
-          <p className="text-gray-600 mt-2">
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Illo molestias, aliquam repellat laborum odit in ducimus perferendis quod nihi
-          </p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 px-4 py-8 sm:px-8 lg:px-12">
+      <div className="mx-auto max-w-7xl space-y-8">
+        <section className="grid grid-cols-1 items-center gap-8 rounded-3xl border border-white/70 bg-white/85 p-6 shadow-xl backdrop-blur lg:grid-cols-2">
+          <div>
+            <p className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+              <i className="ri-information-line"></i>
+              ABOUT RKGITM
+            </p>
+            <h1 className="mt-4 text-3xl font-bold text-slate-900 sm:text-5xl">
+              Building a Better Academic Experience
+            </h1>
+            <p className="mt-4 text-base text-slate-600 sm:text-lg">
+              We combine academic rigor with digital systems to help students, faculty, and administration stay aligned on progress and outcomes.
+            </p>
+            <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <h3 className="text-sm font-semibold text-slate-800">Our Mission</h3>
+              <p className="mt-1 text-sm text-slate-600">
+                Deliver a transparent, efficient, and student-focused environment for learning and growth.
+              </p>
+            </div>
+          </div>
+          <img
+            src={about}
+            alt="About RKGITM"
+            className="w-full rounded-2xl border border-white/70 object-cover shadow-2xl"
+          />
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">Why Choose Us</h2>
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+            {values.map((item) => (
+              <div key={item.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50">
+                  <i className={`${item.icon} text-xl text-blue-700`}></i>
+                </div>
+                <h3 className="mt-3 text-lg font-semibold text-slate-900">{item.title}</h3>
+                <p className="mt-1 text-sm text-slate-600">{item.text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default About
+export default About;

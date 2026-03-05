@@ -6,9 +6,11 @@ import { backendUrl } from '@/App';
 const ChangeStudentpassword = () => {
     const [studentemail, setemail] = useState('');
      const [newPassword, setpassword] = useState('')
+     const [isLoading, setIsLoading] = useState(false)
   const handleSubmit = async (e) => {
     
      e.preventDefault();
+     setIsLoading(true)
 
      try {
        const responce = await axios.put(backendUrl + '/api/updateStudentPassword',{
@@ -27,6 +29,8 @@ const ChangeStudentpassword = () => {
      } catch (error) {
         console.log(error)
              toast.error(error.response.data.message)
+     } finally {
+      setIsLoading(false)
      }
   }
 
@@ -46,7 +50,13 @@ const ChangeStudentpassword = () => {
           <input value={newPassword} onChange={(e)=>setpassword(e.target.value)} placeholder='Enter a New Password'   type="password" id="password" className="border border-gray-300 rounded-md py-2 p-1" required />
 
 
-          <button  type="submit" className="bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600">Change</button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="bg-blue-500 text-white font-semibold py-2 rounded-md hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "Changing..." : "Change"}
+          </button>
  
         </form>
 

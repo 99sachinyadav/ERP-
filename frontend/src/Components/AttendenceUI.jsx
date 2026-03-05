@@ -5,7 +5,18 @@ import axios from "axios";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
 import React from "react";
-import {  AreaChart,  Area, XAxis,  YAxis, CartesianGrid,Tooltip,ResponsiveContainer} from "recharts";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  ReferenceLine,
+} from "recharts";
 import { backendUrl } from "@/App";
 const attendanceData = {
   "2025-05-01": "leave",
@@ -33,6 +44,41 @@ const data = [
   
 ];
 
+const ATTENDANCE_THRESHOLD = 75;
+
+const getAttendanceInsight = (total, attended) => {
+  if (!total) {
+    return {
+      percent: "0.00",
+      isLow: false,
+      message: "No lectures conducted yet.",
+    };
+  }
+
+  const percent = ((attended / total) * 100).toFixed(2);
+  const isLow = Number(percent) < ATTENDANCE_THRESHOLD;
+
+  if (!isLow) {
+    return {
+      percent,
+      isLow,
+      message: `On track (${ATTENDANCE_THRESHOLD}%+).`,
+    };
+  }
+
+  const thresholdDecimal = ATTENDANCE_THRESHOLD / 100;
+  const requiredLectures = Math.max(
+    0,
+    Math.ceil((thresholdDecimal * total - attended) / (1 - thresholdDecimal))
+  );
+
+  return {
+    percent,
+    isLow,
+    message: `Attend next ${requiredLectures} lecture(s) to reach ${ATTENDANCE_THRESHOLD}%.`,
+  };
+};
+
 
 
 const AttendanceUI = () => {
@@ -40,13 +86,15 @@ const AttendanceUI = () => {
     const [response, setresponce] = useState([]); // State to store fetched data
     const [semester, setSemester] = useState("");
     const [mydata, setMydata] = useState([]);
+    const [monthlyTrend, setMonthlyTrend] = useState([]);
+    const [trendLoading, setTrendLoading] = useState(false);
   // const [isOpen, setisOpen] = useState(false);
 
 function formatDate(date) {
   return date.toLocaleDateString('en-CA');
 }
 
-    const getProfile = React.useCallback(async (dateStr) => {
+    const getProfile = React.useCallback(async (dateStr, options = { silent: false }) => {
       try {
         const responce = await axios.get(backendUrl+"/api/getStudentAttendance", {
           params: {
@@ -62,7 +110,9 @@ function formatDate(date) {
         if (responce.data.sucess) {
           setresponce(responce.data.attendance);
           setSemester(responce.data.semester);
-          toast.success(responce.data.message);
+          if (!options.silent) {
+            toast.success(responce.data.message);
+          }
   
           // Build a new array for chart data
           const newData = responce.data.attendance
@@ -79,8 +129,64 @@ function formatDate(date) {
         }
       } catch (error) {
         console.log(error);
-        toast.error(error.response?.data?.message || "Error fetching attendance");
+        if (!options.silent) {
+          toast.error(error.response?.data?.message || "Error fetching attendance");
+        }
         setMydata([]);
+      }
+    }, []);
+
+    const fetchMonthlyTrend = React.useCallback(async (date) => {
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const today = new Date();
+      const isCurrentMonth =
+        today.getFullYear() === year && today.getMonth() === month;
+      const upperDayLimit = isCurrentMonth ? today.getDate() : daysInMonth;
+
+      const dates = Array.from({ length: upperDayLimit }, (_, idx) => {
+        const day = idx + 1;
+        return new Date(year, month, day);
+      });
+
+      setTrendLoading(true);
+      try {
+        const results = await Promise.all(
+          dates.map(async (dayDate) => {
+            const formatted = formatDate(dayDate);
+            const resp = await axios.get(backendUrl + "/api/getStudentAttendance", {
+              params: { date: formatted },
+              headers: { token: localStorage.getItem("token") },
+            });
+
+            if (!resp.data?.sucess) {
+              return { day: dayDate.getDate(), attendance: 0 };
+            }
+
+            const sem = resp.data.semester;
+            const rows = (resp.data.attendance || []).filter((item) =>
+              item.subject.includes(sem)
+            );
+            const totalLec = rows.reduce(
+              (sum, row) => sum + Number(row.totalLecture || 0),
+              0
+            );
+            const totalAtt = rows.reduce(
+              (sum, row) => sum + Number(row.lectureAttended || 0),
+              0
+            );
+            const percent = totalLec > 0 ? Number(((totalAtt / totalLec) * 100).toFixed(2)) : 0;
+            return { day: dayDate.getDate(), attendance: percent };
+          })
+        );
+
+        setMonthlyTrend(results);
+      } catch (error) {
+        console.log(error);
+        setMonthlyTrend([]);
+      } finally {
+        setTrendLoading(false);
       }
     }, []);
   
@@ -88,19 +194,59 @@ function formatDate(date) {
     useEffect(() => {
       if (selectedDate) {
         const dateStr = formatDate(selectedDate);
-        getProfile(dateStr);
+        getProfile(dateStr, { silent: false });
+        fetchMonthlyTrend(selectedDate);
       }
-    }, [selectedDate, getProfile]);
+    }, [selectedDate, getProfile, fetchMonthlyTrend]);
  
 
  
   // console.log(semester);
+const semesterRows = response?.filter((item) => item.subject.includes(semester)) || [];
+const lowAttendanceCount = semesterRows.filter((item) => {
+  const insight = getAttendanceInsight(item.totalLecture || 0, item.lectureAttended || 0);
+  return insight.isLow;
+}).length;
+
 return (
   <div className="min-h-screen bg-gradient-to-br from-blue-100 via-teal-100 to-purple-100 py-8 px-2">
     <div className="max-w-6xl mx-auto flex flex-col-reverse md:flex-row gap-8 md:gap-12 items-center justify-center">
       {/* Attendance Table */}
 
      <div className="flex flex-col   gap-8 w-full mt-5">
+       <div className="w-full h-90 p-4 bg-white rounded-2xl shadow-md">
+        <h2 className="text-2xl font-semibold text-gray-800 text-center mb-4">
+          Monthly Attendance Trend
+        </h2>
+        {trendLoading ? (
+          <div className="h-[80%] flex items-center justify-center text-slate-500">
+            Loading monthly trend...
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="80%">
+            <LineChart data={monthlyTrend} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="day" />
+              <YAxis domain={[0, 100]} />
+              <Tooltip formatter={(value) => [`${value}%`, "Attendance"]} />
+              <ReferenceLine
+                y={ATTENDANCE_THRESHOLD}
+                stroke="#ef4444"
+                strokeDasharray="5 5"
+                label={`${ATTENDANCE_THRESHOLD}% threshold`}
+              />
+              <Line
+                type="monotone"
+                dataKey="attendance"
+                stroke="#2563eb"
+                strokeWidth={2.5}
+                dot={{ r: 3 }}
+                activeDot={{ r: 5 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+       </div>
        <div className="w-full h-90 p-4 bg-white rounded-2xl shadow-md">
               <h2 className="text-2xl font-semibold text-gray-800 text-center mb-4">
         {`${mydata.length===0 ?" No Data Available":"Attendance Overview"}`}
@@ -121,6 +267,20 @@ return (
         <h1 className="text-center text-3xl md:text-4xl font-bold text-teal-700 mb-6 tracking-wide">
           Attendance
         </h1>
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <span className="text-sm font-medium text-slate-700">
+            Minimum attendance required: <b>{ATTENDANCE_THRESHOLD}%</b>
+          </span>
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              lowAttendanceCount > 0 ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"
+            }`}
+          >
+            {lowAttendanceCount > 0
+              ? `${lowAttendanceCount} subject(s) below threshold`
+              : "All subjects above threshold"}
+          </span>
+        </div>
         <div className="overflow-x-auto">
           <table className="min-w-full border border-gray-200 rounded-lg shadow-sm">
             <thead>
@@ -128,18 +288,30 @@ return (
                 <th className="py-3 px-4 text-left text-lg md:text-xl font-semibold text-teal-800">Subject</th>
                 <th className="py-3 px-4 text-center text-lg md:text-xl font-semibold text-teal-800">Total Lecture</th>
                 <th className="py-3 px-4 text-center text-lg md:text-xl font-semibold text-teal-800">Lecture Attended</th>
+                <th className="py-3 px-4 text-center text-lg md:text-xl font-semibold text-teal-800">Status</th>
               </tr>
             </thead>
             <tbody>
-              {response && response.map(item => (
-                item.subject.includes(semester) && (
+              {semesterRows.map(item => {
+                const insight = getAttendanceInsight(item.totalLecture || 0, item.lectureAttended || 0);
+                return (
                   <tr key={item.subject} className="border-t hover:bg-teal-50 transition">
                     <td className="py-2 px-4 text-md md:text-lg font-medium">{item.subject}</td>
                     <td className="py-2 px-4 text-md md:text-lg text-center">{item.totalLecture}</td>
                     <td className="py-2 px-4 text-md md:text-lg text-center">{item.lectureAttended}</td>
+                    <td className="py-2 px-4 text-sm md:text-base text-center">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                          insight.isLow ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"
+                        }`}
+                      >
+                        {insight.percent}% {insight.isLow ? "(Low)" : "(Safe)"}
+                      </span>
+                      <p className="mt-1 text-xs text-slate-600">{insight.message}</p>
+                    </td>
                   </tr>
-                )
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

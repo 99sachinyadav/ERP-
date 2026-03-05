@@ -10,7 +10,6 @@ import CreateSection from "../Components/CreateSection";
 import ChangeYear from "../Components/ChangeYear";
 import AddSubjects from "../Components/AddSubjects";
 import MonitorAttendence from "../Components/MonitorAttendence";
-import Dashboard from "./Dashboard";
 import ChangeTeacherpassword from "../Components/ChangeTeacherpassword";
 import ChangeStudentpassword from "../Components/ChangeStudentpassword";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +19,27 @@ const Home = () => {
   const [activeComponent, setActiveComponent] = useState("AdminMenu");
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+
+  const menuItems = [
+    { key: "TeacherRegister", icon: "ri-user-add-line", label: "Register Teacher" },
+    { key: "UpdateTeacher", icon: "ri-user-settings-line", label: "Update Teacher" },
+    { key: "SeeALLTeachers", icon: "ri-team-line", label: "All Teachers" },
+    { key: "SeeALLStudents", icon: "ri-graduation-cap-line", label: "All Students" },
+    { key: "CreateSection", icon: "ri-layout-grid-line", label: "Create Section" },
+    { key: "ChangeYear", icon: "ri-calendar-event-line", label: "Change Year" },
+    { key: "AddSubjects", icon: "ri-book-open-line", label: "Add Subjects" },
+    { key: "ChangeSemesterOrSection", icon: "ri-exchange-2-line", label: "Semester / Section" },
+    { key: "ChangeStudentSection", icon: "ri-git-branch-line", label: "Student Section" },
+    { key: "ChangeTeacherpassword", icon: "ri-lock-password-line", label: "Teacher Password" },
+    { key: "ChangeStudentpassword", icon: "ri-shield-user-line", label: "Student Password" },
+    { key: "MonitorAttendence", icon: "ri-bar-chart-box-line", label: "Monitor Attendance" },
+  ];
+
+  const handleSelect = (componentName) => {
+    setActiveComponent(componentName);
+    setIsOpen(componentName !== "AdminMenu");
+  };
+
   const logout = () => {
     localStorage.removeItem("adminToken");
 
@@ -29,195 +49,93 @@ const Home = () => {
 
 
   return (
-    <div>
-      <div className="flex ">
-        {/* Left Sidebar */}
-        <div className="left hidden pt-5 sm:hidden md:w-[25%] border-2 md:flex flex-col gap-5 bg-gradient-to-br from-zinc-900 via-neutral-800 to-slate-900 text-white p-8 rounded-lg">
-          <div className="p-2 flex items-center">
-            <div className="flex justify-center bg-white rounded-full w-15 h-15 items-center ml-3">
-              <i className="ri-admin-line text-black   text-3xl text-center "></i>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100">
+      <div className="mx-auto flex w-full max-w-[1600px]">
+        <aside className="hidden min-h-screen w-72 flex-col border-r border-white/40 bg-slate-950/95 p-5 text-slate-100 shadow-2xl lg:flex">
+          <div className="mb-6 flex items-center gap-3 rounded-xl border border-slate-700/70 bg-slate-900/70 p-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/20">
+              <i className="ri-shield-user-line text-2xl text-blue-300"></i>
             </div>
-            <h1 className="text-2xl ml-10 font-semibold">Admin Pannel</h1>
-          </div>
-          <div
-            onClick={() => {
-              setActiveComponent("TeacherRegister");
-              setIsOpen(true);
-            }}
-            className="flex gap-4 mt-10 text-gray-300 hover:bg-gray-700 cursor-pointer p-1 rounded"
-          >
-            <div className="flex justify-center bg-gray-600 rounded-full w-10 h-10 items-center">
-              <i className="ri-user-add-line text-gray-300 text-2xl"></i>
+            <div>
+              <h1 className="text-lg font-bold tracking-wide">Admin Panel</h1>
+              <p className="text-xs text-slate-400">Control Center</p>
             </div>
-            <button className=" text-lg">Register Teacher</button>
-          </div>
-          <div 
-          onClick={() => {
-                setActiveComponent("UpdateTeacher");
-                setIsOpen(true);
-              }} className="flex gap-4 text-gray-300 hover:bg-gray-700 cursor-pointer p-1 rounded">
-            <div className="flex justify-center bg-gray-600 rounded-full w-10 h-10 items-center">
-              <i className="ri-presentation-line text-gray-300 text-2xl"></i>
-            </div>
-            <button
-              className="text-lg"
-              
-            >
-              Update Teacher
-            </button>
           </div>
 
-          
-       <div  onClick={() => {
-              setActiveComponent("SeeALLTeachers");
-                setIsOpen(true);
-              }} className="flex gap-4 text-gray-300 hover:bg-gray-700 cursor-pointer p-1 rounded">
-              <div className="flex justify-center bg-gray-600 rounded-full w-10 h-10 items-center">
-                <i className="ri-user-search-line text-gray-300 text-2xl"></i>
-              </div>
+          <div className="flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
+            {menuItems.map((item) => (
               <button
-                className="text-lg"
+                key={item.key}
+                onClick={() => handleSelect(item.key)}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition ${
+                  activeComponent === item.key
+                    ? "bg-blue-600 text-white shadow"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                }`}
               >
-                See ALL Teachers
+                <i className={`${item.icon} text-lg`}></i>
+                <span className="font-medium">{item.label}</span>
               </button>
-              </div>
-              <div
-              onClick={() => {
-                setActiveComponent("ChangeYear");
-                setIsOpen(true);
-              }}
-              className="flex gap-4 text-gray-300 hover:bg-gray-700 cursor-pointer p-1 rounded"
-              >
-              <div className="flex justify-center bg-gray-600 rounded-full w-10 h-10 items-center">
-                <i className="ri-calendar-event-line text-gray-300 text-2xl"></i>
-              </div>
-              <button className="text-lg">
-                Change Year
-              </button>
-              </div>
-              <div
-              onClick={() => {
-                setActiveComponent("AddSubjects");
-                setIsOpen(true);
-              }}
-              className="flex gap-4 text-gray-300 hover:bg-gray-700 cursor-pointer p-1 rounded"
-              >
-              <div className="flex justify-center bg-gray-600 rounded-full w-10 h-10 items-center">
-                <i className="ri-book-line text-gray-300 text-2xl"></i>
-              </div>
-              <button className="text-lg">
-                Add Subjects
-              </button>
-              </div>
-              <div
-              onClick={() => {
-                setActiveComponent("SeeALLStudents");
-                setIsOpen(true);
-              }}
-              className="flex gap-4 text-gray-300 hover:bg-gray-700 cursor-pointer p-1 rounded"
-              >
-              <div className="flex justify-center bg-gray-600 rounded-full w-10 h-10 items-center">
-                <i className="ri-user-3-line text-gray-300 text-2xl"></i>
-              </div>
-              <button className="text-lg">
-                See ALL Student
-              </button>
-              </div>
-              <div
-              onClick={() => {
-                setActiveComponent("CreateSection");
-                setIsOpen(true);
-              }}
-              className="flex gap-4 text-gray-300 hover:bg-gray-700 cursor-pointer p-1 rounded"
-              >
-              <div className="flex justify-center bg-gray-600 rounded-full w-10 h-10 items-center">
-                <i className="ri-layout-grid-line text-gray-300 text-2xl"></i>
-              </div>
-              <button className="text-lg">
-                Create A Section
-              </button>
-              </div>
-              <div
-              onClick={() => {
-                setActiveComponent("ChangeSemesterOrSection");
-                setIsOpen(true);
-              }}
-              className="flex gap-4 text-gray-300 hover:bg-gray-700 cursor-pointer p-1 rounded"
-              >
-              <div className="flex justify-center bg-gray-600 rounded-full w-10 h-10 items-center">
-                <i className="ri-refresh-line text-gray-300 text-2xl"></i>
-              </div>
-              <button className="text-lg">
-                Change Semester/Section
-              </button>
-              </div>
-              <div
-              onClick={() => {
-                logout();
-                }}
-                className="flex gap-4 text-gray-300 hover:bg-gray-700 cursor-pointer p-1 rounded"
-              >
-                <div className="flex justify-center bg-gray-600 rounded-full w-10 h-10 items-center">
-                <i className="ri-logout-box-r-line text-gray-300 text-2xl"></i>
-                </div>
-                <button className="text-lg">
-                LOGOUT
-                </button>
-              </div>
-        </div>
+            ))}
+          </div>
 
-        {/* Right Content */}
-        <div className="right w-full md:w-[75%] border-1  flex flex-col bg-gray-100">
-          <div className="nav w-full h-20 flex items-center rounded-lg  justify-between  bg-white">
-            <h1 className="text-lg sm:text-2xl  ml-4 sm:ml-10 font-semibold">
-              Dashboard
-            </h1>
-            <div
-              onClick={() =>{ setActiveComponent("AdminMenu"); setIsOpen(false); }}
-              className={`${
-                isOpen ? "flex" : "hidden"
-              } items-center justify-center mr-1 sm:mr-10 p-2 px-6 rounded-4xl cursor-pointer bg-blue-500  text-white  left-8 top-6 hover:bg-blue-600`}
-            >
-              <i className="ri-arrow-left-line text-xl sm:text-3xl"></i>
-              <span className="ml-2 text-md sm:text-xl">Back</span>
+          <button
+            onClick={logout}
+            className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-red-500/90 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600"
+          >
+            <i className="ri-logout-box-r-line"></i>
+            Logout
+          </button>
+        </aside>
+
+        <main className="w-full lg:w-[calc(100%-18rem)]">
+          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200/70 bg-white/85 px-4 py-4 backdrop-blur sm:px-6">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-800 sm:text-2xl">Dashboard</h2>
+              <p className="text-xs text-slate-500 sm:text-sm">Manage teachers, students, and academic settings</p>
             </div>
-            <div
-              onClick={() =>{  logout(), setIsOpen(false); }}
-              className={`${
-                isOpen ? "hidden" : "flex"
-              } items-center justify-center mr-1 sm:mr-10 p-2 px-6 rounded-4xl cursor-pointer bg-blue-500  text-white  left-8 top-6 hover:bg-blue-600`}
-            >
-              <i className="ri-arrow-left-line text-xl sm:text-3xl"></i>
-              <span className="ml-2 text-md sm:text-xl">Log out</span>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button
+                onClick={() => handleSelect("AdminMenu")}
+                className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold sm:px-5 sm:text-sm ${
+                  isOpen ? "bg-blue-600 text-white hover:bg-blue-700" : "bg-slate-200 text-slate-500"
+                }`}
+              >
+                <i className="ri-arrow-left-line"></i>
+                Back
+              </button>
+              <button
+                onClick={logout}
+                className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 sm:px-5 sm:text-sm lg:hidden"
+              >
+                <i className="ri-logout-box-r-line"></i>
+                Logout
+              </button>
             </div>
           </div>
 
-          {activeComponent === "AdminMenu" && (
-            <AdminMenu
-              setActiveComponent={setActiveComponent}
-              setIsOpen={setIsOpen}
-              isOpen={isOpen}
-            />
-          )}
-          {activeComponent === "TeacherRegister" && <TeacherRegister />}
-          {activeComponent === "UpdateTeacher" && <UpdateTeacher />}
-          {activeComponent === "SeeALLTeachers" && <SeeALLTeachers />}
-          {activeComponent === "SeeALLStudents" && <SeeAllStudent />}
-          {activeComponent === "CreateSection" && <CreateSection />}
-          {activeComponent === "ChangeYear" && <ChangeYear />}
-          {activeComponent === "AddSubjects" && <AddSubjects />}
-          {activeComponent === "ChangeStudentSection" && <ChangeStudentSection />}
-          {activeComponent === "ChangeTeacherpassword" && (
-            <ChangeTeacherpassword />
-          )}
-          {activeComponent === "ChangeStudentpassword" && (
-            <ChangeStudentpassword />
-          )}
-          {activeComponent === "ChangeSemesterOrSection" && (
-            <ChangeSemesterOrSection />
-          )}
-          {activeComponent === "MonitorAttendence" && <MonitorAttendence />}
-        </div>
+          <div className="p-4 sm:p-6">
+            {activeComponent === "AdminMenu" && (
+              <AdminMenu
+                setActiveComponent={setActiveComponent}
+                setIsOpen={setIsOpen}
+                isOpen={isOpen}
+              />
+            )}
+            {activeComponent === "TeacherRegister" && <TeacherRegister />}
+            {activeComponent === "UpdateTeacher" && <UpdateTeacher />}
+            {activeComponent === "SeeALLTeachers" && <SeeALLTeachers />}
+            {activeComponent === "SeeALLStudents" && <SeeAllStudent />}
+            {activeComponent === "CreateSection" && <CreateSection />}
+            {activeComponent === "ChangeYear" && <ChangeYear />}
+            {activeComponent === "AddSubjects" && <AddSubjects />}
+            {activeComponent === "ChangeStudentSection" && <ChangeStudentSection />}
+            {activeComponent === "ChangeTeacherpassword" && <ChangeTeacherpassword />}
+            {activeComponent === "ChangeStudentpassword" && <ChangeStudentpassword />}
+            {activeComponent === "ChangeSemesterOrSection" && <ChangeSemesterOrSection />}
+            {activeComponent === "MonitorAttendence" && <MonitorAttendence />}
+          </div>
+        </main>
       </div>
     </div>
   );

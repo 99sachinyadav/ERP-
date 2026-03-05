@@ -7,10 +7,12 @@ const SendEmail = () => {
     const [section, setsection] = useState("")
     const [year, setyear] = useState("")
     const [batch, setbatch] = useState("")
+    const [isLoading, setIsLoading] = useState(false)
 
 
      const sendMail = async (e)=>{
         e.preventDefault();
+        setIsLoading(true)
         try {
             const response = await axios.post(backendUrl + '/api/send-email',{
               section,
@@ -27,6 +29,8 @@ const SendEmail = () => {
         } catch (error) {
             console.log(error);
             toast.error(error.response?.data?.message || 'An error occurred')
+        } finally {
+            setIsLoading(false)
         }
      }
     
@@ -52,7 +56,14 @@ const SendEmail = () => {
           <input   value={batch} onChange={(e)=>setbatch(e.target.value)} placeholder='Enter a Your Starting Year'   type="batch" id="password" className="border border-gray-300 rounded-md p-1" required />
           
 
-          <button onClick={sendMail}  type="submit" className="bg-blue-500 text-white font-semibold py-1 rounded-md hover:bg-blue-600">Send Email</button>
+          <button
+            onClick={sendMail}
+            type="submit"
+            disabled={isLoading}
+            className="bg-blue-500 text-white font-semibold py-1 rounded-md hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "Sending..." : "Send Email"}
+          </button>
  
         </form>
 

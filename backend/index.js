@@ -5,6 +5,11 @@ import { Router } from './routes/studentRoute.js';
 import { teacherRouter } from './routes/teacherRoute.js';
 import { adminRouter } from './routes/adminRoute.js';
 import  cors from 'cors'
+import { setServers } from "node:dns/promises";
+import mongoose from "mongoose";
+
+// 1️⃣ Set DNS servers
+setServers(["1.1.1.1", "8.8.8.8"]);
 
  await connectdb()
 

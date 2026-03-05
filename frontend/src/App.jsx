@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import Studentsignup from "./pages/Studentsignup";
 import StudentLogin from "./pages/StudentLogin";
 import Profile from "./pages/Profile";
+import StudentMarks from "./pages/StudentMarks";
 import About from "./pages/About";
 import Department from "./pages/Department";
 import Contact from "./pages/Contact";
@@ -45,6 +46,14 @@ const App = () => {
             element={
               <StudentProtect>
                 <Profile />
+              </StudentProtect>
+            }
+          />
+          <Route
+            path="/marks"
+            element={
+              <StudentProtect>
+                <StudentMarks />
               </StudentProtect>
             }
           />

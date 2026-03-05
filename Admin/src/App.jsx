@@ -5,6 +5,7 @@ import { Toaster} from "react-hot-toast"
  
 import TeacherRegister from "./pages/TeacherRegister"
 import Dashboard from "./pages/Dashboard"
+import MarksDashboard from "./pages/MarksDashboard"
 import TeacherLogin from "./pages/TeacherLogin"
 import Home from "./pages/Home"
 import AdminProtect from "./Components/AdminProtect"
@@ -68,6 +69,11 @@ function App() {
           <Route path="/dashboard" element={
             <TeacherProTect>
               <Dashboard />
+            </TeacherProTect>
+          } />
+          <Route path="/marks" element={
+            <TeacherProTect>
+              <MarksDashboard />
             </TeacherProTect>
           } />
           <Route path="/teacherlogin" element={<TeacherLogin />} />
