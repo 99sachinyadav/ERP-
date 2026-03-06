@@ -391,7 +391,7 @@ const getAttendanceofAllStudent = async (req, res) => {
   }
 };
 
-// Only the class counsellor (section teacher) can upload or update marks
+// Any teacher assigned to the subject for the given section-year-batch can upload or update marks
 const uploadMarks = async (req, res) => {
   try {
     const {
@@ -411,7 +411,7 @@ const uploadMarks = async (req, res) => {
     if (adminID && !teacherId) {
       return res
         .status(403)
-        .json({ sucess: false, message: "Only class counsellor can upload marks" });
+        .json({ sucess: false, message: "Only assigned teacher can upload marks" });
     }
 
     if (
@@ -431,12 +431,16 @@ const uploadMarks = async (req, res) => {
       });
     }
 
+    const normalizedSubject = String(subject || "").trim();
+    const normalizedYear = String(year || "").trim();
+    const normalizedBatch = String(batch || "").trim();
+    const normalizedExam = String(exam || "").trim().toUpperCase();
     const upperSection = section.toUpperCase().trim();
-    const sectionName = upperSection + year.trim() + "_" + batch.trim();
+    const sectionName = upperSection + normalizedYear + "_" + normalizedBatch;
 
     const [teacher, sectionDoc, student] = await Promise.all([
       Teacher.findById(teacherId),
-      Section.findOne({ name: sectionName, year: year.trim(), batch: batch.trim() }),
+      Section.findOne({ name: sectionName, year: normalizedYear, batch: normalizedBatch }),
       Student.findOne({ rollno: rollno }),
     ]);
 
@@ -452,10 +456,18 @@ const uploadMarks = async (req, res) => {
         .json({ sucess: false, message: "Section not found with these details" });
     }
 
-    if (!teacher.section.includes(sectionDoc._id)) {
+    // Same assignment format used in attendance check: <subject>_<section><year>_<batch>
+    const assignedSubjectKey = `${normalizedSubject}_${sectionName}`;
+    const isAssignedSubject = Array.isArray(teacher.subjects)
+      ? teacher.subjects.some(
+          (item) => String(item || "").trim() === assignedSubjectKey
+        )
+      : false;
+
+    if (!isAssignedSubject) {
       return res.status(403).json({
         sucess: false,
-        message: "You are not class counsellor of this section",
+        message: "You are not assigned to upload marks for this subject and section",
       });
     }
 
@@ -465,7 +477,7 @@ const uploadMarks = async (req, res) => {
         .json({ sucess: false, message: "Student not found with this roll number" });
     }
 
-    if (!student.subjects.includes(subject)) {
+    if (!student.subjects.includes(normalizedSubject)) {
       return res.status(401).json({
         sucess: false,
         message: "Subject not assigned to this student",
@@ -481,32 +493,61 @@ const uploadMarks = async (req, res) => {
       });
     }
 
-    const maxTotal = exam === "PUT" ? 70 : 50;
-
-    if (numObtained < 0 || numObtained > maxTotal) {
+    if (!["ST1", "ST2", "PUT"].includes(normalizedExam)) {
       return res.status(401).json({
         sucess: false,
-        message: `Marks are not in valid range for ${exam}. Max allowed is ${maxTotal}`,
+        message: "Invalid exam type",
+      });
+    }
+
+    const maxTotal = normalizedExam === "PUT" ? 70 : 50;
+    const hasTotalMarks =
+      totalMarks !== undefined &&
+      totalMarks !== null &&
+      String(totalMarks).trim() !== "";
+    let parsedTotalMarks = maxTotal;
+
+    if (hasTotalMarks) {
+      parsedTotalMarks = Number(totalMarks);
+      if (Number.isNaN(parsedTotalMarks) || parsedTotalMarks <= 0) {
+        return res.status(401).json({
+          sucess: false,
+          message: "Total marks must be a valid positive number",
+        });
+      }
+
+      if (parsedTotalMarks > maxTotal) {
+        return res.status(401).json({
+          sucess: false,
+          message: `Total marks cannot be more than ${maxTotal} for ${normalizedExam}`,
+        });
+      }
+    }
+
+    if (numObtained < 0 || numObtained > parsedTotalMarks) {
+      return res.status(401).json({
+        sucess: false,
+        message: `Marks are not in valid range for ${normalizedExam}. Max allowed is ${parsedTotalMarks}`,
       });
     }
 
     const existing = student.marks.find(
       (m) =>
-        m.exam === exam &&
+        m.exam === normalizedExam &&
         m.semester === semester &&
-        m.subject === subject
+        m.subject === normalizedSubject
     );
 
     if (existing) {
       existing.obtainedMarks = numObtained;
-      existing.totalMarks = maxTotal;
+      existing.totalMarks = parsedTotalMarks;
     } else {
       student.marks.push({
-        exam,
+        exam: normalizedExam,
         semester,
-        subject,
+        subject: normalizedSubject,
         obtainedMarks: numObtained,
-        totalMarks: maxTotal,
+        totalMarks: parsedTotalMarks,
       });
     }
 

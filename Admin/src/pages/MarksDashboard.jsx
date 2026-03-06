@@ -14,8 +14,11 @@ function MarksDashboard() {
   const [exam, setExam] = useState("ST1");
   const [obtainedMarks, setObtainedMarks] = useState({});
   const [totalMarks, setTotalMarks] = useState({});
+  const [applyAllObtained, setApplyAllObtained] = useState("");
+  const [applyAllTotal, setApplyAllTotal] = useState("");
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
   const [savingRollNo, setSavingRollNo] = useState("");
+  const [isSavingAll, setIsSavingAll] = useState(false);
   const getDefaultTotalByExam = (examName) =>
     examName === "PUT" ? 70 : 50;
 
@@ -43,6 +46,8 @@ function MarksDashboard() {
         );
         setStudent(sorted);
         setObtainedMarks({});
+        setApplyAllObtained("");
+        setApplyAllTotal("");
         const defaults = {};
         sorted.forEach((item) => {
           defaults[item?.rollno] = getDefaultTotalByExam(exam);
@@ -67,7 +72,18 @@ function MarksDashboard() {
     }
   };
 
-  const uploadMarks = async (rollno) => {
+  const uploadMarks = async (rollno, options = {}) => {
+    const { showToast = true } = options;
+    const maxAllowed = getDefaultTotalByExam(exam);
+    const enteredTotal = Number(totalMarks[rollno]);
+
+    if (!Number.isNaN(enteredTotal) && enteredTotal > maxAllowed) {
+      if (showToast) {
+        toast.error(`Total marks cannot be more than ${maxAllowed} for ${exam}`);
+      }
+      return false;
+    }
+
     setSavingRollNo(rollno);
     try {
       const response = await axios.post(
@@ -90,17 +106,106 @@ function MarksDashboard() {
         }
       );
       if (response.data.sucess) {
-        toast.success(response.data.message);
+        if (showToast) {
+          toast.success(response.data.message);
+        }
+        return true;
       } else {
-        toast.error(response.data.message || "Failed to upload marks");
+        if (showToast) {
+          toast.error(response.data.message || "Failed to upload marks");
+        }
+        return false;
       }
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "An error occurred while uploading marks."
-      );
+      if (showToast) {
+        toast.error(
+          error.response?.data?.message || "An error occurred while uploading marks."
+        );
+      }
+      return false;
     } finally {
       setSavingRollNo("");
     }
+  };
+
+  const uploadAllFilledMarks = async () => {
+    const filledRollNos = (student || [])
+      .filter((item) => {
+        const roll = item?.rollno;
+        const hasObtained =
+          obtainedMarks[roll] !== undefined && String(obtainedMarks[roll]).trim() !== "";
+        const hasTotal =
+          totalMarks[roll] !== undefined && String(totalMarks[roll]).trim() !== "";
+        return hasObtained && hasTotal;
+      })
+      .map((item) => item?.rollno);
+
+    if (!filledRollNos.length) {
+      toast.error("Fill obtained and total marks for at least one student.");
+      return;
+    }
+
+    setIsSavingAll(true);
+    let successCount = 0;
+    let failedCount = 0;
+
+    try {
+      for (const rollno of filledRollNos) {
+        // eslint-disable-next-line no-await-in-loop
+        const ok = await uploadMarks(rollno, { showToast: false });
+        if (ok) successCount += 1;
+        else failedCount += 1;
+      }
+
+      if (failedCount === 0) {
+        toast.success(`Saved marks for ${successCount} students.`);
+      } else if (successCount === 0) {
+        toast.error("Failed to save marks for filled students.");
+      } else {
+        toast.success(`Saved ${successCount} students, failed ${failedCount}.`);
+      }
+    } finally {
+      setIsSavingAll(false);
+    }
+  };
+
+  const applySameObtainedToAll = (value) => {
+    setApplyAllObtained(value);
+    setObtainedMarks((prev) => {
+      const next = { ...prev };
+      (student || []).forEach((item) => {
+        next[item?.rollno] = value;
+      });
+      return next;
+    });
+  };
+
+  const applySameTotalToAll = (value) => {
+    const maxAllowed = getDefaultTotalByExam(exam);
+    if (value === "") {
+      setApplyAllTotal("");
+      setTotalMarks((prev) => {
+        const next = { ...prev };
+        (student || []).forEach((item) => {
+          next[item?.rollno] = "";
+        });
+        return next;
+      });
+      return;
+    }
+
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) return;
+    const safeValue = String(numeric > maxAllowed ? maxAllowed : numeric);
+
+    setApplyAllTotal(safeValue);
+    setTotalMarks((prev) => {
+      const next = { ...prev };
+      (student || []).forEach((item) => {
+        next[item?.rollno] = safeValue;
+      });
+      return next;
+    });
   };
 
   return (
@@ -126,6 +231,8 @@ function MarksDashboard() {
                 onChange={(e) => {
                   const nextExam = e.target.value;
                   setExam(nextExam);
+                  setApplyAllObtained("");
+                  setApplyAllTotal("");
                   setObtainedMarks({});
                   const defaults = {};
                   student.forEach((item) => {
@@ -201,6 +308,24 @@ function MarksDashboard() {
           </div>
         </div>
         <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8 overflow-x-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <input
+              type="number"
+              value={applyAllObtained}
+              onChange={(e) => applySameObtainedToAll(e.target.value)}
+              placeholder="Enter obtained marks for all students"
+              className="border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            <input
+              type="number"
+              value={applyAllTotal}
+              onChange={(e) => applySameTotalToAll(e.target.value)}
+              placeholder="Enter total marks for all students"
+              min={1}
+              max={getDefaultTotalByExam(exam)}
+              className="border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
           <div className="hidden sm:grid grid-cols-5 gap-4 pb-2 border-b">
             <span className="text-sm font-semibold text-gray-600">
               Roll No
@@ -239,20 +364,36 @@ function MarksDashboard() {
                     type="number"
                     value={totalMarks[item?.rollno] ?? ""}
                     onChange={(e) =>
-                      setTotalMarks((prev) => ({
-                        ...prev,
-                        [item?.rollno]: e.target.value,
-                      }))
+                      setTotalMarks((prev) => {
+                        const raw = e.target.value;
+                        const maxAllowed = getDefaultTotalByExam(exam);
+
+                        if (raw === "") {
+                          return { ...prev, [item?.rollno]: "" };
+                        }
+
+                        const numeric = Number(raw);
+                        if (Number.isNaN(numeric)) {
+                          return prev;
+                        }
+
+                        return {
+                          ...prev,
+                          [item?.rollno]: numeric > maxAllowed ? maxAllowed : raw,
+                        };
+                      })
                     }
                     placeholder="Total"
+                    min={1}
+                    max={getDefaultTotalByExam(exam)}
                     className="border rounded-lg px-2 py-1 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
                   />
                   <button
                     onClick={() => uploadMarks(item?.rollno)}
-                    disabled={savingRollNo === item?.rollno}
+                    disabled={savingRollNo === item?.rollno || isSavingAll}
                     className="bg-green-500 text-white font-semibold rounded-lg px-4 py-1 hover:bg-green-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {savingRollNo === item?.rollno ? "Saving..." : "Save"}
+                    {savingRollNo === item?.rollno ? "Saving..." : "Edit"}
                   </button>
                 </div>
               ))}
@@ -277,6 +418,13 @@ function MarksDashboard() {
           </h1>
           <p className="text-sm font-semibold text-gray-600">Total Subjects</p>
         </div>
+        <button
+          onClick={uploadAllFilledMarks}
+          disabled={isSavingAll || isLoadingStudents}
+          className="w-full bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-60 disabled:cursor-not-allowed mt-4"
+        >
+          {isSavingAll ? "Saving..." : "Save"}
+        </button>
       </div>
     </div>
   );

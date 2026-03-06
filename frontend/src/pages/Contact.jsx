@@ -21,11 +21,14 @@ const Contact = () => {
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <p className="text-xs text-slate-500">Phone</p>
-              <p className="mt-1 font-semibold text-slate-900">+91-9315966203</p>
+              <p className="mt-1 font-semibold text-slate-900">
+
++91-9310089953</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:col-span-2">
               <p className="text-xs text-slate-500">Email</p>
-              <p className="mt-1 text-sm font-semibold text-slate-900">sy7841846@gmail.com | Ratnesh34@gmail.com | raj67@gmail.com</p>
+              <p className="mt-1 text-sm font-semibold text-slate-900">info@rkgitm.ac.in | 
+director@rkgitm.ac.in</p>
             </div>
           </div>
 

@@ -17,6 +17,8 @@ function Dashboard() {
 const [teacher, setteacher] = useState("")
 const [totalnoLec, settotalLecture] = useState({})
 const [noofLecAttended, setlectureAttended] = useState({})
+const [applyAllTotalLecture, setApplyAllTotalLecture] = useState("")
+const [applyAllLectureAttended, setApplyAllLectureAttended] = useState("")
 const [semester, setsemester] = useState('')
 const [isLoadingStudents, setIsLoadingStudents] = useState(false)
 const [markingRollNo, setMarkingRollNo] = useState("")
@@ -75,6 +77,8 @@ sortedStudents.forEach((item) => {
 });
 settotalLecture(defaultLectures);
 setlectureAttended(defaultAttended);
+setApplyAllTotalLecture("");
+setApplyAllLectureAttended("");
 
            setsubjects(responce.data.findSection.subjects)
            setsingleSubject(responce.data.findSection.subjects[0])
@@ -120,6 +124,28 @@ setlectureAttended(defaultAttended);
     } finally {
         setMarkingRollNo("")
     }
+ }
+
+ const applyTotalLectureToAll = (value) => {
+    setApplyAllTotalLecture(value);
+    settotalLecture((prev) => {
+        const next = { ...prev };
+        (student || []).forEach((item) => {
+            next[item?.rollno] = value;
+        });
+        return next;
+    });
+ }
+
+ const applyLectureAttendedToAll = (value) => {
+    setApplyAllLectureAttended(value);
+    setlectureAttended((prev) => {
+        const next = { ...prev };
+        (student || []).forEach((item) => {
+            next[item?.rollno] = value;
+        });
+        return next;
+    });
  }
 
 //    console.log(totalnoLec)
@@ -192,6 +218,22 @@ return (
                 </div>
             </div>
             <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8 overflow-x-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    <input
+                        type="number"
+                        value={applyAllTotalLecture}
+                        onChange={(e) => applyTotalLectureToAll(e.target.value)}
+                        placeholder="Enter total lecture for all students"
+                        className="border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                    <input
+                        type="number"
+                        value={applyAllLectureAttended}
+                        onChange={(e) => applyLectureAttendedToAll(e.target.value)}
+                        placeholder="Enter lecture attended for all students"
+                        className="border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                </div>
                 <div className="hidden sm:grid grid-cols-5 gap-4 pb-2 border-b">
                     <span className="text-sm font-semibold text-gray-600">Student ID</span>
                     <span className="text-sm font-semibold text-gray-600">Name</span>
