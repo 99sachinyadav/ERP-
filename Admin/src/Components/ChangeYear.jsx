@@ -58,7 +58,7 @@ const ChangeYear = () => {
           </select>
 
           <label className="text-gray-700 font-semibold" htmlFor="Batch">Batch</label>
-          <input  value={batch} onChange={(e)=>setbatch(e.target.value)} placeholder='Enter a Your Starting Year'   type="batch" id="password" className="border border-gray-300 rounded-md p-1" required />
+          <input  value={batch} onChange={(e)=>setbatch(e.target.value.replace(/\D/g, ""))} placeholder='Enter a Your Starting Year'   type="text" inputMode="numeric" pattern="\\d*" id="password" className="border border-gray-300 rounded-md p-1" required />
           <label className="text-gray-700 font-semibold" htmlFor="Year">Select New Year</label>
             <select  value={newyear} onChange={(e)=>setnewyear(e.target.value)} placeholder="Select New Year" className=' border border-gray-300 rounded-md p-1' >      
           <option value="Ist">1st Year</option>
@@ -73,7 +73,7 @@ const ChangeYear = () => {
             disabled={isLoading}
             className="bg-blue-500 text-white font-semibold py-1 rounded-md hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Updating..." : "Update teacher"}
+            {isLoading ? "Updating..." : "Change Year"}
           </button>
  
         </form>

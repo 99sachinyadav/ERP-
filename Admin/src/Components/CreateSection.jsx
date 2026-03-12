@@ -77,7 +77,7 @@ const CreateSection = () => {
           </select>
 
           <label className="text-gray-700 font-semibold" htmlFor="Batch">Batch</label>
-          <input   value={batch}  onChange={(e) => setbatch(e.target.value)} placeholder='Enter a Your Starting Year'   type="text" id="text" className="border border-gray-300 rounded-md p-1" required />
+          <input   value={batch}  onChange={(e) => setbatch(e.target.value.replace(/\D/g, ""))} placeholder='Enter a Your Starting Year'   type="text" inputMode="numeric" pattern="\\d*" id="text" className="border border-gray-300 rounded-md p-1" required />
           <label className="text-gray-700 font-semibold" htmlFor="Email">Class Counsellor Email</label>
           <input   value={teacheremail}  onChange={(e) => setteacheremail(e.target.value)} placeholder='Enter Class Counsellor Email here'   type="email" id="Email" className="border border-gray-300 rounded-md p-1" required />
 

@@ -170,7 +170,8 @@ const attendancebyTeacher = async (req, res) => {
     }
 
     const sectionName =
-      findStudent.section + findStudent.year + "_" + findStudent.batch;
+      findStudent.section.toUpperCase() + findStudent.year + "_" + findStudent.batch;
+      console.log(sectionName)
     const findSection = await Section.findOne({ name: sectionName });
     if (!findSection) {
       return res
@@ -361,7 +362,7 @@ const getAttendanceofAllStudent = async (req, res) => {
         .status(403)
         .json({ sucess: false, message: "kindly fill you full details" });
     }
-    const SectionName = section + year + "_" + batch;
+    const SectionName = section.toUpperCase() + year + "_" + batch;
     const SectionExist = await Section.findOne({
       name: SectionName,
       year: year,

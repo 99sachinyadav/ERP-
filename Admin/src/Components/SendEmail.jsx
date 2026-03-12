@@ -53,7 +53,7 @@ const SendEmail = () => {
           </select>
 
           <label className="text-gray-700 font-semibold" htmlFor="Batch">Batch</label>
-          <input   value={batch} onChange={(e)=>setbatch(e.target.value)} placeholder='Enter a Your Starting Year'   type="batch" id="password" className="border border-gray-300 rounded-md p-1" required />
+          <input   value={batch} onChange={(e)=>setbatch(e.target.value.replace(/\D/g, ""))} placeholder='Enter a Your Starting Year'   type="text" inputMode="numeric" pattern="\\d*" id="password" className="border border-gray-300 rounded-md p-1" required />
           
 
           <button

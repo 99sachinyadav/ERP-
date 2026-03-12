@@ -72,6 +72,7 @@ const addSubjects = async (req, res) => {
     }
   
     const yearSection = section + year + "_" + batch;
+    console.log(yearSection)
     // console.log(yearSection);
     const sectionFind = await Section.findOne({
       name: yearSection,
@@ -83,6 +84,7 @@ const addSubjects = async (req, res) => {
         .json({ sucess: false, message: "Section not found" });
     }
     //  console.log(sectionFind)
+    console.log(sectionFind.semester ,semester)
     if (sectionFind.semester !== semester) {
        return res
          .status(401)
@@ -113,7 +115,7 @@ const addSubjects = async (req, res) => {
     });
 
    
-    const subjectWithSemAndYear = sectionFind.semester + "_" + subject+"_"+yearSection;
+const subjectWithSemAndYear = sectionFind.semester + "_" + subject+"_"+yearSection;
     teacherExists.subjects = teacherExists.subjects || [];
     if (!teacherExists.subjects.includes(subjectWithSemAndYear)) {
       teacherExists.subjects.push(subjectWithSemAndYear);
@@ -142,14 +144,15 @@ const changeSemesterorSection = async (req,res)=>{
         .json({ sucess: false, message: "please fill all the details" });
     }
 
-    const yearSection = currentSection + currentYear + "_" + currentBatch;
+    const yearSection = currentSection.toUpperCase() + currentYear + "_" + currentBatch;
+    console.log(yearSection)
     const sectionExist = await Section.findOne({ name: yearSection });
     if (!sectionExist) {
       return res
         .status(401)
         .json({ success: false, message: "Section does not exists check details" });
     }
-     const updatedsectionname = newSection + currentYear + "_" + currentBatch;
+     const updatedsectionname = newSection.toUpperCase() + currentYear + "_" + currentBatch;
      const alreadyExistedSection = await Section.findOne({ name: updatedsectionname });
      if (alreadyExistedSection && newSection !== currentSection) {
        return res
@@ -158,7 +161,9 @@ const changeSemesterorSection = async (req,res)=>{
      }
      sectionExist.name = updatedsectionname;
      sectionExist.semester = newSemester;
-     sectionExist.section = newSection;
+     sectionExist.section = newSection.toUpperCase();
+
+     console.log(sectionExist.name,sectionExist.semester,sectionExist.section)
 
      await sectionExist.save();
  sectionExist.students.forEach(async (studentId) => {
@@ -187,7 +192,7 @@ const changeStudentSection =  async (req,res)=>{
 
      section=section.toUpperCase();
      newsection=newsection.toUpperCase();
-      // console.log(year ,batch,newyear,studentId,section,newsection)
+      console.log(year ,batch,newyear,studentId,section,newsection)
      if(!year||!batch||!section||!newsection||!newyear||!studentId){
       return res.status(401).json({sucess:false,message:"please fill all the details"});
      }
@@ -243,6 +248,10 @@ const changeStudentSection =  async (req,res)=>{
   }
   student.section = newsection;
   student.year = newyear;
+  student.semester=targetSection.semester
+  console.log(student.section ,
+  student.year ,
+ targetSection.semester)
   await student.save();
 
   res.status(200).json({

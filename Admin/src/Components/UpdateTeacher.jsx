@@ -67,7 +67,7 @@ const UpdateTeacher = () => {
           </select>
 
           <label className="text-gray-700 font-semibold" htmlFor="Batch">Batch</label>
-          <input value={batch} onChange={(e)=>setbatch(e.target.value)} placeholder='Enter  Your Starting Year'   type="batch" id="password" className="border border-gray-300 rounded-md p-1" required />
+          <input value={batch} onChange={(e)=>setbatch(e.target.value.replace(/\D/g, ""))} placeholder='Enter  Your Starting Year'   type="text" inputMode="numeric" pattern="\\d*" id="password" className="border border-gray-300 rounded-md p-1" required />
           <label className="text-gray-700 font-semibold" htmlFor="Email">New Teacher Email</label>
           <input value={newteacheremail} onChange={(e)=>setnewteacheremail(e.target.value)} placeholder='Enter New Teacher Email here'   type="email" id="Email" className="border border-gray-300 rounded-md p-1" required />
 

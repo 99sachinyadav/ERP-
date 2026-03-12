@@ -138,7 +138,9 @@ return (
                                 type="text"
                                 placeholder="Batch"
                                 value={batch}
-                                onChange={e => setbatch(e.target.value)}
+                                onChange={e => setbatch(e.target.value.replace(/\D/g, ""))}
+                                inputMode="numeric"
+                                pattern="\\d*"
                                 className="border rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 text-xs sm:text-base"
                             />
                         </th>

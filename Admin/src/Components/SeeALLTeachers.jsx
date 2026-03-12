@@ -86,6 +86,8 @@ const SeeALLTeachers = () => {
         <th className="border border-gray-300   text-xs sm:text-lg sm:px-4 py-2 bg-gray-100 text-left">Email</th>
         <th className="border border-gray-300   text-xs sm:text-lg sm:px-4 py-2 bg-gray-100 text-center">Section</th>
         <th className="border border-gray-300   text-xs sm:text-lg sm:px-4 py-2 bg-gray-100 text-center">Batch Assigned</th>
+        <th className="border border-gray-300   text-xs sm:text-lg sm:px-4 py-2 bg-gray-100 text-center">Semester</th>
+        <th className="border border-gray-300   text-xs sm:text-lg sm:px-4 py-2 bg-gray-100 text-center">Subjects</th>
       </tr>
     </thead>
     <tbody>
@@ -106,6 +108,38 @@ const SeeALLTeachers = () => {
             ))}
            </div>
            </td>
+          <td className="border border-gray-300 text-sm  sm:text-lg  text-center  sm:px-4 py-2">
+            <div className='flex flex-col'>
+              {teacher?.section?.map((sec,idx)=>(
+                <h3 key={idx}> {sec?.semester || "-"}</h3>
+              ))}
+            </div>
+          </td>
+          <td className="border border-gray-300 text-sm sm:text-lg text-center sm:px-4 py-2">
+            <div className="flex flex-col gap-3">
+              {teacher?.section?.map((sec, idx) => (
+                <div key={idx} className="rounded-lg border border-slate-200 bg-slate-50 p-2">
+                  <div className="text-xs font-semibold text-slate-700">
+                    Section {sec?.name?.split("_")[0]} | Batch {sec?.name?.split("_")[1]}
+                  </div>
+                  <div className="mt-2 flex flex-wrap justify-center gap-2">
+                    {sec?.subjects?.length ? (
+                      sec.subjects.map((subj) => (
+                        <span
+                          key={`${sec?.name}-${subj}`}
+                          className="rounded-full border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700"
+                        >
+                          {subj}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-slate-500">No subjects assigned</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </td>
         </tr>
       ))}
     </tbody>

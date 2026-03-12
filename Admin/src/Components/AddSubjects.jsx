@@ -70,7 +70,7 @@ const AddSubjects = () => {
           </select>
 
           <label className="text-gray-700 font-semibold" htmlFor="Batch">Batch</label>
-          <input value={batch} onChange={(e) => setBatch(e.target.value)} placeholder='Enter a  Starting Year'   type="batch" id="password" className="border border-gray-300 rounded-md p-1" required />
+          <input value={batch} onChange={(e) => setBatch(e.target.value.replace(/\D/g, ""))} placeholder='Enter a  Starting Year'   type="text" inputMode="numeric" pattern="\\d*" id="password" className="border border-gray-300 rounded-md p-1" required />
           <label className="text-gray-700 font-semibold" htmlFor="Batch">Semester</label>
           <select className=' border border-gray-300 rounded-md p-1' onChange={(e) => setSemester(e.target.value)} value={semester}>
           <option value="Ist">Ist Semester</option>

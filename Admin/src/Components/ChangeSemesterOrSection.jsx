@@ -64,8 +64,8 @@ const ChangeSemesterOrSection = () => {
           </select>
 
           <label className="text-gray-700 font-semibold" htmlFor="Batch">Batch</label>
-          <input  value={currentBatch} onChange={(e) => setcurrentBatch(e.target.value)}  placeholder='Enter a Your Starting Year'   type="batch" id="password1" className="border border-gray-300 rounded-md p-1" required />
-          <label className="text-gray-700 font-semibold" htmlFor="Year">Select New Year</label>
+          <input  value={currentBatch} onChange={(e) => setcurrentBatch(e.target.value.replace(/\D/g, ""))}  placeholder='Enter a Your Starting Year'   type="text" inputMode="numeric" pattern="\\d*" id="password1" className="border border-gray-300 rounded-md p-1" required />
+          <label className="text-gray-700 font-semibold" htmlFor="Year">Select New Semester</label>
             <select  value={newSemester} onChange={(e) => setnewSemester(e.target.value)}  placeholder="Select New Semester" className=' border border-gray-300 rounded-md p-1' >      
           <option value="Ist">Ist Semester</option>
           <option value="IInd">IInd Semester</option>    
@@ -77,7 +77,7 @@ const ChangeSemesterOrSection = () => {
           <option value="VIIIth">VIII Semester</option>
           </select>
                     <label className="text-gray-700 font-semibold" htmlFor="Batch">New Section</label>
-          <input  value={newSection} onChange={(e) => setnewSection(e.target.value)}  placeholder='Enter New Section'   type="batch" id="password" className="border border-gray-300 rounded-md p-1" required />
+          <input  value={newSection} onChange={(e) => setnewSection(e.target.value)}  placeholder='Enter New Section'   type="text" id="password" className="border border-gray-300 rounded-md p-1" required />
 
           <button
             onClick={handleSubmit}

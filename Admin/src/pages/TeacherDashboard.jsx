@@ -35,6 +35,9 @@ const TeacherDashboard = () => {
   const [marksTotal, setMarksTotal] = React.useState("");
    
   const [mydata,setmydata]= React.useState([]);
+  const [assignedSections, setAssignedSections] = React.useState([]);
+  const [sectionSemesters, setSectionSemesters] = React.useState({});
+  const [sectionSubjects, setSectionSubjects] = React.useState({});
   const logout = () => {
     localStorage.removeItem("teacherToken");
     localStorage.removeItem("teachername"); 
@@ -74,61 +77,95 @@ const TeacherDashboard = () => {
   }
 
   useEffect(() => {
-  const getAttendanceData = async () => {
-    try {
-    if(localStorage.getItem("teachersection")){
-        const str = localStorage.getItem("teachersection").split(',')[1];
-      const underscoreIndex = str.indexOf("_");
+    const parseSections = () => {
+      const raw = localStorage.getItem("teachersection") || "";
+      return raw
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+    };
 
-      const sectionVal = str[0];
-      const batchVal = str.substring(underscoreIndex + 1).trim();
-      const yearVal = str.substring(1, underscoreIndex).trim();
-      // console.log(sectionVal, yearVal, batchVal);
-    
- 
+    const getAttendanceData = async () => {
+      try {
+        const sections = parseSections();
+        setAssignedSections(sections);
+        if (sections.length === 0) return;
 
-      const response = await axios.get(backendUrl + "/api/gelStudentBySection", {
-        params: { section: sectionVal, year: yearVal, batch: batchVal },
-        headers: { teachertoken: localStorage.getItem("teacherToken") }
-      });
+        const primary = sections[0];
+        const underscoreIndex = primary.indexOf("_");
+        const sectionVal = primary[0];
+        const batchVal = primary.substring(underscoreIndex + 1).trim();
+        const yearVal = primary.substring(1, underscoreIndex).trim();
 
-      if (response.data.sucess) {
-        const studentsFromResponse = response.data.findSection.students;
-        // console.log(studentsFromResponse);
-        setstudents(studentsFromResponse);
-        setAttendance(response.data.attendance);
-        setsemester(response.data.findSection.semester);
-
-        const newData = studentsFromResponse.map(student => {
-          let totalLec = 0;
-          let totalAttend = 0;
-          if (student.attendance) {
-            student.attendance.forEach(attend => {
-              if (Array.isArray(attend.subject)) {
-                attend.subject.forEach(att => {
-                  if (att.name.includes(response.data.findSection.semester)) {
-                    totalAttend += att.noofLecAttended || 0;
-                    totalLec += att.totalnoLec || 0;
-                  }
-                });
-              }
-            });
-          }
-          return { name: student.name, attendance: totalLec ? Math.round((totalAttend / totalLec) * 100) : 0 };
+        const response = await axios.get(backendUrl + "/api/gelStudentBySection", {
+          params: { section: sectionVal, year: yearVal, batch: batchVal },
+          headers: { teachertoken: localStorage.getItem("teacherToken") }
         });
 
-        setmydata(newData);
-      }
-       
-      }
-    } catch (error) {
-      console.log(error.response?.data?.message || error.message);
-      alert("Error in fetching data");
-    }
-  };
+        if (response.data.sucess) {
+          const studentsFromResponse = response.data.findSection.students;
+          setstudents(studentsFromResponse);
+          setAttendance(response.data.attendance);
+          setsemester(response.data.findSection.semester);
 
-  getAttendanceData();
-}, []);
+          const newData = studentsFromResponse.map(student => {
+            let totalLec = 0;
+            let totalAttend = 0;
+            if (student.attendance) {
+              student.attendance.forEach(attend => {
+                if (Array.isArray(attend.subject)) {
+                  attend.subject.forEach(att => {
+                    if (att.name.includes(response.data.findSection.semester)) {
+                      totalAttend += att.noofLecAttended || 0;
+                      totalLec += att.totalnoLec || 0;
+                    }
+                  });
+                }
+              });
+            }
+            return { name: student.name, attendance: totalLec ? Math.round((totalAttend / totalLec) * 100) : 0 };
+          });
+
+          setmydata(newData);
+        }
+
+        const semesterResults = await Promise.all(
+          sections.map(async (sectionName) => {
+            const underscore = sectionName.indexOf("_");
+            const sec = sectionName[0];
+            const batch = sectionName.substring(underscore + 1).trim();
+            const year = sectionName.substring(1, underscore).trim();
+            try {
+              const res = await axios.get(backendUrl + "/api/gelStudentBySection", {
+                params: { section: sec, year, batch },
+                headers: { teachertoken: localStorage.getItem("teacherToken") }
+              });
+              if (res.data?.findSection?.semester) {
+                return [sectionName, res.data.findSection.semester, res.data.findSection.subjects || []];
+              }
+            } catch (err) {
+              // ignore per-section errors
+            }
+            return [sectionName, "", []];
+          })
+        );
+
+        const semesterMap = {};
+        const subjectsMap = {};
+        semesterResults.forEach(([name, sem, subjects]) => {
+          semesterMap[name] = sem;
+          subjectsMap[name] = subjects;
+        });
+        setSectionSemesters(semesterMap);
+        setSectionSubjects(subjectsMap);
+      } catch (error) {
+        console.log(error.response?.data?.message || error.message);
+        alert("Error in fetching data");
+      }
+    };
+
+    getAttendanceData();
+  }, []);
 //  console.log(mydata);
   
      const data = [
@@ -242,10 +279,41 @@ const TeacherDashboard = () => {
                 Hi, <span className="text-blue-600">{localStorage.getItem("teachername") || "Teacher"}</span>
               </h2>
               <p className="mt-2 text-sm text-gray-600 sm:text-base">
-                {localStorage.getItem("teachersection")
-                  ? `Assigned Section: ${localStorage.getItem("teachersection")}`
-                  : "No section is assigned yet."}
+                {assignedSections.length > 0 ? "Assigned Sections" : "No section is assigned yet."}
               </p>
+              {assignedSections.length > 0 ? (
+                <div className="mt-4 space-y-3">
+                  {assignedSections.map((sectionName) => (
+                    <div
+                      key={sectionName}
+                      className="rounded-xl border border-blue-100 bg-blue-50 p-3"
+                    >
+                      <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-blue-800">
+                        <span className="rounded-full bg-white px-3 py-1 border border-blue-200">
+                          Section: {sectionName}
+                        </span>
+                        <span className="rounded-full bg-white px-3 py-1 border border-blue-200">
+                          Semester: {sectionSemesters[sectionName] || "N/A"}
+                        </span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {(sectionSubjects[sectionName] || []).length > 0 ? (
+                          sectionSubjects[sectionName].map((subject) => (
+                            <span
+                              key={`${sectionName}-${subject}`}
+                              className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 border border-slate-200"
+                            >
+                              {subject}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-slate-500">No subjects assigned.</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
 
               <div className="mt-6 rounded-xl bg-blue-50 p-4">
                 <h5 className="text-sm font-semibold text-blue-900 sm:text-base">
@@ -281,7 +349,14 @@ const TeacherDashboard = () => {
                           <option value="IVth">IVth</option>
                         </select>
                         <Input value={section} onChange={(e) => setsection(e.target.value)} type="text" placeholder="Enter section" />
-                        <Input value={batch} onChange={(e) => setbatch(e.target.value)} type="text" placeholder="Enter batch" />
+                        <Input
+                          value={batch}
+                          onChange={(e) => setbatch(e.target.value.replace(/\D/g, ""))}
+                          type="text"
+                          inputMode="numeric"
+                          pattern="\\d*"
+                          placeholder="Enter batch"
+                        />
                         <Button
                           onClick={sendEmailStudents}
                           disabled={isSendingEmail || sentEmail}
@@ -348,4 +423,3 @@ const TeacherDashboard = () => {
 };
 
 export default TeacherDashboard;
-

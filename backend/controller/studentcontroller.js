@@ -281,6 +281,7 @@ const changeYear = async (req, res) => {
         .json({ sucess: false, message: "please fill all the details" });
     }
     const sectionYear = section + year + "_" + batch;
+    console.log(sectionYear)
 
     const findSection = await Section.findOne({
       name: sectionYear,

@@ -16,10 +16,91 @@ const MonitorAttendence = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchRoll, setSearchRoll] = useState("");
+  const [searchMessage, setSearchMessage] = useState("");
+  const adminLikeToken =
+    localStorage.getItem("adminToken") ||
+    localStorage.getItem("deanToken") ||
+    localStorage.getItem("directorToken");
+
+  const downloadAttendancePdf = (student) => {
+    if (!student) return;
+    const popupWindow = window.open("", "_blank", "width=900,height=700");
+    if (!popupWindow) return;
+
+    let subjectRows = "";
+    if (student.attendance && student.attendance.length > 0) {
+      student.attendance.forEach((attend) => {
+        let totalLec = 0;
+        let totalAttend = 0;
+        let subjectName = "";
+        attend.subject &&
+          attend.subject.forEach((subj) => {
+            if (subj.name && subj.name.includes(semester)) {
+              totalAttend += subj.noofLecAttended || 0;
+              totalLec += subj.totalnoLec || 0;
+              subjectName = subj.name || "";
+            }
+          });
+        if (subjectName && totalLec) {
+          const percent = ((totalAttend / totalLec) * 100).toFixed(2);
+          subjectRows += `
+            <tr>
+              <td>${subjectName}</td>
+              <td>${totalLec}</td>
+              <td>${totalAttend}</td>
+              <td>${percent}%</td>
+            </tr>
+          `;
+        }
+      });
+    }
+
+    const html = `
+      <html>
+        <head>
+          <title>Attendance Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
+            h1 { font-size: 20px; margin-bottom: 8px; }
+            h2 { font-size: 16px; margin-top: 16px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+            th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; text-align: left; }
+            th { background: #f5f5f5; }
+            .meta { font-size: 12px; color: #555; }
+          </style>
+        </head>
+        <body>
+          <h1>Attendance Report</h1>
+          <div class="meta">Name: ${student.name || "-"} | Roll No: ${student.rollno || "-"}</div>
+          <div class="meta">Father's Name: ${student.father_name || "-"}</div>
+          <h2>Subject-wise Attendance</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Subject</th>
+                <th>Total Lectures</th>
+                <th>Lectures Attended</th>
+                <th>Attendance %</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${subjectRows || "<tr><td colspan='4'>No attendance data available.</td></tr>"}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+    popupWindow.document.write(html);
+    popupWindow.document.close();
+    popupWindow.focus();
+    popupWindow.print();
+  };
   const getStudent = async () => {
     setLoading(true);
     setErrorMessage("");
     setHasSearched(true);
+    setSearchMessage("");
     try {
       // console.log(localStorage.getItem("teacherToken"));
       const responce = await axios.get(
@@ -34,9 +115,7 @@ const MonitorAttendence = () => {
             teachertoken: localStorage.getItem("teacherToken")
               ? localStorage.getItem("teacherToken")
               : null,
-            admintoken: localStorage.getItem("adminToken")
-              ? localStorage.getItem("adminToken")
-              : null,
+            admintoken: adminLikeToken ? adminLikeToken : null,
           },
         }
       );
@@ -61,6 +140,30 @@ const MonitorAttendence = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = () => {
+    setSearchMessage("");
+    const roll = String(searchRoll || "").trim();
+    if (!roll) {
+      setSearchMessage("Enter a roll number to search.");
+      return;
+    }
+    const found = students.find(
+      (student) => String(student?.rollno || "").trim() === roll
+    );
+    if (!found) {
+      setPopupStudent(null);
+      setSearchMessage("No student found with this roll number.");
+      return;
+    }
+    setPopupStudent(found);
+  };
+
+  const clearSearch = () => {
+    setSearchRoll("");
+    setSearchMessage("");
+    setPopupStudent(null);
   };
   return (
     <div className={`flex flex-col  `}>
@@ -89,9 +192,11 @@ const MonitorAttendence = () => {
        
         <input
           value={batch}
-          onChange={(e) => setbatch(e.target.value)}
+          onChange={(e) => setbatch(e.target.value.replace(/\D/g, ""))}
           placeholder="Enter Starting year here"
           type="text"
+          inputMode="numeric"
+          pattern="\d*"
           className="border border-gray-300 rounded sm:w-40 w-20 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
         />
         <button
@@ -101,6 +206,34 @@ const MonitorAttendence = () => {
         >
           {loading ? "Loading..." : "Track"}
         </button>
+      </div>
+      <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
+          <input
+            value={searchRoll}
+            onChange={(e) => setSearchRoll(e.target.value)}
+            placeholder="Search by roll no"
+            type="text"
+            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition md:w-64"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={handleSearch}
+              className="px-4 py-2 rounded-md text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700"
+            >
+              Search
+            </button>
+            <button
+              onClick={clearSearch}
+              className="px-4 py-2 rounded-md text-sm font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+        {searchMessage ? (
+          <p className="mt-2 text-sm text-slate-600">{searchMessage}</p>
+        ) : null}
       </div>
       <div className="mt-5">
         {loading ? (
@@ -289,12 +422,20 @@ const MonitorAttendence = () => {
                             ) : (
                               <div>No attendance data available.</div>
                             )}
-                            <button
-                              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-                              onClick={() => setPopupStudent(null)}
-                            >
-                              Close
-                            </button>
+                            <div className="mt-4 flex flex-wrap gap-3">
+                              <button
+                                className="px-4 py-2 bg-blue-500 text-white rounded"
+                                onClick={() => downloadAttendancePdf(popupStudent)}
+                              >
+                                Download PDF
+                              </button>
+                              <button
+                                className="px-4 py-2 bg-slate-200 text-slate-700 rounded"
+                                onClick={() => setPopupStudent(null)}
+                              >
+                                Close
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </td>

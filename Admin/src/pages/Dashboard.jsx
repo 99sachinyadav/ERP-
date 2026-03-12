@@ -204,7 +204,9 @@ return (
                         <input
                             placeholder="Enter Starting Year"
                             value={batch}
-                            onChange={(e) => setbatch(e.target.value)}
+                            onChange={(e) => setbatch(e.target.value.replace(/\D/g, ""))}
+                            inputMode="numeric"
+                            pattern="\\d*"
                             className="border rounded-lg px-2 py-1 text-base font-semibold bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
                         />
                     </div>
