@@ -1,5 +1,5 @@
 import express from "express"
-import { attendancebyTeacher, getAttendanceofAllStudent, registerTeacher, teacherLogin, updateTeacherInSection, uploadMarks } from "../controller/teacherconroller.js";
+import { attendancebyTeacher, getAttendanceofAllStudent, getTeacherAssignments, registerTeacher, teacherLogin, updateTeacherInSection, uploadMarks } from "../controller/teacherconroller.js";
 import { adminAuth } from "../middelware/adminAuth.js";
 import  authTeacher from "../middelware/teacherAuth.js";
 import { addSubjects } from "../controller/sectioncontroller.js";
@@ -16,6 +16,7 @@ teacherRouter.put('/updateTeacher',adminAuth,updateTeacherInSection)
 teacherRouter.get('/getattandanceStudent',authTeacher,getAttendanceofAllStudent);
 teacherRouter.post('/addSubjects',adminAuth,addSubjects);
 teacherRouter.get('/gelStudentBySection',authTeacher,getAllStudentBySection)
+teacherRouter.get('/getTeacherAssignments',authTeacher,getTeacherAssignments)
 teacherRouter.post("/send-email", authTeacher,sendEmailStudent);
 teacherRouter.post("/uploadMarks", authTeacher, uploadMarks);
 export {teacherRouter}

@@ -353,6 +353,41 @@ const getAllTeacher = async (req, res) => {
     return res.status(403).json({ sucess: false, message: error.message });
   }
 };
+
+const getTeacherAssignments = async (req, res) => {
+  try {
+    const { teacherId } = req.body;
+    if (!teacherId) {
+      return res
+        .status(403)
+        .json({ sucess: false, message: "teacher id is missing" });
+    }
+
+    const teacher = await Teacher.findById(teacherId).select(
+      "name email subjects section"
+    );
+    if (!teacher) {
+      return res
+        .status(404)
+        .json({ sucess: false, message: "Teacher not found" });
+    }
+
+    return res.status(200).json({
+      sucess: true,
+      message: "teacher assignments fetched successfully",
+      teacher: {
+        id: teacher._id,
+        name: teacher.name,
+        email: teacher.email,
+      },
+      subjects: teacher.subjects || [],
+      sections: teacher.section || [],
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(403).json({ sucess: false, message: error.message });
+  }
+};
 // by this route we can get all the attendance of all student in a particular section with student data
 const getAttendanceofAllStudent = async (req, res) => {
   try {
@@ -571,6 +606,7 @@ export {
   attendancebyTeacher,
   updateTeacherInSection,
   getAllTeacher,
+  getTeacherAssignments,
   getAttendanceofAllStudent,
   uploadMarks,
 };

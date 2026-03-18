@@ -10,6 +10,8 @@ import CreateSection from "../Components/CreateSection";
 import ChangeYear from "../Components/ChangeYear";
 import AddSubjects from "../Components/AddSubjects";
 import MonitorAttendence from "../Components/MonitorAttendence";
+import MonitorSubjectFaculty from "../Components/MonitorSubjectFaculty";
+import RemoveSubject from "../Components/RemoveSubject";
 import ChangeTeacherpassword from "../Components/ChangeTeacherpassword";
 import ChangeStudentpassword from "../Components/ChangeStudentpassword";
 import { useNavigate } from "react-router-dom";
@@ -28,11 +30,13 @@ const Home = () => {
     { key: "CreateSection", icon: "ri-layout-grid-line", label: "Create Section" },
     { key: "ChangeYear", icon: "ri-calendar-event-line", label: "Change Year" },
     { key: "AddSubjects", icon: "ri-book-open-line", label: "Add Subjects" },
+    { key: "RemoveSubject", icon: "ri-delete-bin-6-line", label: "Remove Subject" },
     { key: "ChangeSemesterOrSection", icon: "ri-exchange-2-line", label: "Semester / Section" },
     { key: "ChangeStudentSection", icon: "ri-git-branch-line", label: "Student Section" },
     { key: "ChangeTeacherpassword", icon: "ri-lock-password-line", label: "Teacher Password" },
     { key: "ChangeStudentpassword", icon: "ri-shield-user-line", label: "Student Password" },
     { key: "MonitorAttendence", icon: "ri-bar-chart-box-line", label: "Monitor Attendance" },
+    { key: "MonitorSubjectFaculty", icon: "ri-book-2-line", label: "Subject-wise Faculty" },
   ];
 
   const handleSelect = (componentName) => {
@@ -129,11 +133,13 @@ const Home = () => {
             {activeComponent === "CreateSection" && <CreateSection />}
             {activeComponent === "ChangeYear" && <ChangeYear />}
             {activeComponent === "AddSubjects" && <AddSubjects />}
+            {activeComponent === "RemoveSubject" && <RemoveSubject />}
             {activeComponent === "ChangeStudentSection" && <ChangeStudentSection />}
             {activeComponent === "ChangeTeacherpassword" && <ChangeTeacherpassword />}
             {activeComponent === "ChangeStudentpassword" && <ChangeStudentpassword />}
             {activeComponent === "ChangeSemesterOrSection" && <ChangeSemesterOrSection />}
             {activeComponent === "MonitorAttendence" && <MonitorAttendence />}
+            {activeComponent === "MonitorSubjectFaculty" && <MonitorSubjectFaculty />}
           </div>
         </main>
       </div>

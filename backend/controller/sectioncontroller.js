@@ -1,6 +1,7 @@
 import { Section } from "../model/sectionmodel.js";
 import { Teacher } from "../model/teachermodel.js";
 import { Student } from "../model/studentmodel.js";
+ 
 const Sectionregister = async (req, res) => {
   try {
     const { year, batch, teacheremail ,semester } = req.body;
@@ -184,6 +185,56 @@ const changeSemesterorSection = async (req,res)=>{
   }
 }
 
+const removeSubjectFromSection = async (req, res) => {
+  try {
+    let { batch, year, subject } = req.body;
+    let { section } = req.body;
+    section = section.toUpperCase().trim();
+
+    if (!section || !year || !batch || !subject) {
+      return res
+        .status(400)
+        .json({ sucess: false, message: "please fill all the details" });
+    }
+
+    const yearSection = section + year + "_" + batch;
+    const sectionFind = await Section.findOne({ name: yearSection });
+    if (!sectionFind) {
+      return res
+        .status(404)
+        .json({ sucess: false, message: "Section not found" });
+    }
+
+    const semsubject = sectionFind.semester + "_" + subject;
+    const subjectExists = sectionFind.subjects.find((sub) => sub === semsubject);
+    if (!subjectExists) {
+      return res
+        .status(404)
+        .json({ sucess: false, message: "Subject not found in section" });
+    }
+
+    sectionFind.subjects = sectionFind.subjects.filter(
+      (sub) => sub !== semsubject
+    );
+    await sectionFind.save();
+
+    await Student.updateMany(
+      { _id: { $in: sectionFind.students } },
+      { $pull: { subjects: semsubject } }
+    );
+
+    return res.status(200).json({
+      sucess: true,
+      message: "Subject removed from section and students successfully",
+      section: sectionFind.name,
+      removedSubject: semsubject,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ sucess: false, message: error.message });
+  }
+};
+
 const changeStudentSection =  async (req,res)=>{
     
   try {
@@ -269,4 +320,10 @@ const changeStudentSection =  async (req,res)=>{
 
 }
 
-export { Sectionregister, addSubjects, changeSemesterorSection ,changeStudentSection};
+export {
+  Sectionregister,
+  addSubjects,
+  removeSubjectFromSection,
+  changeSemesterorSection,
+  changeStudentSection,
+};

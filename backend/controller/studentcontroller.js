@@ -1,4 +1,5 @@
 import { Section } from "../model/sectionmodel.js";
+import { Teacher } from "../model/teachermodel.js";
 import { Student } from "../model/studentmodel.js";
 import bcrypt  ,{ genSalt } from "bcryptjs";
  
@@ -331,9 +332,9 @@ const getAllStudentBySection = async (req, res) => {
     }
     const Section_Year = section + year + "_" + batch;
     //console.log(Section_Year)
-    const findSection = await Section.findOne({ name: Section_Year }).populate(
-      "students"
-    ).populate("teacher");
+    const findSection = await Section.findOne({ name: Section_Year })
+      .populate("students")
+      .populate("teacher");
 
     if (!findSection) {
       return res
@@ -341,12 +342,30 @@ const getAllStudentBySection = async (req, res) => {
         .json({ sucess: false, message: "section not found" });
     }
 
+    const teachers = await Teacher.find({
+      subjects: { $elemMatch: { $regex: `${Section_Year}$` } },
+    }).select("name email subjects");
+
+    const subjectFaculty = (findSection.subjects || []).map((subjectName) => {
+      const subjectKey = `${subjectName}_${Section_Year}`;
+      const matchedTeacher = teachers.find((teacher) =>
+        Array.isArray(teacher.subjects) && teacher.subjects.includes(subjectKey)
+      );
+      return {
+        subject: subjectName,
+        faculty: matchedTeacher
+          ? { id: matchedTeacher._id, name: matchedTeacher.name, email: matchedTeacher.email }
+          : null,
+      };
+    });
+
     return res
       .status(201)
       .json({
         sucess: true,
         message: "students fetched sucessfully",
         findSection,
+        subjectFaculty,
       });
   } catch (error) {
     console.log(error);

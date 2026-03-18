@@ -1,166 +1,245 @@
-# ERP System Backend & Frontend
+# ERP@ - College ERP System
 
-This project is a full-stack **ERP (Enterprise Resource Planning)** system designed to manage students, teachers, sections, and attendance.  
-The backend is built using **Node.js**, **Express.js**, and **MongoDB** with **Mongoose** for database interactions.  
-The frontend is built using **React**, **Vite**, and **Tailwind CSS**.
+A full-stack college ERP platform with separate Admin and Student web apps plus a Node.js/Express backend. The system manages students, teachers, sections/semesters, attendance, subjects, and marks, and can email low-attendance alerts.
 
 ---
 
-## Features
-
-### **1. Authentication**
-- **Admin Login**: Admins can log in using environment-provided credentials.
-- **Teacher Login**: Teachers can log in using their email and password.
-- **Student Login**: Students can log in using their email and password.
-- **JWT Authentication**: Secure token-based authentication for all users.
-
-### **2. User Management**
-- **Register Students**: Add new students to the system and assign them to sections.
-- **Register Teachers**: Add new teachers and assign them to sections.
-- **Fetch Profiles**: Retrieve profiles for students and teachers.
-- **Get All Users**: Fetch all registered students or teachers.
-
-### **3. Section Management**
-- **Create Sections**: Create sections for specific years and batches.
-- **Assign Teachers**: Assign or update teachers for specific sections.
-- **Update Section Year**: Change the year of a section and update all associated students.
-
-### **4. Attendance Management**
-- **Mark Attendance**: Teachers can mark attendance for students in their assigned sections.
-- **Fetch Attendance**: Retrieve attendance records for all students in a specific section.
+**Table Of Contents**
+1. Project Overview
+2. Key Features
+3. Architecture
+4. Tech Stack
+5. Repository Layout
+6. Environment Variables
+7. Getting Started
+8. API Reference
+9. Data Model Overview
+10. Notes And Known Constraints
 
 ---
 
-## Frontend Features
+**Project Overview**
+This repository contains three apps that work together.
+1. Backend API: REST services for authentication, sections, attendance, subjects, and marks.
+2. Admin Web App: Admin-only UI for managing teachers, sections, subjects, students, attendance, and marks.
+3. Student Web App: Student UI for login, profile, and attendance views.
 
-- **Admin Panel**: Register, update, and manage teachers, sections, and subjects. Monitor and mark attendance. View all students and teachers.
-- **Teacher Panel**: Mark and update student attendance, add subjects, view assigned sections and students.
-- **Student Panel**: Register, login, view attendance by date and subject, view profile and section details.
-- **Responsive UI**: Built with React, Vite, and Tailwind CSS for a modern and responsive experience.
-- **Notifications**: Real-time feedback using React Hot Toast.
-- **Calendar View**: Visualize attendance with calendar components.
-
----
-
-## Tech Stack
-
-- **Frontend:** React, Vite, Tailwind CSS, Remix Icon, React Calendar, React Hot Toast
-- **Backend:** Node.js, Express.js
-- **Database:** MongoDB (Mongoose ODM)
-- **Authentication:** JWT (JSON Web Token)
+The backend uses JWT-based auth with different headers for admin, teacher, and student access. It stores data in MongoDB via Mongoose. Attendance and marks are recorded per student and per subject with section, semester, and batch rules enforced at the API level.
 
 ---
 
-## Folder Structure
+**Key Features**
+Admin
+- Admin login and token validation.
+- Create sections with year, batch, semester, and assigned teacher.
+- Update section name or semester and propagate to students.
+- Change a student to a new section and update subject list accordingly.
+- Manage teachers and update passwords.
+- Manage students and update passwords.
 
+Teacher
+- Teacher login and token validation.
+- Mark daily attendance with lecture counts and date.
+- View all attendance for a section.
+- Add subjects to a section and automatically assign to students.
+- Upload or update student marks (ST1, ST2, PUT).
+- Send low-attendance email alerts to students in a section.
+
+Student
+- Student registration with photo upload and contact info.
+- Student login and profile fetch.
+- View attendance for a specific date.
+
+Email Notifications
+- Low-attendance alerts are sent using Nodemailer (Gmail) with an HTML template.
+- The email flow pulls section students through the backend and emails those below 75 percent.
+
+---
+
+**Architecture**
+- Backend: Express API on `/api` with three route groups (student, teacher, admin).
+- Admin UI: Vite + React app (separate folder).
+- Student UI: Vite + React app (separate folder).
+- Shared data layer: MongoDB collections for students, teachers, sections.
+
+Auth Headers
+- Admin endpoints use `admintoken` header.
+- Teacher endpoints use `teachertoken` header, or `admintoken` for elevated access.
+- Student endpoints use `token` header.
+
+---
+
+**Tech Stack**
+Backend
+- Node.js, Express, MongoDB, Mongoose
+- JWT auth, bcrypt hashing
+- Multer for image upload (in-memory)
+- Nodemailer for email
+
+Frontend
+- React 19, Vite 6
+- Tailwind CSS v4
+- React Router v7
+- Recharts, React Datepicker, React Calendar
+- React Hot Toast, Remix Icons
+
+---
+
+**Repository Layout**
 ```
-ERP@
-├── Admin
-│   └── Admin
-│       ├── src
-│       │   ├── Components
-│       │   ├── pages
-│       │   ├── App.jsx
-│       │   ├── index.css
-│       │   └── main.jsx
-│       └── README.md
-├── backend
-│   ├── controller
-│   │   ├── admincontroller.js
-│   │   ├── sectioncontroller.js
-│   │   ├── studentcontroller.js
-│   │   └── teacherconroller.js
-│   └── model
-│       ├── sectionmodel.js
-│       ├── studentmodel.js
-│       ├── teachermodel.js
-│       └── usermodel.js
-├── frontend
-│   └── src
-│       ├── Components
-│       ├── pages
-│       ├── assets
-│       ├── App.jsx
-│       ├── index.css
-│       └── main.jsx
+ERP@ - Copy/
+Admin/                 # Admin web app (Vite + React)
+  src/
+backend/               # Express API
+  config/
+  controller/
+  middelware/
+  model/
+  routes/
+frontend/              # Student web app (Vite + React)
+  src/
+readme.md
 ```
 
 ---
 
-## Installation
+**Environment Variables**
+Create the following `.env` files with your own values. Do not commit secrets to source control.
 
-### **1. Clone the Repository**
-```bash
-git clone <repository-url>
-cd <repository-folder>
-```
+Backend `backend/.env`
+- `PORT`
+- `MONGOURI`
+- `JWT_SECRET`
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+- `RESEND_API_KEY` (optional, present but not required if Nodemailer is used)
+- `GMAIL_USER`
+- `GMAIL_PASS`
+- `BACKEND_URL` (optional, defaults to deployed URL for internal email flow)
 
-### **2. Install Dependencies**
+Admin app `Admin/.env`
+- `VITE_BACKEND_URL`
 
-**Backend:**
+Student app `frontend/.env`
+- `VITE_BACKEND_URL`
+
+---
+
+**Getting Started**
+1. Install dependencies
+
+Backend
 ```bash
 cd backend
 npm install
 ```
 
-**Admin Frontend:**
+Admin app
 ```bash
-cd ../Admin/Admin
+cd ..\Admin
 npm install
 ```
 
-**Student Frontend:**
+Student app
 ```bash
-cd ../../frontend
+cd ..\frontend
 npm install
 ```
 
-### **3. Set Up Environment Variables**
+2. Run the apps
 
-Create a `.env` file in the backend root with the following:
-```
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-ADMIN_EMAIL=your_admin_email
-ADMIN_PASSWORD=your_admin_password
-```
-
-### **4. Start the Applications**
-
-**Backend:**
+Backend
 ```bash
 cd backend
-npm start
+npm run server
 ```
 
-**Admin Frontend:**
+Admin app
 ```bash
-cd ../Admin/Admin
+cd ..\Admin
 npm run dev
 ```
 
-**Student Frontend:**
+Student app
 ```bash
-cd ../../frontend
+cd ..\frontend
 npm run dev
 ```
 
 ---
 
-## API Overview
+**API Reference**
+Base URL
+- `http://localhost:4000/api` by default (see `PORT`)
 
-- **Admin APIs:** `/api/admin/...`
-- **Teacher APIs:** `/api/teacher/...`
-- **Student APIs:** `/api/student/...`
-- **Section APIs:** `/api/section/...`
+Admin Routes
+- `POST /loginAdmin` logs in admin.
+- `GET /getAllTeacher` returns teachers, admin auth required.
+- `PUT /updateTeacherPassword` updates teacher password, admin auth required.
+- `PUT /updateStudentPassword` updates student password, admin auth required.
+- `PUT /updateSectionorSemester` change section name or semester, admin auth required.
+- `PUT /changeStudentSection` move student to another section, admin auth required.
 
-See the controller files in `backend/controller/` for detailed endpoints.
+Teacher Routes
+- `POST /registerTeacher` create teacher, admin auth required.
+- `POST /loginTeacher` teacher login.
+- `POST /markAttendance` mark attendance, teacher auth required.
+- `PUT /updateTeacher` assign a teacher to a section, admin auth required.
+- `GET /getattandanceStudent` view attendance for a section, teacher auth required.
+- `POST /addSubjects` add subject to a section, admin auth required.
+- `GET /gelStudentBySection` list students by section, teacher auth required.
+- `POST /send-email` send low-attendance emails, teacher auth required.
+- `POST /uploadMarks` upload or update marks, teacher auth required.
+
+Student Routes
+- `POST /registerStudent` register a student with image upload.
+- `POST /loginStudent` student login.
+- `GET /getProfile` get student profile, student auth required.
+- `GET /getStudent` list all students, admin auth required.
+- `POST /changeYear` update section year, admin auth required.
+- `GET /getStudentAttendance` view attendance by date, student auth required.
+- `POST /createSection` create section, admin auth required.
+
+Auth Header Summary
+- Admin: `admintoken: <jwt>`
+- Teacher: `teachertoken: <jwt>`
+- Student: `token: <jwt>`
+
+Important Request Notes
+- `POST /registerStudent` uses `multipart/form-data` with `image` as file field.
+- Attendance checks enforce lecture counts and assigned subjects.
+- Marks upload enforces exam types `ST1`, `ST2`, `PUT` and maximum totals.
 
 ---
 
-## License
+**Data Model Overview**
+Section
+- `name` combines section + year + batch (example: `A2_2025` pattern).
+- `semester` enum with `Ist` through `VIIIth`.
+- `subjects` stored as `Semester_Subject` strings.
+- `teacher` references a Teacher document.
+- `students` is an array of Student references.
 
-- This project is for my college attendance managment
-- Please Do not make any changes in it
+Student
+- Basic profile fields, contact info, and avatar base64.
+- `subjects` list derived from section subjects.
+- `attendance` array stores per-subject per-date lecture totals.
+- `marks` array stores exam marks per subject and semester.
+
+Teacher
+- Profile fields, hashed password.
+- `section` references assigned sections.
+- `subjects` list stores keys like `Semester_Subject_SectionYearBatch`.
 
 ---
+
+**Notes And Known Constraints**
+- The backend `.env` in this repository is populated. Rotate secrets and remove it before sharing publicly.
+- Student photo upload is stored as base64 in MongoDB, which can grow quickly.
+- Attendance rules rely on subject keys that include semester and section identifiers. Keep naming consistent when adding subjects.
+- Admin and teacher tokens are not interchangeable; each endpoint expects a specific header.
+
+---
+
+**License**
+This project appears to be for college attendance management and internal use. If you plan to distribute it, add a proper license and remove all secrets from source control.

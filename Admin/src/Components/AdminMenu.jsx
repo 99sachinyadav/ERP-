@@ -51,6 +51,13 @@ const coreActions = [
     gradient: "from-orange-100 to-amber-100 border-orange-300",
   },
   {
+    title: "Remove Subject",
+    description: "Delete subject from a section and students.",
+    icon: "ri-delete-bin-6-line",
+    key: "RemoveSubject",
+    gradient: "from-red-100 to-rose-100 border-red-300",
+  },
+  {
     title: "Semester / Section",
     description: "Update semester and section mappings.",
     icon: "ri-exchange-2-line",
@@ -66,6 +73,13 @@ const controlActions = [
     icon: "ri-bar-chart-box-line",
     key: "MonitorAttendence",
     gradient: "from-blue-100 to-indigo-100 border-blue-300",
+  },
+  {
+    title: "Subject-wise Faculty",
+    description: "See subject assignments for each section.",
+    icon: "ri-book-2-line",
+    key: "MonitorSubjectFaculty",
+    gradient: "from-cyan-100 to-sky-100 border-cyan-300",
   },
   {
     title: "Teacher Password",

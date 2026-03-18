@@ -38,6 +38,7 @@ const TeacherDashboard = () => {
   const [assignedSections, setAssignedSections] = React.useState([]);
   const [sectionSemesters, setSectionSemesters] = React.useState({});
   const [sectionSubjects, setSectionSubjects] = React.useState({});
+  const [assignedSubjects, setAssignedSubjects] = React.useState([]);
   const logout = () => {
     localStorage.removeItem("teacherToken");
     localStorage.removeItem("teachername"); 
@@ -83,6 +84,48 @@ const TeacherDashboard = () => {
         .split(",")
         .map((item) => item.trim())
         .filter(Boolean);
+    };
+
+    const parseAssignmentKey = (key) => {
+      const parts = String(key || "")
+        .split("_")
+        .map((item) => item.trim())
+        .filter(Boolean);
+      if (parts.length < 3) return null;
+
+      const semester = parts[0];
+      const batch = parts[parts.length - 1];
+      const sectionYear = parts[parts.length - 2];
+      const subject = parts.slice(1, -2).join("_");
+
+      const yearTokens = [
+        "Ist",
+        "IInd",
+        "IIIrd",
+        "IVth",
+        "Vth",
+        "VIth",
+        "VIIth",
+        "VIIIth",
+      ];
+      let yearValue = "";
+      let sectionValue = sectionYear;
+      yearTokens.some((yearToken) => {
+        if (sectionYear.endsWith(yearToken)) {
+          yearValue = yearToken;
+          sectionValue = sectionYear.slice(0, -yearToken.length);
+          return true;
+        }
+        return false;
+      });
+
+      return {
+        subject,
+        section: sectionValue || "-",
+        year: yearValue || "-",
+        batch: batch || "-",
+        semester: semester || "-",
+      };
     };
 
     const getAttendanceData = async () => {
@@ -158,6 +201,23 @@ const TeacherDashboard = () => {
         });
         setSectionSemesters(semesterMap);
         setSectionSubjects(subjectsMap);
+
+        try {
+          const assignments = await axios.get(
+            backendUrl + "/api/getTeacherAssignments",
+            {
+              headers: { teachertoken: localStorage.getItem("teacherToken") },
+            }
+          );
+          if (assignments.data?.sucess) {
+            const parsed = (assignments.data.subjects || [])
+              .map(parseAssignmentKey)
+              .filter(Boolean);
+            setAssignedSubjects(parsed);
+          }
+        } catch (err) {
+          // silently ignore assignment errors
+        }
       } catch (error) {
         console.log(error.response?.data?.message || error.message);
         alert("Error in fetching data");
@@ -314,6 +374,61 @@ const TeacherDashboard = () => {
                   ))}
                 </div>
               ) : null}
+              <div className="mt-5">
+                <h4 className="text-sm font-semibold text-slate-800">
+                  Assigned Subjects
+                </h4>
+                {assignedSubjects.length === 0 ? (
+                  <p className="mt-2 text-xs text-slate-500">
+                    No subjects assigned yet.
+                  </p>
+                ) : (
+                  <div className="mt-3 overflow-x-auto">
+                    <table className="w-full border-collapse text-xs">
+                      <thead>
+                        <tr>
+                          <th className="border border-slate-200 bg-white px-2 py-1 text-left">
+                            Subject
+                          </th>
+                          <th className="border border-slate-200 bg-white px-2 py-1 text-left">
+                            Section
+                          </th>
+                          <th className="border border-slate-200 bg-white px-2 py-1 text-left">
+                            Year
+                          </th>
+                          <th className="border border-slate-200 bg-white px-2 py-1 text-left">
+                            Batch
+                          </th>
+                          <th className="border border-slate-200 bg-white px-2 py-1 text-left">
+                            Semester
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {assignedSubjects.map((item, idx) => (
+                          <tr key={`${item.subject}-${idx}`} className="even:bg-slate-50">
+                            <td className="border border-slate-200 px-2 py-1">
+                              {item.subject}
+                            </td>
+                            <td className="border border-slate-200 px-2 py-1">
+                              {item.section}
+                            </td>
+                            <td className="border border-slate-200 px-2 py-1">
+                              {item.year}
+                            </td>
+                            <td className="border border-slate-200 px-2 py-1">
+                              {item.batch}
+                            </td>
+                            <td className="border border-slate-200 px-2 py-1">
+                              {item.semester}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
 
               <div className="mt-6 rounded-xl bg-blue-50 p-4">
                 <h5 className="text-sm font-semibold text-blue-900 sm:text-base">
