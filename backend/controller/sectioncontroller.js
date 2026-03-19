@@ -85,7 +85,7 @@ const addSubjects = async (req, res) => {
         .json({ sucess: false, message: "Section not found" });
     }
     //  console.log(sectionFind)
-    console.log(sectionFind.semester ,semester)
+    // console.log(sectionFind.semester ,semester)
     if (sectionFind.semester !== semester) {
        return res
          .status(401)
@@ -146,7 +146,7 @@ const changeSemesterorSection = async (req,res)=>{
     }
 
     const yearSection = currentSection.toUpperCase() + currentYear + "_" + currentBatch;
-    console.log(yearSection)
+    // console.log(yearSection)
     const sectionExist = await Section.findOne({ name: yearSection });
     if (!sectionExist) {
       return res
@@ -164,7 +164,7 @@ const changeSemesterorSection = async (req,res)=>{
      sectionExist.semester = newSemester;
      sectionExist.section = newSection.toUpperCase();
 
-     console.log(sectionExist.name,sectionExist.semester,sectionExist.section)
+    //  console.log(sectionExist.name,sectionExist.semester,sectionExist.section)
 
      await sectionExist.save();
  sectionExist.students.forEach(async (studentId) => {
@@ -243,7 +243,7 @@ const changeStudentSection =  async (req,res)=>{
 
      section=section.toUpperCase();
      newsection=newsection.toUpperCase();
-      console.log(year ,batch,newyear,studentId,section,newsection)
+      // console.log(year ,batch,newyear,studentId,section,newsection)
      if(!year||!batch||!section||!newsection||!newyear||!studentId){
       return res.status(401).json({sucess:false,message:"please fill all the details"});
      }
@@ -300,9 +300,9 @@ const changeStudentSection =  async (req,res)=>{
   student.section = newsection;
   student.year = newyear;
   student.semester=targetSection.semester
-  console.log(student.section ,
-  student.year ,
- targetSection.semester)
+//   // console.log(student.section ,
+//   student.year ,
+//  targetSection.semester)
   await student.save();
 
   res.status(200).json({

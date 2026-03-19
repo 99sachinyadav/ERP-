@@ -21,7 +21,7 @@ const [applyAllTotalLecture, setApplyAllTotalLecture] = useState("")
 const [applyAllLectureAttended, setApplyAllLectureAttended] = useState("")
 const [semester, setsemester] = useState('')
 const [isLoadingStudents, setIsLoadingStudents] = useState(false)
-const [markingRollNo, setMarkingRollNo] = useState("")
+const [isSavingAll, setIsSavingAll] = useState(false)
     
   
 function formatDate(date) {
@@ -96,33 +96,72 @@ setApplyAllLectureAttended("");
     }
  }
 
- const markAttendance = async (rollno) => {
-    setMarkingRollNo(rollno)
+ const markAllAttendance = async () => {
+    if (!student || student.length === 0) {
+        toast.error("No students loaded to mark attendance.");
+        return;
+    }
+    const ok = window.confirm(
+        "Save attendance for all students on the selected date and subject?"
+    );
+    if (!ok) return;
+    setIsSavingAll(true);
     try {
-        // console.log(localStorage.getItem('teacherToken'), localStorage.getItem('adminToken'));
-        const response = await axios.post(backendUrl + '/api/markAttendance', {
-            rollno: rollno,
+        const payloads = student.map((item) => ({
+            rollno: item?.rollno,
             date: formatDate(selectedDate),
             subject: singleSubject,
-            totalnoLec: totalnoLec[rollno],
-            noofLecAttended: noofLecAttended[rollno],   
+            totalnoLec: totalnoLec[item?.rollno],
+            noofLecAttended: noofLecAttended[item?.rollno],
             batch,
             year,
             section,
             semester
-        }, {
-            headers: {
-                teachertoken: localStorage.getItem('teacherToken'),
-                adminToken: localStorage.getItem('adminToken'),
-            },
+        }));
+
+        const invalid = [];
+        payloads.forEach((p) => {
+            const hasRoll = p.rollno !== undefined && p.rollno !== null && String(p.rollno).trim() !== "";
+            const hasTotal = p.totalnoLec !== undefined && p.totalnoLec !== null && String(p.totalnoLec).trim() !== "";
+            const hasAttend = p.noofLecAttended !== undefined && p.noofLecAttended !== null && String(p.noofLecAttended).trim() !== "";
+            if (!(hasRoll && hasTotal && hasAttend)) {
+                invalid.push(p.rollno);
+            }
         });
-        // console.log(response.data);
-        toast.success(response.data.message);
+
+        if (invalid.length > 0) {
+            toast.error("Please fill attendance for every student before saving.");
+            return;
+        }
+
+        const requests = payloads.map((data) =>
+            axios
+                .post(backendUrl + "/api/markAttendance", data, {
+                    headers: {
+                        teachertoken: localStorage.getItem("teacherToken"),
+                        adminToken: localStorage.getItem("adminToken"),
+                    },
+                })
+                .then(() => ({ ok: true }))
+                .catch((err) => ({
+                    ok: false,
+                    message: err.response?.data?.message || "Unknown error",
+                }))
+        );
+
+        const results = await Promise.all(requests);
+        const failed = results.filter((r) => !r.ok);
+        if (failed.length > 0) {
+            const topErrors = failed.slice(0, 3).map((f) => f.message).join("; ");
+            toast.error(`Attendance saved with ${failed.length} error(s). ${topErrors}`);
+        } else {
+            toast.success("Attendance saved for all students.");
+        }
     } catch (error) {
         console.log(error);
-        toast.error(error.response?.data?.message || "An error occurred while marking attendance.");
+        toast.error(error.response?.data?.message || "Failed to save attendance.");
     } finally {
-        setMarkingRollNo("")
+        setIsSavingAll(false);
     }
  }
 
@@ -236,18 +275,17 @@ return (
                         className="border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
                 </div>
-                <div className="hidden sm:grid grid-cols-5 gap-4 pb-2 border-b">
+                <div className="hidden sm:grid grid-cols-4 gap-4 pb-2 border-b">
                     <span className="text-sm font-semibold text-gray-600">Student ID</span>
                     <span className="text-sm font-semibold text-gray-600">Name</span>
                     <span className="text-sm font-semibold text-gray-600">Total Lecture</span>
                     <span className="text-sm font-semibold text-gray-600">Lecture Attended</span>
-                    <span className="text-sm font-semibold text-gray-600">Action</span>
                 </div>
                 <div className="flex flex-col gap-2 mt-2">
                     {student && student.map((item, index) => (
                         <div
                             key={index}
-                            className="grid grid-cols-1 sm:grid-cols-5 gap-2 sm:gap-4 items-center border-b last:border-b-0 py-2"
+                            className="grid grid-cols-1 sm:grid-cols-4 gap-2 sm:gap-4 items-center border-b last:border-b-0 py-2"
                         >
                             <span className="text-sm text-gray-500">{item?.rollno}</span>
                             <span className="text-sm text-gray-500">{item?.name}</span>
@@ -277,13 +315,6 @@ return (
                                 placeholder="Attended"
                                 className="border rounded-lg px-2 py-1 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
                             />
-                            <button
-                                onClick={() => markAttendance(item?.rollno)}
-                                disabled={markingRollNo === item?.rollno}
-                                className="bg-blue-500 text-white font-semibold rounded-lg px-4 py-1 hover:bg-blue-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
-                            >
-                                {markingRollNo === item?.rollno ? "Marking..." : "Mark"}
-                            </button>
                         </div>
                     ))}
                 </div>
@@ -308,6 +339,13 @@ return (
                 <h1 className="text-2xl font-bold text-red-700">{subjects ? subjects.length : "00"}</h1>
                 <p className="text-sm font-semibold text-gray-600">Total Subjects</p>
             </div>
+            <button
+                onClick={markAllAttendance}
+                disabled={isSavingAll}
+                className="bg-emerald-600 text-white font-semibold w-full py-2 rounded-lg hover:bg-emerald-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+                {isSavingAll ? "Saving..." : "Save Attendance"}
+            </button>
             <button
                 onClick={() => window.location.reload()}
                 className="bg-blue-600 text-white font-semibold w-full mt-6 py-2 rounded-lg hover:bg-blue-700 transition"

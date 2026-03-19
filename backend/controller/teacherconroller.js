@@ -171,7 +171,7 @@ const attendancebyTeacher = async (req, res) => {
 
     const sectionName =
       findStudent.section.toUpperCase() + findStudent.year + "_" + findStudent.batch;
-      console.log(sectionName)
+      // console.log(sectionName)
     const findSection = await Section.findOne({ name: sectionName });
     if (!findSection) {
       return res
