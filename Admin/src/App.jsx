@@ -15,6 +15,7 @@ import AddSubjects from "./Components/AddSubjects";
 import SeeAllStudent from "./Components/SeeAllStudent";
 import MonitorAttendence from "./Components/MonitorAttendence";
 import MonitorMarks from "./Components/MonitorMarks";
+import MonitorSubjectFaculty from "./Components/MonitorSubjectFaculty";
 import ContactForm from "./pages/ContactForm";
 import SendEmail from "./Components/SendEmail";
 import DeanLogin from "./pages/DeanLogin";
@@ -106,6 +107,14 @@ function App() {
           }
         />
         <Route
+          path="/dean/subject-faculty"
+          element={
+            <RoleProtect tokenKey="deanToken" redirectTo="/deanlogin">
+              <MonitorSubjectFaculty />
+            </RoleProtect>
+          }
+        />
+        <Route
           path="/director"
           element={
             <RoleProtect tokenKey="directorToken" redirectTo="/directorlogin">
@@ -126,6 +135,14 @@ function App() {
           element={
             <RoleProtect tokenKey="directorToken" redirectTo="/directorlogin">
               <MonitorMarks />
+            </RoleProtect>
+          }
+        />
+        <Route
+          path="/director/subject-faculty"
+          element={
+            <RoleProtect tokenKey="directorToken" redirectTo="/directorlogin">
+              <MonitorSubjectFaculty />
             </RoleProtect>
           }
         />

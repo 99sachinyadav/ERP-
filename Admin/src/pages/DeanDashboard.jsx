@@ -39,6 +39,12 @@ const DeanDashboard = () => {
               >
                 Attendance Monitor
               </Link>
+              <Link
+                to="/dean/subject-faculty"
+                className="rounded-full bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur hover:bg-white/25"
+              >
+                Subject-wise Faculty
+              </Link>
               <button
                 type="button"
                 onClick={handleLogout}
@@ -74,6 +80,12 @@ const DeanDashboard = () => {
                 className="inline-flex items-center gap-2 rounded-lg bg-lime-600 px-4 py-2 text-sm font-semibold text-white hover:bg-lime-700"
               >
                 Open Attendance Monitor
+              </Link>
+              <Link
+                to="/dean/subject-faculty"
+                className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+              >
+                Open Subject-wise Faculty
               </Link>
             </div>
           </div>
@@ -122,6 +134,19 @@ const DeanDashboard = () => {
               className="mt-4 inline-flex items-center gap-2 rounded-lg bg-lime-600 px-4 py-2 text-sm font-semibold text-white hover:bg-lime-700"
             >
               Open Attendance Monitor
+            </Link>
+          </div>
+          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+            <p className="text-xs uppercase tracking-widest text-sky-500">Faculty</p>
+            <h3 className="mt-2 text-2xl font-semibold text-slate-900">Subject-wise Faculty</h3>
+            <p className="mt-2 text-sm text-slate-600">
+              View assigned faculty by subject for any section and batch.
+            </p>
+            <Link
+              to="/dean/subject-faculty"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+            >
+              Open Faculty Monitor
             </Link>
           </div>
         </div>

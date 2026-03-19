@@ -143,10 +143,10 @@ const MonitorSubjectFaculty = () => {
                     Year
                   </th>
                   <th className="border border-gray-200 bg-slate-50 px-3 py-2 text-left">
-                    Faculty
+                    Faculty Name
                   </th>
                   <th className="border border-gray-200 bg-slate-50 px-3 py-2 text-left">
-                    Email
+                    Faculty Email
                   </th>
                 </tr>
               </thead>
