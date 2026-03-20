@@ -16,6 +16,18 @@ const htmlPath = path.join(__dirname, "Resend.html");
 const resend = new Resend(process.env.RESEND_API_KEY);
 const backendUrl = process.env.BACKEND_URL || "https://erpbackend-pearl.vercel.app";
 
+const getSmtpTransporter = () => {
+  return nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.GMAIL_USER, // your Gmail address
+      pass: process.env.GMAIL_PASS
+    }
+  });
+};
+
 const sendEmail = async (email, name, attendance, fatherName, rollNo, semester, attendancePercent,year) => {
    const subject = `Attendance Alert: ${attendancePercent}% in ${semester}`;
    
@@ -67,7 +79,7 @@ const html = htmlTemplate
   .replace(/{{required_percent}}/g, "75")
   .replace(/{{records_rows}}/g, rows)
   //  .replace(/{{list}}/g, list)
-  .replace(/{{attendance_portal_url}}/g, "https://erpfrontend-bice.vercel.app/attendance")
+ 
   .replace(/{{sender_name}}/g, "Class counsellor")
   .replace(/{{sender_position}}/g, "Attendance Coordinator")
   .replace(/{{institution_name}}/g, " Raj Kumar Goel Institute of Technology & Management")
@@ -84,20 +96,11 @@ const html = htmlTemplate
 
     
     // Setup SMTP transport
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.GMAIL_USER, // your Gmail address
-        pass: process.env.GMAIL_PASS
-      }
-
-    });
+    const transporter = getSmtpTransporter();
 
     // Send mail
     const response = await transporter.sendMail({
-      from: '"RKGITM ERP" <sy7841846@gmail.com>',
+      from: '"RKGITM ERP" <sachin_cs_2023@rkgitm.ac.in>',
       to: email,
       subject,
       html
@@ -111,6 +114,33 @@ const html = htmlTemplate
   }
 };
 
+const sendPasswordResetCode = async (email, name, code) => {
+  const subject = "Password Reset Code";
+  const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937;">
+      <h2 style="margin: 0 0 8px;">Hello ${name || "Student"}</h2>
+      <p style="margin: 0 0 12px;">We received a request to reset your password. Use the code below to continue:</p>
+      <div style="font-size: 24px; font-weight: bold; letter-spacing: 4px; background: #f3f4f6; padding: 12px 16px; display: inline-block; border-radius: 8px;">
+        ${code}
+      </div>
+      <p style="margin: 12px 0 0;">This code expires in 10 minutes. If you did not request this, you can ignore this email.</p>
+    </div>
+  `;
+
+  try {
+    const transporter = getSmtpTransporter();
+    const response = await transporter.sendMail({
+      from: '"RKGITM ERP" <sy7841846@gmail.com>',
+      to: email,
+      subject,
+      html
+    });
+    return ({ success: true, data: response });
+  } catch (error) {
+    console.error("Error sending reset code email:", error);
+    return ({ success: false, error: error.message });
+  }
+};
 
 const sendEmailStudent = async (req, res) => {
    try {
@@ -201,4 +231,4 @@ const sendEmailStudent = async (req, res) => {
 
 }
 
- export { sendEmail , sendEmailStudent};
+ export { sendEmail , sendEmailStudent, sendPasswordResetCode };

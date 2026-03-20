@@ -2,6 +2,8 @@ import { Section } from "../model/sectionmodel.js";
 import { Teacher } from "../model/teachermodel.js";
 import { Student } from "../model/studentmodel.js";
 import bcrypt  ,{ genSalt } from "bcryptjs";
+import crypto from "crypto";
+import { sendPasswordResetCode } from "../config/resend.js";
  
 import jwt from "jsonwebtoken";
 
@@ -427,6 +429,74 @@ const viewAttendance = async (req, res) => {
   }
 }
 
+const requestStudentPasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ sucess: false, message: "email is required" });
+    }
+
+    const student = await Student.findOne({ email }).select("+resetCodeHash +resetCodeExpires");
+    if (!student) {
+      return res.json({ sucess: false, message: "student not found" });
+    }
+
+    const code = String(crypto.randomInt(100000, 1000000));
+    const salt = await genSalt(10);
+    const codeHash = await bcrypt.hash(code, salt);
+
+    student.resetCodeHash = codeHash;
+    student.resetCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
+    await student.save();
+
+    const mailResponse = await sendPasswordResetCode(student.email, student.name, code);
+    if (!mailResponse.success) {
+      return res.status(500).json({ sucess: false, message: "failed to send reset code" });
+    }
+
+    return res.json({ sucess: true, message: "reset code sent to email" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ sucess: false, message: error.message });
+  }
+};
+
+const resetStudentPassword = async (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body;
+    if (!email || !code || !newPassword) {
+      return res.status(400).json({ sucess: false, message: "email, code and newPassword are required" });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ sucess: false, message: "Password must be at least 6 characters" });
+    }
+
+    const student = await Student.findOne({ email }).select("+password +resetCodeHash +resetCodeExpires");
+    if (!student || !student.resetCodeHash || !student.resetCodeExpires) {
+      return res.json({ sucess: false, message: "reset request not found" });
+    }
+
+    if (student.resetCodeExpires.getTime() < Date.now()) {
+      return res.json({ sucess: false, message: "reset code expired" });
+    }
+
+    const isMatch = await bcrypt.compare(code, student.resetCodeHash);
+    if (!isMatch) {
+      return res.json({ sucess: false, message: "invalid reset code" });
+    }
+
+    student.password = await hashpasssword(newPassword);
+    student.resetCodeHash = undefined;
+    student.resetCodeExpires = undefined;
+    await student.save();
+
+    return res.json({ sucess: true, message: "password reset successfully" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ sucess: false, message: error.message });
+  }
+};
+
 export {
   registerStudent,
   studentLogin,
@@ -436,5 +506,7 @@ export {
   getAllStudent,
   changeYear,
   getAllStudentBySection,
-  viewAttendance
+  viewAttendance,
+  requestStudentPasswordReset,
+  resetStudentPassword
 };

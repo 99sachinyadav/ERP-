@@ -1,5 +1,5 @@
 import express  from 'express'
-import { changeYear, getAllStudent, getAllStudentBySection, registerStudent, studentLogin, studentProfile, viewAttendance } from '../controller/studentcontroller.js';
+import { changeYear, getAllStudent, getAllStudentBySection, registerStudent, studentLogin, studentProfile, viewAttendance, requestStudentPasswordReset, resetStudentPassword } from '../controller/studentcontroller.js';
 import {Sectionregister } from '../controller/sectioncontroller.js';
 import { adminAuth } from '../middelware/adminAuth.js';
 import { authStudent } from '../middelware/userAuth.js';
@@ -15,6 +15,8 @@ Router.post('/loginStudent',studentLogin)
 Router.get('/getStudent',adminAuth,getAllStudent)
 Router.post('/changeYear',adminAuth,changeYear)
 Router.get('/getStudentAttendance',authStudent,viewAttendance)
+Router.post('/requestStudentPasswordReset',requestStudentPasswordReset)
+Router.post('/resetStudentPassword',resetStudentPassword)
 
  
 

@@ -22,6 +22,14 @@ const studentSchema = new mongoose.Schema(
       required: true,
       select: false,
     },
+    resetCodeHash: {
+      type: String,
+      select: false,
+    },
+    resetCodeExpires: {
+      type: Date,
+      select: false,
+    },
     section: {
       type: String,
       required: true,
