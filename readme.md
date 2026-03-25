@@ -112,6 +112,10 @@ Backend `backend/.env`
 - `JWT_SECRET`
 - `ADMIN_EMAIL`
 - `ADMIN_PASSWORD`
+- `DEAN_EMAIL`
+- `DEAN_PASSWORD`
+- `DIRECTOR_EMAIL`
+- `DIRECTOR_PASSWORD`
 - `RESEND_API_KEY` (optional, present but not required if Nodemailer is used)
 - `GMAIL_USER`
 - `GMAIL_PASS`
@@ -174,6 +178,8 @@ Base URL
 
 Admin Routes
 - `POST /loginAdmin` logs in admin.
+- `POST /loginDean` logs in dean (separate credentials).
+- `POST /loginDirector` logs in director (separate credentials).
 - `GET /getAllTeacher` returns teachers, admin auth required.
 - `PUT /updateTeacherPassword` updates teacher password, admin auth required.
 - `PUT /updateStudentPassword` updates student password, admin auth required.
@@ -193,6 +199,8 @@ Teacher Routes
 
 Student Routes
 - `POST /registerStudent` register a student with image upload.
+- `POST /requestStudentVerification` send registration verification code to email.
+- `POST /registerStudentWithCode` register a student after verification (multipart + `verificationCode`).
 - `POST /loginStudent` student login.
 - `GET /getProfile` get student profile, student auth required.
 - `GET /getStudent` list all students, admin auth required.
@@ -207,6 +215,7 @@ Auth Header Summary
 
 Important Request Notes
 - `POST /registerStudent` uses `multipart/form-data` with `image` as file field.
+- `POST /registerStudentWithCode` uses `multipart/form-data` and requires `verificationCode`.
 - Attendance checks enforce lecture counts and assigned subjects.
 - Marks upload enforces exam types `ST1`, `ST2`, `PUT` and maximum totals.
 
@@ -238,6 +247,26 @@ Teacher
 - Student photo upload is stored as base64 in MongoDB, which can grow quickly.
 - Attendance rules rely on subject keys that include semester and section identifiers. Keep naming consistent when adding subjects.
 - Admin and teacher tokens are not interchangeable; each endpoint expects a specific header.
+
+---
+
+**Updates (March 26, 2026)**
+Backend
+- Added dean/director login endpoints (`/loginDean`, `/loginDirector`) with separate env credentials.
+- Teacher auth now accepts admin/dean/director tokens for shared monitoring endpoints.
+- Added student email verification flow with new verification email helper and `StudentVerification` model.
+- Added `/requestStudentVerification` and `/registerStudentWithCode` routes.
+
+Admin Web App
+- Teacher dashboard: assigned subjects now load even when no section is allocated.
+- Upload Marks: prefill existing marks by exam/subject and improved save flow.
+- Mark Attendance: prefill existing attendance by date + subject to ease edits.
+- Added reusable Teacher action buttons (Home, Upload Marks, Mark Attendance, Monitor Student, Monitor Marks) shown only on Upload Marks and Mark Attendance, hidden on mobile.
+- Monitor Marks/Monitor Student: Back button placed near search controls with cleaner layout.
+- Subject-wise Faculty: Back button placed next to Track.
+
+Student Web App
+- Student registration now uses email verification with popup, resend option, countdown timer, and expiry message.
 
 ---
 
