@@ -3,7 +3,8 @@ import { Teacher } from "../model/teachermodel.js";
 import { Student } from "../model/studentmodel.js";
 import bcrypt  ,{ genSalt } from "bcryptjs";
 import crypto from "crypto";
-import { sendPasswordResetCode } from "../config/resend.js";
+import { sendPasswordResetCode, sendStudentVerificationCode } from "../config/resend.js";
+import { StudentVerification } from "../model/studentverificationmodel.js";
  
 import jwt from "jsonwebtoken";
 
@@ -173,6 +174,7 @@ const registerStudent = async (req, res) => {
 
     const studentToken = generateToken(student._id);
 
+    res.locals.registrationSuccess = true;
     return res.status(200).json({
       sucess: true,
       message: "student saved successfully",
@@ -461,6 +463,78 @@ const requestStudentPasswordReset = async (req, res) => {
   }
 };
 
+const requestStudentVerification = async (req, res) => {
+  try {
+    const { email, name } = req.body;
+    if (!email) {
+      return res.status(400).json({ sucess: false, message: "email is required" });
+    }
+
+    const code = String(crypto.randomInt(100000, 1000000));
+    const salt = await genSalt(10);
+    const codeHash = await bcrypt.hash(code, salt);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await StudentVerification.findOneAndUpdate(
+      { email },
+      { email, codeHash, expiresAt, name },
+      { upsert: true, new: true }
+    );
+
+    const mailResponse = await sendStudentVerificationCode(email, name, code);
+    if (!mailResponse.success) {
+      return res.status(500).json({ sucess: false, message: "failed to send verification code" });
+    }
+
+    return res.json({ sucess: true, message: "verification code sent to email" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ sucess: false, message: error.message });
+  }
+};
+
+const registerStudentWithCode = async (req, res) => {
+  try {
+    const { email, verificationCode } = req.body;
+    if (!email || !verificationCode) {
+      return res
+        .status(400)
+        .json({ sucess: false, message: "email and verification code are required" });
+    }
+
+    const record = await StudentVerification.findOne({ email });
+    if (!record) {
+      return res
+        .status(400)
+        .json({ sucess: false, message: "verification request not found" });
+    }
+
+    if (record.expiresAt.getTime() < Date.now()) {
+      await StudentVerification.deleteOne({ email });
+      return res
+        .status(400)
+        .json({ sucess: false, message: "verification code expired" });
+    }
+
+    const isMatch = await bcrypt.compare(verificationCode, record.codeHash);
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json({ sucess: false, message: "invalid verification code" });
+    }
+
+    // Proceed with normal registration
+    await registerStudent(req, res);
+
+    if (res.locals.registrationSuccess) {
+      await StudentVerification.deleteOne({ email });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ sucess: false, message: error.message });
+  }
+};
+
 const resetStudentPassword = async (req, res) => {
   try {
     const { email, code, newPassword } = req.body;
@@ -497,8 +571,69 @@ const resetStudentPassword = async (req, res) => {
   }
 };
 
+const updateStudentProfile = async (req, res) => {
+  try {
+    const { studentId, email, rollno } = req.body;
+
+    if (!studentId) {
+      return res.status(403).json({ sucess: false, message: "student id is missing" });
+    }
+
+    const nextEmail = email?.trim();
+    const nextRollno = rollno?.trim();
+
+    if (!nextEmail && !nextRollno) {
+      return res.status(400).json({ sucess: false, message: "email or rollno is required" });
+    }
+
+    if (nextEmail) {
+      const emailExists = await Student.findOne({
+        email: nextEmail,
+        _id: { $ne: studentId },
+      });
+      if (emailExists) {
+        return res.json({ sucess: false, message: "email already in use" });
+      }
+    }
+
+    if (nextRollno) {
+      const rollnoExists = await Student.findOne({
+        rollno: nextRollno,
+        _id: { $ne: studentId },
+      });
+      if (rollnoExists) {
+        return res.json({ sucess: false, message: "roll number already in use" });
+      }
+    }
+
+    const updates = {};
+    if (nextEmail) updates.email = nextEmail;
+    if (nextRollno) updates.rollno = nextRollno;
+
+    const updated = await Student.findByIdAndUpdate(studentId, updates, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updated) {
+      return res.status(404).json({ sucess: false, message: "student not found" });
+    }
+
+    return res.status(200).json({
+      sucess: true,
+      message: "profile updated successfully",
+      profile: updated,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ sucess: false, message: error.message });
+  }
+};
+
 export {
   registerStudent,
+  requestStudentVerification,
+  registerStudentWithCode,
   studentLogin,
   hashpasssword,
   generateToken,
@@ -508,5 +643,6 @@ export {
   getAllStudentBySection,
   viewAttendance,
   requestStudentPasswordReset,
-  resetStudentPassword
+  resetStudentPassword,
+  updateStudentProfile
 };

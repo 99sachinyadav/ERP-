@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { backendUrl } from "@/App";
@@ -12,6 +13,7 @@ const MonitorSubjectFaculty = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
+  const navigate = useNavigate();
 
   const adminLikeToken =
     localStorage.getItem("adminToken") ||
@@ -85,13 +87,22 @@ const MonitorSubjectFaculty = () => {
           pattern="\d*"
           className="w-20 rounded border border-gray-300 px-3 py-2 transition focus:outline-none focus:ring-2 focus:ring-blue-400 sm:w-40"
         />
-        <button
-          onClick={fetchAssignments}
-          disabled={loading}
-          className="w-20 rounded-lg bg-blue-500 px-2 py-2 text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 sm:w-40"
-        >
-          {loading ? "Loading..." : "Track"}
-        </button>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <button
+            onClick={fetchAssignments}
+            disabled={loading}
+            className="w-20 rounded-lg bg-blue-500 px-2 py-2 text-lg font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 sm:w-40"
+          >
+            {loading ? "Loading..." : "Track"}
+          </button>
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            <i className="ri-arrow-left-line text-base"></i>
+            Back
+          </button>
+        </div>
       </div>
 
       <div className="mt-5">

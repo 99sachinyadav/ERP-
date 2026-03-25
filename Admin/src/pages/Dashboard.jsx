@@ -1,9 +1,10 @@
-import {  useState } from "react";
+import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from 'axios'
 import toast from "react-hot-toast";
 import { backendUrl } from "@/App";
+import TeacherActionButtons from "@/Components/TeacherActionButtons";
 
 function Dashboard() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -22,12 +23,56 @@ const [applyAllLectureAttended, setApplyAllLectureAttended] = useState("")
 const [semester, setsemester] = useState('')
 const [isLoadingStudents, setIsLoadingStudents] = useState(false)
 const [isSavingAll, setIsSavingAll] = useState(false)
+const [savingRoll, setSavingRoll] = useState("")
     
   
 function formatDate(date) {
   return date.toLocaleDateString('en-CA');
 }
 
+const dateKey = (date) => {
+  if (!date) return "";
+  return new Date(date).toISOString().slice(0, 10);
+};
+
+const getTargetDateKey = (date) => dateKey(new Date(formatDate(date)));
+
+const getExistingAttendance = (studentItem, subjectName, targetKey) => {
+  const attendance = Array.isArray(studentItem?.attendance)
+    ? studentItem.attendance
+    : [];
+  for (const record of attendance) {
+    const subjects = Array.isArray(record?.subject) ? record.subject : [];
+    const found = subjects.find(
+      (subj) =>
+        String(subj?.name || "") === String(subjectName || "") &&
+        dateKey(subj?.date) === targetKey
+    );
+    if (found) return found;
+  }
+  return null;
+};
+
+const buildAttendanceMaps = (studentsList, subjectName, dateValue) => {
+  const totals = {};
+  const attended = {};
+  const targetKey = getTargetDateKey(dateValue);
+
+  (studentsList || []).forEach((item) => {
+    const roll = item?.rollno;
+    const existing = getExistingAttendance(item, subjectName, targetKey);
+    totals[roll] =
+      existing?.totalnoLec !== undefined && existing?.totalnoLec !== null
+        ? existing.totalnoLec
+        : 1;
+    attended[roll] =
+      existing?.noofLecAttended !== undefined && existing?.noofLecAttended !== null
+        ? existing.noofLecAttended
+        : 1;
+  });
+
+  return { totals, attended };
+};
 
  const showStudents = async ()=>{
     setIsLoadingStudents(true)
@@ -69,20 +114,23 @@ const sortedStudents = [...(responce.data.findSection.students || [])].sort((a, 
 
 setstudent(sortedStudents);
 
-const defaultLectures = {};
-const defaultAttended = {};
-sortedStudents.forEach((item) => {
-  defaultLectures[item?.rollno] = 1;
-  defaultAttended[item?.rollno] = 1;
-});
-settotalLecture(defaultLectures);
-setlectureAttended(defaultAttended);
+const nextSubjects = responce.data.findSection.subjects || [];
+const nextSubject = nextSubjects[0] || "";
+const nextSemester = responce.data.findSection.semester;
+
+const { totals, attended } = buildAttendanceMaps(
+  sortedStudents,
+  nextSubject,
+  selectedDate
+);
+settotalLecture(totals);
+setlectureAttended(attended);
 setApplyAllTotalLecture("");
 setApplyAllLectureAttended("");
 
-           setsubjects(responce.data.findSection.subjects)
-           setsingleSubject(responce.data.findSection.subjects[0])
-           setsemester(responce.data.findSection.semester)
+           setsubjects(nextSubjects)
+           setsingleSubject(nextSubject)
+           setsemester(nextSemester)
            toast.success(responce.data.message)
         }
         
@@ -91,12 +139,26 @@ setApplyAllLectureAttended("");
           // Check if the error has a response and a message
         // console.error(error);
         toast.error(error.response?.data?.message || "An error occurred while fetching students.");
-    } finally {
+ } finally {
         setIsLoadingStudents(false)
     }
  }
 
- const markAllAttendance = async () => {
+useEffect(() => {
+  if (!student || student.length === 0) return;
+  if (!singleSubject) return;
+  const { totals, attended } = buildAttendanceMaps(
+    student,
+    singleSubject,
+    selectedDate
+  );
+  settotalLecture(totals);
+  setlectureAttended(attended);
+  setApplyAllTotalLecture("");
+  setApplyAllLectureAttended("");
+}, [selectedDate, singleSubject]);
+
+const markAllAttendance = async () => {
     if (!student || student.length === 0) {
         toast.error("No students loaded to mark attendance.");
         return;
@@ -165,6 +227,48 @@ setApplyAllLectureAttended("");
     }
  }
 
+ const saveSingleAttendance = async (roll) => {
+    if (!roll) return;
+    const payload = {
+        rollno: roll,
+        date: formatDate(selectedDate),
+        subject: singleSubject,
+        totalnoLec: totalnoLec[roll],
+        noofLecAttended: noofLecAttended[roll],
+        batch,
+        year,
+        section,
+        semester,
+    };
+
+    const hasRoll = payload.rollno !== undefined && payload.rollno !== null && String(payload.rollno).trim() !== "";
+    const hasTotal = payload.totalnoLec !== undefined && payload.totalnoLec !== null && String(payload.totalnoLec).trim() !== "";
+    const hasAttend = payload.noofLecAttended !== undefined && payload.noofLecAttended !== null && String(payload.noofLecAttended).trim() !== "";
+    if (!(hasRoll && hasTotal && hasAttend)) {
+        toast.error("Please fill total and attended lectures for this student before saving.");
+        return;
+    }
+
+    try {
+        setSavingRoll(roll);
+        const response = await axios.post(backendUrl + "/api/markAttendance", payload, {
+            headers: {
+                teachertoken: localStorage.getItem("teacherToken"),
+                adminToken: localStorage.getItem("adminToken"),
+            },
+        });
+        if (response.data?.sucess) {
+            toast.success(`Attendance updated for roll no ${roll}.`);
+        } else {
+            toast.error(response.data?.message || "Failed to update attendance.");
+        }
+    } catch (error) {
+        toast.error(error.response?.data?.message || "Failed to update attendance.");
+    } finally {
+        setSavingRoll("");
+    }
+ }
+
  const applyTotalLectureToAll = (value) => {
     setApplyAllTotalLecture(value);
     settotalLecture((prev) => {
@@ -193,6 +297,9 @@ setApplyAllLectureAttended("");
 return (
     <div className="bg-gradient-to-br from-blue-50 to-gray-100 min-h-screen flex flex-col lg:flex-row">
         <div className="flex-1 flex flex-col gap-6 p-4 sm:p-8">
+            <div className="hidden sm:block">
+                <TeacherActionButtons />
+            </div>
             <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8">
                 <h1 className="text-2xl font-bold text-blue-700 mb-4">Subject Attendance</h1>
                 <div className="flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-8 mb-4">
@@ -275,17 +382,18 @@ return (
                         className="border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
                 </div>
-                <div className="hidden sm:grid grid-cols-4 gap-4 pb-2 border-b">
+                <div className="hidden sm:grid grid-cols-5 gap-4 pb-2 border-b">
                     <span className="text-sm font-semibold text-gray-600">Student ID</span>
                     <span className="text-sm font-semibold text-gray-600">Name</span>
                     <span className="text-sm font-semibold text-gray-600">Total Lecture</span>
                     <span className="text-sm font-semibold text-gray-600">Lecture Attended</span>
+                    <span className="text-sm font-semibold text-gray-600">Action</span>
                 </div>
                 <div className="flex flex-col gap-2 mt-2">
                     {student && student.map((item, index) => (
                         <div
                             key={index}
-                            className="grid grid-cols-1 sm:grid-cols-4 gap-2 sm:gap-4 items-center border-b last:border-b-0 py-2"
+                            className="grid grid-cols-1 sm:grid-cols-5 gap-2 sm:gap-4 items-center border-b last:border-b-0 py-2"
                         >
                             <span className="text-sm text-gray-500">{item?.rollno}</span>
                             <span className="text-sm text-gray-500">{item?.name}</span>
@@ -315,6 +423,13 @@ return (
                                 placeholder="Attended"
                                 className="border rounded-lg px-2 py-1 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
                             />
+                            <button
+                                onClick={() => saveSingleAttendance(item?.rollno)}
+                                disabled={savingRoll === item?.rollno}
+                                className="bg-indigo-600 text-white text-sm font-semibold px-3 py-2 rounded-lg shadow hover:bg-indigo-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                {savingRoll === item?.rollno ? "Saving..." : "Update"}
+                            </button>
                         </div>
                     ))}
                 </div>

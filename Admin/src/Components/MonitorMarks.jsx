@@ -4,6 +4,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { backendUrl } from "@/App";
 import ModuleState from "./ui/module-state";
+import { useNavigate } from "react-router-dom";
 
 const EXAMS = ["ST1", "ST2", "PUT"];
 
@@ -230,6 +231,7 @@ const MonitorMarks = () => {
     ? getExamTotals(popupStudent, selectedExam, semester)
     : { obtained: 0, total: 0 };
 
+  const navigate = useNavigate();
   return (
     <div className="flex flex-col">
       <div
@@ -273,28 +275,37 @@ const MonitorMarks = () => {
         </button>
       </div>
       <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          <input
-            value={searchRoll}
-            onChange={(e) => setSearchRoll(e.target.value)}
-            placeholder="Search by roll no"
-            type="text"
-            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition md:w-64"
-          />
-          <div className="flex gap-2">
-            <button
-              onClick={handleSearch}
-              className="px-4 py-2 rounded-md text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700"
-            >
-              Search
-            </button>
-            <button
-              onClick={clearSearch}
-              className="px-4 py-2 rounded-md text-sm font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50"
-            >
-              Clear
-            </button>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+            <input
+              value={searchRoll}
+              onChange={(e) => setSearchRoll(e.target.value)}
+              placeholder="Search by roll no"
+              type="text"
+              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition md:w-64"
+            />
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleSearch}
+                className="px-4 py-2 rounded-md text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700"
+              >
+                Search
+              </button>
+              <button
+                onClick={clearSearch}
+                className="px-4 py-2 rounded-md text-sm font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50"
+              >
+                Clear
+              </button>
+            </div>
           </div>
+          <button
+            onClick={() => navigate(-1)}
+            className="px-4 py-2 rounded-md text-sm font-semibold text-slate-700 border border-slate-200 bg-white hover:bg-slate-50 inline-flex items-center gap-2"
+          >
+            <i className="ri-arrow-left-line text-base"></i>
+            Back
+          </button>
         </div>
         {searchMessage ? (
           <p className="mt-2 text-sm text-slate-600">{searchMessage}</p>

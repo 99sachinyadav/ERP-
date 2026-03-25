@@ -9,7 +9,13 @@ const authTeacher = (req,res,next)=>{
         }
        if(!teachertoken ){
    const adminDecodedToken = jwt.verify(admintoken, process.env.JWT_SECRET);
-     if(adminDecodedToken.id!==process.env.ADMIN_EMAIL+process.env.ADMIN_PASSWORD){
+     const adminIds = [
+       process.env.ADMIN_EMAIL + process.env.ADMIN_PASSWORD,
+       process.env.DEAN_EMAIL + process.env.DEAN_PASSWORD,
+       process.env.DIRECTOR_EMAIL + process.env.DIRECTOR_PASSWORD,
+     ].filter(Boolean);
+
+     if(!adminIds.includes(adminDecodedToken.id)){
             return res.status(403).json({sucess:false,message:" invalid token"})
          }
         //  console.log("hello")

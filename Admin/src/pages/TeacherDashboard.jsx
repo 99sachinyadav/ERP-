@@ -132,75 +132,83 @@ const TeacherDashboard = () => {
       try {
         const sections = parseSections();
         setAssignedSections(sections);
-        if (sections.length === 0) return;
 
-        const primary = sections[0];
-        const underscoreIndex = primary.indexOf("_");
-        const sectionVal = primary[0];
-        const batchVal = primary.substring(underscoreIndex + 1).trim();
-        const yearVal = primary.substring(1, underscoreIndex).trim();
+        if (sections.length > 0) {
+          const primary = sections[0];
+          const underscoreIndex = primary.indexOf("_");
+          const sectionVal = primary[0];
+          const batchVal = primary.substring(underscoreIndex + 1).trim();
+          const yearVal = primary.substring(1, underscoreIndex).trim();
 
-        const response = await axios.get(backendUrl + "/api/gelStudentBySection", {
-          params: { section: sectionVal, year: yearVal, batch: batchVal },
-          headers: { teachertoken: localStorage.getItem("teacherToken") }
-        });
-
-        if (response.data.sucess) {
-          const studentsFromResponse = response.data.findSection.students;
-          setstudents(studentsFromResponse);
-          setAttendance(response.data.attendance);
-          setsemester(response.data.findSection.semester);
-
-          const newData = studentsFromResponse.map(student => {
-            let totalLec = 0;
-            let totalAttend = 0;
-            if (student.attendance) {
-              student.attendance.forEach(attend => {
-                if (Array.isArray(attend.subject)) {
-                  attend.subject.forEach(att => {
-                    if (att.name.includes(response.data.findSection.semester)) {
-                      totalAttend += att.noofLecAttended || 0;
-                      totalLec += att.totalnoLec || 0;
-                    }
-                  });
-                }
-              });
-            }
-            return { name: student.name, attendance: totalLec ? Math.round((totalAttend / totalLec) * 100) : 0 };
+          const response = await axios.get(backendUrl + "/api/gelStudentBySection", {
+            params: { section: sectionVal, year: yearVal, batch: batchVal },
+            headers: { teachertoken: localStorage.getItem("teacherToken") }
           });
 
-          setmydata(newData);
-        }
+          if (response.data.sucess) {
+            const studentsFromResponse = response.data.findSection.students;
+            setstudents(studentsFromResponse);
+            setAttendance(response.data.attendance);
+            setsemester(response.data.findSection.semester);
 
-        const semesterResults = await Promise.all(
-          sections.map(async (sectionName) => {
-            const underscore = sectionName.indexOf("_");
-            const sec = sectionName[0];
-            const batch = sectionName.substring(underscore + 1).trim();
-            const year = sectionName.substring(1, underscore).trim();
-            try {
-              const res = await axios.get(backendUrl + "/api/gelStudentBySection", {
-                params: { section: sec, year, batch },
-                headers: { teachertoken: localStorage.getItem("teacherToken") }
-              });
-              if (res.data?.findSection?.semester) {
-                return [sectionName, res.data.findSection.semester, res.data.findSection.subjects || []];
+            const newData = studentsFromResponse.map(student => {
+              let totalLec = 0;
+              let totalAttend = 0;
+              if (student.attendance) {
+                student.attendance.forEach(attend => {
+                  if (Array.isArray(attend.subject)) {
+                    attend.subject.forEach(att => {
+                      if (att.name.includes(response.data.findSection.semester)) {
+                        totalAttend += att.noofLecAttended || 0;
+                        totalLec += att.totalnoLec || 0;
+                      }
+                    });
+                  }
+                });
               }
-            } catch (err) {
-              // ignore per-section errors
-            }
-            return [sectionName, "", []];
-          })
-        );
+              return { name: student.name, attendance: totalLec ? Math.round((totalAttend / totalLec) * 100) : 0 };
+            });
 
-        const semesterMap = {};
-        const subjectsMap = {};
-        semesterResults.forEach(([name, sem, subjects]) => {
-          semesterMap[name] = sem;
-          subjectsMap[name] = subjects;
-        });
-        setSectionSemesters(semesterMap);
-        setSectionSubjects(subjectsMap);
+            setmydata(newData);
+          }
+
+          const semesterResults = await Promise.all(
+            sections.map(async (sectionName) => {
+              const underscore = sectionName.indexOf("_");
+              const sec = sectionName[0];
+              const batch = sectionName.substring(underscore + 1).trim();
+              const year = sectionName.substring(1, underscore).trim();
+              try {
+                const res = await axios.get(backendUrl + "/api/gelStudentBySection", {
+                  params: { section: sec, year, batch },
+                  headers: { teachertoken: localStorage.getItem("teacherToken") }
+                });
+                if (res.data?.findSection?.semester) {
+                  return [sectionName, res.data.findSection.semester, res.data.findSection.subjects || []];
+                }
+              } catch (err) {
+                // ignore per-section errors
+              }
+              return [sectionName, "", []];
+            })
+          );
+
+          const semesterMap = {};
+          const subjectsMap = {};
+          semesterResults.forEach(([name, sem, subjects]) => {
+            semesterMap[name] = sem;
+            subjectsMap[name] = subjects;
+          });
+          setSectionSemesters(semesterMap);
+          setSectionSubjects(subjectsMap);
+        } else {
+          setstudents([]);
+          setAttendance([]);
+          setsemester("");
+          setmydata([]);
+          setSectionSemesters({});
+          setSectionSubjects({});
+        }
 
         try {
           const assignments = await axios.get(
@@ -209,6 +217,7 @@ const TeacherDashboard = () => {
               headers: { teachertoken: localStorage.getItem("teacherToken") },
             }
           );
+          
           if (assignments.data?.sucess) {
             const parsed = (assignments.data.subjects || [])
               .map(parseAssignmentKey)
@@ -217,6 +226,7 @@ const TeacherDashboard = () => {
           }
         } catch (err) {
           // silently ignore assignment errors
+          console.log(err)
         }
       } catch (error) {
         console.log(error.response?.data?.message || error.message);

@@ -11,6 +11,9 @@ function Profile() {
   const [response, setresponce] = useState();
   const [Attendance, setAttendance] = useState([]);
   const [isOpen, setisOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editEmail, setEditEmail] = useState("");
+  const [editRollno, setEditRollno] = useState("");
   const [semester, setSemester] = useState("");
   const [marks, setMarks] = useState([]);
   useEffect(() => {
@@ -32,10 +35,44 @@ function Profile() {
         setAttendance(response.data.profile.attendance);
         setSemester(response.data.profile.semester);
         setMarks(response.data.profile.marks || []);
+        setEditEmail(response.data.profile.email || "");
+        setEditRollno(response.data.profile.rollno || "");
       }
     } catch (error) {
       console.log(error); // Set error message
       toast.error(error.response.data.message); // Display error message
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const payload = {
+        email: editEmail?.trim(),
+        rollno: editRollno?.trim(),
+      };
+
+      if (!payload.email && !payload.rollno) {
+        toast.error("Please enter email or roll number");
+        return;
+      }
+
+      const result = await axios.post(backendUrl + "/api/updateProfile", payload, {
+        headers: { token },
+      });
+
+      if (result.data.sucess) {
+        setresponce(result.data.profile);
+        setEditEmail(result.data.profile.email || "");
+        setEditRollno(result.data.profile.rollno || "");
+        setIsEditing(false);
+        toast.success("Profile updated");
+      } else {
+        toast.error(result.data.message || "Failed to update profile");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response?.data?.message || "Failed to update profile");
     }
   };
   const handleDownloadResult = () => {
@@ -308,6 +345,12 @@ function Profile() {
             <h1 className="text-xl lg:text-2xl font-semibold text-blue-800">Profile Details</h1>
             <div className="flex items-center gap-3">
               <button
+                onClick={() => setIsEditing((v) => !v)}
+                className="rounded-lg border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"
+              >
+                {isEditing ? "Cancel Edit" : "Edit Profile"}
+              </button>
+              <button
                 onClick={() => navigate("/marks")}
                 className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
               >
@@ -321,6 +364,50 @@ function Profile() {
               </button>
             </div>
           </div>
+
+          {isEditing && (
+            <div className="w-full bg-white/95 rounded-xl shadow border border-white/70 p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Roll No</label>
+                  <input
+                    type="text"
+                    value={editRollno}
+                    onChange={(e) => setEditRollno(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center gap-3">
+                <button
+                  onClick={handleSaveProfile}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                >
+                  Save Changes
+                </button>
+                <button
+                  onClick={() => {
+                    setEditEmail(response?.email || "");
+                    setEditRollno(response?.rollno || "");
+                    setIsEditing(false);
+                  }}
+                  className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
           <table className="w-full bg-white/95 rounded-xl shadow border border-white/70 print:text-xs">
             <tbody>
               <tr className="border-b">

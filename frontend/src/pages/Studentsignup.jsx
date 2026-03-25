@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -18,7 +18,12 @@ const Studentsignup = () => {
   const [year, setyear] = useState("");
   const [fathername, setfathername] = useState("");
   const [semester, setsemester] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isVerifyOpen, setIsVerifyOpen] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [codeSecondsLeft, setCodeSecondsLeft] = useState(0);
+  const [codeExpired, setCodeExpired] = useState(false);
 
   const navigate = useNavigate();
 
@@ -30,9 +35,41 @@ const Studentsignup = () => {
       toast.error("Please upload profile image");
       return;
     }
-    setIsLoading(true);
+    setIsSendingCode(true);
 
-   
+    try {
+      const response = await axios.post(
+        backendUrl + "/api/requestStudentVerification",
+        { email, name },
+        { timeout: 30000 }
+      );
+
+      if (response.data.sucess) {
+        toast.success(response.data.message);
+        setIsVerifyOpen(true);
+        setCodeSecondsLeft(600);
+        setCodeExpired(false);
+      } else {
+        toast.error(response.data.message || "Failed to send verification code");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.response?.data?.message || "Something went wrong");
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  const submitRegistrationWithCode = async () => {
+    if (!verificationCode) {
+      toast.error("Enter the verification code");
+      return;
+    }
+    if (codeExpired) {
+      toast.error("Verification code expired. Please resend.");
+      return;
+    }
+    setIsVerifying(true);
     try {
       const formData = new FormData();
       // File
@@ -49,13 +86,13 @@ const Studentsignup = () => {
       formData.append("year", year);
       formData.append("semester", semester);
       formData.append("father_name", fathername);
+      formData.append("verificationCode", verificationCode);
       // Contact info (flat fields because FormData can't send nested objects)
       formData.append("address", address);
       formData.append("phoneNO", mobile);
-      console.log(formData)
 
       const response = await axios.post(
-        backendUrl + "/api/registerStudent",
+        backendUrl + "/api/registerStudentWithCode",
         formData,
         {
           headers: {
@@ -70,7 +107,25 @@ const Studentsignup = () => {
         localStorage.setItem("studentname", response.data.name);
 
         toast.success(response.data.message);
+        setIsVerifyOpen(false);
         navigate("/home");
+
+        setname("");
+        setaddress("");
+        setbatch("");
+        setdob("");
+        setemail("");
+        setfathername("");
+        setimage(null);
+        setmobile("");
+        setpassword("");
+        setrollno("");
+        setsection("");
+        setyear("");
+        setsemester("");
+        setVerificationCode("");
+        setCodeSecondsLeft(0);
+        setCodeExpired(false);
       } else {
         toast.error(response.data.message);
       }
@@ -78,25 +133,54 @@ const Studentsignup = () => {
       console.error(error);
       toast.error(error?.response?.data?.message || "Something went wrong");
     } finally {
-      setIsLoading(false);
+      setIsVerifying(false);
     }
-
-    // Reset all fields (same resets as original)
-    setname("");
-    setaddress("");
-    setbatch("");
-    setdob("");
-    setemail("");
-    setfathername("");
-    setimage(null);
-    setmobile("");
-    setpassword("");
-    setrollno("");
-    setsection("");
-    setyear("");
-    setsemester("");
   };
 
+  const resendVerificationCode = async () => {
+    if (!email) {
+      toast.error("Enter email first");
+      return;
+    }
+    setIsSendingCode(true);
+    try {
+      const response = await axios.post(
+        backendUrl + "/api/requestStudentVerification",
+        { email, name },
+        { timeout: 30000 }
+      );
+      if (response.data.sucess) {
+        toast.success("Verification code resent");
+        setCodeSecondsLeft(600);
+        setCodeExpired(false);
+      } else {
+        toast.error(response.data.message || "Failed to resend code");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.response?.data?.message || "Something went wrong");
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isVerifyOpen) return;
+    if (codeSecondsLeft <= 0) {
+      setCodeExpired(true);
+      return;
+    }
+    const timer = setInterval(() => {
+      setCodeSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isVerifyOpen, codeSecondsLeft]);
   const handlelogin = () => {
     navigate("/login");
   };
@@ -303,10 +387,10 @@ const Studentsignup = () => {
           <div className="md:col-span-2 flex flex-col items-center mt-4">
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isSendingCode}
               className="w-full sm:w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition text-lg shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Registering..." : "Register"}
+              {isSendingCode ? "Sending Code..." : "Register"}
             </button>
             <p onClick={handlelogin} className="mt-4 text-blue-700 hover:underline cursor-pointer text-md">
               Already have an account? Login here...
@@ -314,6 +398,65 @@ const Studentsignup = () => {
           </div>
         </form>
       </div>
+      {isVerifyOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <h2 className="text-xl font-bold text-slate-900">Verify Your Email</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              We sent a verification code to <span className="font-semibold">{email}</span>.
+            </p>
+            <div className="mt-3 flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+              <span>
+                {codeExpired ? "Code expired." : "Code expires in"}
+              </span>
+              <span className="font-semibold text-slate-800">
+                {codeExpired
+                  ? "--:--"
+                  : `${String(Math.floor(codeSecondsLeft / 60)).padStart(2, "0")}:${String(
+                      codeSecondsLeft % 60
+                    ).padStart(2, "0")}`}
+              </span>
+            </div>
+            <input
+              type="text"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value)}
+              placeholder="Enter verification code"
+              className="mt-4 w-full rounded-lg border border-slate-200 px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            {codeExpired ? (
+              <p className="mt-2 text-xs font-semibold text-red-500">
+                Verification code expired. Please resend.
+              </p>
+            ) : null}
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={submitRegistrationWithCode}
+                disabled={isVerifying || codeExpired}
+                className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+              >
+                {isVerifying ? "Verifying..." : "Verify & Register"}
+              </button>
+              <button
+                type="button"
+                onClick={resendVerificationCode}
+                disabled={isSendingCode}
+                className="flex-1 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+              >
+                Resend Code
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsVerifyOpen(false)}
+              className="mt-4 w-full text-sm font-semibold text-slate-500 hover:text-slate-700"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

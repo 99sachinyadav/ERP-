@@ -120,6 +120,68 @@ const adminLogin = async (req, res) => {
   }
 };
 
+const deanLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res
+        .status(403)
+        .json({ sucess: false, message: "please enter full details" });
+    }
+    if (
+      email === process.env.DEAN_EMAIL &&
+      password === process.env.DEAN_PASSWORD
+    ) {
+      const deanToken = generateToken(
+        process.env.DEAN_EMAIL + process.env.DEAN_PASSWORD
+      );
+      return res
+        .status(200)
+        .json({ sucess: true, message: "dean login sucessfully", adminToken: deanToken });
+    } else {
+      return res
+        .status(401)
+        .json({ sucess: false, message: "Invalid dean credentials" });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(203).json({ sucess: false, message: error.message });
+  }
+};
+
+const directorLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res
+        .status(403)
+        .json({ sucess: false, message: "please enter full details" });
+    }
+    if (
+      email === process.env.DIRECTOR_EMAIL &&
+      password === process.env.DIRECTOR_PASSWORD
+    ) {
+      const directorToken = generateToken(
+        process.env.DIRECTOR_EMAIL + process.env.DIRECTOR_PASSWORD
+      );
+      return res
+        .status(200)
+        .json({
+          sucess: true,
+          message: "director login sucessfully",
+          adminToken: directorToken,
+        });
+    } else {
+      return res
+        .status(401)
+        .json({ sucess: false, message: "Invalid director credentials" });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(203).json({ sucess: false, message: error.message });
+  }
+};
+
 //DONE
 const attendancebyTeacher = async (req, res) => {
   try {
@@ -190,6 +252,8 @@ const attendancebyTeacher = async (req, res) => {
     //     });
     // }
     const dateObject = new Date(date);
+    const dateKey = (d) => new Date(d).toISOString().slice(0, 10);
+    const targetDateKey = dateKey(dateObject);
     if (!findStudent.subjects.includes(subject)) {
       return res
         .status(401)
@@ -200,13 +264,12 @@ const attendancebyTeacher = async (req, res) => {
     for (let record of findStudent.attendance) {
       // record.subject is an array
       let subj = record.subject.find(
-        (s) =>
-          s.name === subject &&
-          s.date.toISOString() === dateObject.toISOString()
+        (s) => s.name === subject && dateKey(s.date) === targetDateKey
       );
       if (subj) {
-        subj.noofLecAttended += Number(noofLecAttended);
-        subj.totalnoLec += Number(totalnoLec);
+        // Edit for the same date: replace values instead of accumulating
+        subj.noofLecAttended = Number(noofLecAttended);
+        subj.totalnoLec = Number(totalnoLec);
         updated = true;
         break;
       }
@@ -215,16 +278,7 @@ const attendancebyTeacher = async (req, res) => {
       // Check if subject exists with a different date in any attendance record
       let subjectAdded = false;
       for (let record of findStudent.attendance) {
-        let subj = record.subject.find(
-          (s) =>
-            s.name === subject &&
-            s.date.toISOString() !== dateObject.toISOString()
-        );
-        let subj2 = record.subject.find(
-          (s) =>
-            s.name === subject &&
-            s.date.toISOString() === dateObject.toISOString()
-        );
+        let subj = record.subject.find((s) => s.name === subject);
         if (subj) {
           // Add new date entry for the same subject in the same subject array
           record.subject.push({
@@ -236,13 +290,6 @@ const attendancebyTeacher = async (req, res) => {
           subjectAdded = true;
           break;
         }
-        // if(subj2){
-
-        //     subj2.noofLecAttended+=Number(noofLecAttended);
-        //     subj2.totalnoLec+=Number(totalnoLec);
-        //      subjectAdded = true;
-        //     break;
-        // }
       }
       if (!subjectAdded) {
         // If subject not found at all, push a new attendance record
@@ -603,6 +650,8 @@ export {
   registerTeacher,
   teacherLogin,
   adminLogin,
+  deanLogin,
+  directorLogin,
   attendancebyTeacher,
   updateTeacherInSection,
   getAllTeacher,

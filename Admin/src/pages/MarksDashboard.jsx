@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { backendUrl } from "@/App";
+import TeacherActionButtons from "@/Components/TeacherActionButtons";
 
 function MarksDashboard() {
   const [student, setStudent] = useState([]);
@@ -21,6 +22,49 @@ function MarksDashboard() {
   const [isSavingAll, setIsSavingAll] = useState(false);
   const getDefaultTotalByExam = (examName) =>
     examName === "PUT" ? 70 : 50;
+
+  const getExistingMark = (studentItem, examName, semesterName, subjectName) => {
+    const marks = Array.isArray(studentItem?.marks) ? studentItem.marks : [];
+    const examKey = String(examName || "").toUpperCase();
+    return marks.find(
+      (mark) =>
+        String(mark?.exam || "").toUpperCase() === examKey &&
+        (!semesterName || mark?.semester === semesterName) &&
+        String(mark?.subject || "") === String(subjectName || "")
+    );
+  };
+
+  const buildMarksMaps = (studentsList, examName, semesterName, subjectName) => {
+    const defaults = {};
+    const obtained = {};
+    const total = {};
+    const defaultTotal = getDefaultTotalByExam(examName);
+
+    (studentsList || []).forEach((item) => {
+      const roll = item?.rollno;
+      defaults[roll] = defaultTotal;
+      const existing = getExistingMark(
+        item,
+        examName,
+        semesterName,
+        subjectName
+      );
+      if (existing) {
+        obtained[roll] = existing?.obtainedMarks ?? "";
+        total[roll] =
+          existing?.totalMarks !== undefined &&
+          existing?.totalMarks !== null &&
+          String(existing?.totalMarks).trim() !== ""
+            ? existing?.totalMarks
+            : defaultTotal;
+      } else {
+        obtained[roll] = "";
+        total[roll] = defaultTotal;
+      }
+    });
+
+    return { defaults, obtained, total };
+  };
 
   const showStudents = async () => {
     setIsLoadingStudents(true);
@@ -45,21 +89,25 @@ function MarksDashboard() {
           (a, b) => Number(a.rollno) - Number(b.rollno)
         );
         setStudent(sorted);
-        setObtainedMarks({});
         setApplyAllObtained("");
         setApplyAllTotal("");
-        const defaults = {};
-        sorted.forEach((item) => {
-          defaults[item?.rollno] = getDefaultTotalByExam(exam);
-        });
-        setTotalMarks(defaults);
-        setSubjects(responce.data.findSection.subjects || []);
-        setSingleSubject(
-          responce.data.findSection.subjects
-            ? responce.data.findSection.subjects[0]
-            : ""
+
+        const nextSubjects = responce.data.findSection.subjects || [];
+        const nextSubject = nextSubjects[0] || "";
+        const nextSemester = responce.data.findSection.semester;
+
+        const { obtained, total } = buildMarksMaps(
+          sorted,
+          exam,
+          nextSemester,
+          nextSubject
         );
-        setSemester(responce.data.findSection.semester);
+
+        setObtainedMarks(obtained);
+        setTotalMarks(total);
+        setSubjects(nextSubjects);
+        setSingleSubject(nextSubject);
+        setSemester(nextSemester);
         toast.success(responce.data.message);
       }
     } catch (error) {
@@ -211,6 +259,9 @@ function MarksDashboard() {
   return (
     <div className="bg-gradient-to-br from-blue-50 to-gray-100 min-h-screen flex flex-col lg:flex-row">
       <div className="flex-1 flex flex-col gap-6 p-4 sm:p-8">
+        <div className="hidden sm:block">
+          <TeacherActionButtons />
+        </div>
         <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8">
           <h1 className="text-2xl font-bold text-blue-700 mb-4">
             Upload Marks
@@ -233,12 +284,15 @@ function MarksDashboard() {
                   setExam(nextExam);
                   setApplyAllObtained("");
                   setApplyAllTotal("");
-                  setObtainedMarks({});
-                  const defaults = {};
-                  student.forEach((item) => {
-                    defaults[item?.rollno] = getDefaultTotalByExam(nextExam);
-                  });
-                  setTotalMarks(defaults);
+
+                  const { obtained, total } = buildMarksMaps(
+                    student,
+                    nextExam,
+                    semester,
+                    singleSubject
+                  );
+                  setObtainedMarks(obtained);
+                  setTotalMarks(total);
                 }}
                 className="border rounded-lg px-2 py-1 text-base font-semibold bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
@@ -253,7 +307,21 @@ function MarksDashboard() {
               </span>
               <select
                 value={singleSubject}
-                onChange={(e) => setSingleSubject(e.target.value)}
+                onChange={(e) => {
+                  const nextSubject = e.target.value;
+                  setSingleSubject(nextSubject);
+                  setApplyAllObtained("");
+                  setApplyAllTotal("");
+
+                  const { obtained, total } = buildMarksMaps(
+                    student,
+                    exam,
+                    semester,
+                    nextSubject
+                  );
+                  setObtainedMarks(obtained);
+                  setTotalMarks(total);
+                }}
                 className="border rounded-lg px-2 py-1 text-base font-semibold bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
                 {subjects &&

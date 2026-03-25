@@ -142,6 +142,34 @@ const sendPasswordResetCode = async (email, name, code) => {
   }
 };
 
+const sendStudentVerificationCode = async (email, name, code) => {
+  const subject = "Student Registration Verification Code";
+  const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937;">
+      <h2 style="margin: 0 0 8px;">Hello ${name || "Student"}</h2>
+      <p style="margin: 0 0 12px;">Use the code below to verify your registration:</p>
+      <div style="font-size: 24px; font-weight: bold; letter-spacing: 4px; background: #f3f4f6; padding: 12px 16px; display: inline-block; border-radius: 8px;">
+        ${code}
+      </div>
+      <p style="margin: 12px 0 0;">This code expires in 10 minutes. If you did not request this, you can ignore this email.</p>
+    </div>
+  `;
+
+  try {
+    const transporter = getSmtpTransporter();
+    const response = await transporter.sendMail({
+      from: '"RKGITM ERP" <sy7841846@gmail.com>',
+      to: email,
+      subject,
+      html
+    });
+    return ({ success: true, data: response });
+  } catch (error) {
+    console.error("Error sending verification code email:", error);
+    return ({ success: false, error: error.message });
+  }
+};
+
 const sendEmailStudent = async (req, res) => {
    try {
        const {year, batch, teacherId} = req.body;
@@ -231,4 +259,4 @@ const sendEmailStudent = async (req, res) => {
 
 }
 
- export { sendEmail , sendEmailStudent, sendPasswordResetCode };
+ export { sendEmail , sendEmailStudent, sendPasswordResetCode, sendStudentVerificationCode };
