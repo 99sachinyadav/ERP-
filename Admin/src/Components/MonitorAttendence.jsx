@@ -5,6 +5,15 @@ import toast from "react-hot-toast";
 import { backendUrl } from '@/App';
 import ModuleState from "./ui/module-state";
 import { useNavigate } from "react-router-dom";
+
+const getAttendanceRowColor = (percentage) => {
+  if (percentage >= 1 && percentage < 25) return "bg-red-400";
+  if (percentage >= 25 && percentage < 50) return "bg-yellow-300";
+  if (percentage >= 50 && percentage < 75) return "bg-green-300";
+  if (percentage >= 75) return "bg-white";
+  return "";
+};
+
 const MonitorAttendence = () => {
   const [popupStudent, setPopupStudent] = useState(null);
   const [section, setsection] = useState("");
@@ -307,16 +316,16 @@ const MonitorAttendence = () => {
                   }
                 });
               }
+              const attendancePercentage =
+                totalLec > 0 ? Number(((totalAttend / totalLec) * 100).toFixed(2)) : 0;
 
               return (
                 <React.Fragment key={student.rollno}>
                   <tr
                     onClick={() => setPopupStudent(student)}
-                    className={`${
-                      ((totalAttend / totalLec) * 100).toFixed(2) < 75
-                        ? "bg-red-400"
-                        : "even:bg-gray-50"
-                    } ${popupStudent && popupStudent ? "opacity-40" : ""}`}
+                    className={`${getAttendanceRowColor(attendancePercentage)} ${
+                      popupStudent && popupStudent ? "opacity-40" : ""
+                    }`}
                     style={{ cursor: "pointer" }}
                   >
                     <td className="border border-gray-300 text-xs sm:text-lg sm:px-4 py-2">
