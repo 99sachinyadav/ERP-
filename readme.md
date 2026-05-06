@@ -272,9 +272,9 @@ Admin Web App
 - Subject-wise Faculty: Back button placed next to Track.
 
 Student Web App
-- Student registration now uses email verification with popup, resend option, countdown timer, and expiry message.
+- Student registration now uses email verification with popup,and  resend option, countdown timer, and expiry message.
 
 ---
 
 **License**
-This project appears to be for college attendance management and internal use. If you plan to distribute it, add a proper license and remove all secrets from source control.
+This project appears to be for college attendance management and internal use. If you plan to distribute it, add a proper license and remove all secrets from source control .
