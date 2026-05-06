@@ -213,11 +213,7 @@ Auth Header Summary
 - Teacher: `teachertoken: <jwt>`
 - Student: `token: <jwt>`
 
-Email Crediantials
--  User: erpadmin@rkgitm.ac.in
--  password :  Erpadmin@123
--  SMTP Host: smtp.gmail.com
--   Email 2FA App Password : nrad znvb rvvc ttvl
+
 
 Important Request Notes
 - `POST /registerStudent` uses `multipart/form-data` with `image` as file field.
