@@ -17,6 +17,7 @@ import ChangeStudentpassword from "../Components/ChangeStudentpassword";
 import { useNavigate } from "react-router-dom";
 import ChangeSemesterOrSection from "../Components/ChangeSemesterOrSection";
 import ChangeStudentSection from "../Components/ChangeStudentSection";
+import ManageLeaves from "@/Components/ManageLeaves";
 const Home = () => {
   const [activeComponent, setActiveComponent] = useState("AdminMenu");
   const [isOpen, setIsOpen] = useState(false);
@@ -24,6 +25,7 @@ const Home = () => {
 
   const menuItems = [
     { key: "TeacherRegister", icon: "ri-user-add-line", label: "Register Teacher" },
+    { key: "ManageLeaves", icon: "ri-calendar-2-line", label: "Manage Leaves" },
     { key: "UpdateTeacher", icon: "ri-user-settings-line", label: "Update Teacher" },
     { key: "SeeALLTeachers", icon: "ri-team-line", label: "All Teachers" },
     { key: "SeeALLStudents", icon: "ri-graduation-cap-line", label: "All Students" },
@@ -140,6 +142,7 @@ const Home = () => {
             {activeComponent === "ChangeSemesterOrSection" && <ChangeSemesterOrSection />}
             {activeComponent === "MonitorAttendence" && <MonitorAttendence />}
             {activeComponent === "MonitorSubjectFaculty" && <MonitorSubjectFaculty />}
+            {activeComponent === "ManageLeaves" && <ManageLeaves/>}
           </div>
         </main>
       </div>

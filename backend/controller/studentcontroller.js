@@ -310,6 +310,7 @@ const changeYear = async (req, res) => {
     const updatedStudents = findSection.students.forEach(async (studentId) => {
       await Student.updateOne({ _id: studentId }, { $set: { year: newyear } });
     });
+    console.log("Hello",updatedStudents)
     return res
       .status(200)
       .json({
@@ -350,7 +351,14 @@ const getAllStudentBySection = async (req, res) => {
       subjects: { $elemMatch: { $regex: `${Section_Year}$` } },
     }).select("name email subjects");
 
-    const subjectFaculty = (findSection.subjects || []).map((subjectName) => {
+    const currentSemesterPrefix = `${findSection.semester}_`;
+    const currentSubjects = (findSection.subjects || []).filter((subjectName) =>
+      String(subjectName || "").startsWith(currentSemesterPrefix)
+    );
+    const findSectionData = findSection.toObject();
+    findSectionData.subjects = currentSubjects;
+
+    const subjectFaculty = currentSubjects.map((subjectName) => {
       const subjectKey = `${subjectName}_${Section_Year}`;
       const matchedTeacher = teachers.find((teacher) =>
         Array.isArray(teacher.subjects) && teacher.subjects.includes(subjectKey)
@@ -368,7 +376,7 @@ const getAllStudentBySection = async (req, res) => {
       .json({
         sucess: true,
         message: "students fetched sucessfully",
-        findSection,
+        findSection: findSectionData,
         subjectFaculty,
       });
   } catch (error) {

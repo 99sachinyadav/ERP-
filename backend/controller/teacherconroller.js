@@ -388,12 +388,27 @@ const getAllTeacher = async (req, res) => {
         .status(401)
         .json({ sucess: false, message: "no teacher is registered now" });
     }
+
+    const teachersWithCurrentSubjects = findAllTeacher.map((teacher) => {
+      const teacherData = teacher.toObject();
+      teacherData.section = (teacherData.section || []).map((section) => {
+        const semesterPrefix = `${section.semester}_`;
+        return {
+          ...section,
+          subjects: (section.subjects || []).filter((subject) =>
+            String(subject || "").startsWith(semesterPrefix)
+          ),
+        };
+      });
+      return teacherData;
+    });
+
     return res
       .status(200)
       .json({
         sucess: true,
         message: "all teacher fetched sucessfully",
-        findAllTeacher,
+        findAllTeacher: teachersWithCurrentSubjects,
       });
   } catch (error) {
     console.log(error);
@@ -419,6 +434,10 @@ const getTeacherAssignments = async (req, res) => {
         .json({ sucess: false, message: "Teacher not found" });
     }
 
+    const assignedSections = await Section.find({
+      _id: { $in: teacher.section || [] },
+    }).select("name semester year batch");
+
     return res.status(200).json({
       sucess: true,
       message: "teacher assignments fetched successfully",
@@ -428,7 +447,7 @@ const getTeacherAssignments = async (req, res) => {
         email: teacher.email,
       },
       subjects: teacher.subjects || [],
-      sections: teacher.section || [],
+      sections: assignedSections,
     });
   } catch (error) {
     console.log(error);

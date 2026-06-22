@@ -14,6 +14,20 @@ const getAttendanceRowColor = (percentage) => {
   return "";
 };
 
+const getAvailableAttendanceSemesters = (students, currentSemester) => {
+  const semesters = new Set();
+  if (currentSemester) semesters.add(currentSemester);
+  students.forEach((student) => {
+    (student?.attendance || []).forEach((record) => {
+      (record?.subject || []).forEach((subject) => {
+        const semesterName = String(subject?.name || "").split("_")[0];
+        if (semesterName) semesters.add(semesterName);
+      });
+    });
+  });
+  return Array.from(semesters);
+};
+
 const MonitorAttendence = () => {
   const [popupStudent, setPopupStudent] = useState(null);
   const [section, setsection] = useState("");
@@ -22,7 +36,7 @@ const MonitorAttendence = () => {
   const [students, setstudents] = useState([]);
   const [Attendance, setAttendance] = useState([]);
   const [semester, setsemester] = useState("");
-  const [selectedExam, setSelectedExam] = useState("ST1");
+  const [selectedAttendanceSemester, setSelectedAttendanceSemester] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
@@ -46,7 +60,10 @@ const MonitorAttendence = () => {
         let subjectName = "";
         attend.subject &&
           attend.subject.forEach((subj) => {
-            if (subj.name && subj.name.includes(semester)) {
+            if (
+              subj.name &&
+              subj.name.startsWith(`${activeAttendanceSemester}_`)
+            ) {
               totalAttend += subj.noofLecAttended || 0;
               totalLec += subj.totalnoLec || 0;
               subjectName = subj.name || "";
@@ -84,6 +101,7 @@ const MonitorAttendence = () => {
           <h1>Attendance Report</h1>
           <div class="meta">Name: ${student.name || "-"} | Roll No: ${student.rollno || "-"}</div>
           <div class="meta">Father's Name: ${student.father_name || "-"}</div>
+          <div class="meta">Semester: ${activeAttendanceSemester || "-"}</div>
           <h2>Subject-wise Attendance</h2>
           <table>
             <thead>
@@ -137,6 +155,7 @@ const MonitorAttendence = () => {
         setstudents(sortedStudents);
         setAttendance(responce.data.attendance);
         setsemester(responce.data.findSection.semester);
+        setSelectedAttendanceSemester(responce.data.findSection.semester || "");
         toast.success(responce.data.message);
       } else {
         setstudents([]);
@@ -175,6 +194,11 @@ const MonitorAttendence = () => {
     setSearchMessage("");
     setPopupStudent(null);
   };
+  const availableAttendanceSemesters = getAvailableAttendanceSemesters(
+    students,
+    semester
+  );
+  const activeAttendanceSemester = selectedAttendanceSemester || semester;
   const navigate = useNavigate();
   return (
     <div className={`flex flex-col  `}>
@@ -254,6 +278,24 @@ const MonitorAttendence = () => {
         {searchMessage ? (
           <p className="mt-2 text-sm text-slate-600">{searchMessage}</p>
         ) : null}
+        {hasSearched && students.length > 0 ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <label className="text-sm font-semibold text-slate-700">
+              Attendance Semester
+            </label>
+            <select
+              value={activeAttendanceSemester}
+              onChange={(e) => setSelectedAttendanceSemester(e.target.value)}
+              className="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              {availableAttendanceSemesters.map((sem) => (
+                <option key={sem} value={sem}>
+                  {sem}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
       </div>
       <div className="mt-5">
         {loading ? (
@@ -308,7 +350,7 @@ const MonitorAttendence = () => {
                     attend.subject.forEach((att) => {
                       // Replace 'noofLecAttended' and 'totalnoLec' with actual property names from your data
                       //  console.log(att)
-                      if(att.name.includes(semester)){
+                      if(att.name.startsWith(`${activeAttendanceSemester}_`)){
                          totalAttend += att.noofLecAttended || 0;
                       totalLec += att.totalnoLec || 0;
                       }
@@ -362,7 +404,7 @@ const MonitorAttendence = () => {
                               {popupStudent.father_name}
                             </p>
                             <h3 className="font-semibold mt-4 mb-2">
-                              Subject-wise Attendance
+                              Subject-wise Attendance ({activeAttendanceSemester || "N/A"})
                             </h3>
                             {popupStudent.attendance &&
                             popupStudent.attendance.length > 0 ? (
@@ -373,7 +415,7 @@ const MonitorAttendence = () => {
                                 {
                                   attend.subject &&
                                     attend.subject.forEach((subj) => {
-                                       if(subj.name.includes(semester)){
+                                       if(subj.name.startsWith(`${activeAttendanceSemester}_`)){
                                            totalAttend += subj.noofLecAttended || 0;
                                            totalLec += subj.totalnoLec || 0;
                                            subjectName = subj.name || "";

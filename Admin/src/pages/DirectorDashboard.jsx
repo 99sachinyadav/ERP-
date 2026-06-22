@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+import college from "../assets/college.jpg";
 
 const DirectorDashboard = () => {
   const navigate = useNavigate();
@@ -11,7 +12,7 @@ const DirectorDashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="bg-gradient-to-r from-cyan-600 via-sky-600 to-lime-500 text-white">
+      <div className="bg-gradient-to-r from-cyan-600 via-sky-600 to-lime-500 text-white sticky top-0">
         <div className="mx-auto max-w-6xl px-6 py-10">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div>
@@ -56,13 +57,18 @@ const DirectorDashboard = () => {
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-6 py-10">
-        <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-xs uppercase tracking-widest text-cyan-500">Executive View</p>
-            <h3 className="mt-2 text-2xl font-semibold text-slate-900">
-              Institutional Monitoring
-            </h3>
+      <div
+        className="min-h-screen relative bg-cover bg-center"
+        style={{ backgroundImage: `url(${college})` }}
+      >
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="mx-auto max-w-6xl px-6 py-10 relative z-50">
+          <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-xs uppercase tracking-widest text-cyan-500">Executive View</p>
+              <h3 className="mt-2 text-2xl font-semibold text-slate-900">
+                Institutional Monitoring
+              </h3>
             <p className="mt-2 text-sm text-slate-600">
               Review marks and attendance across departments. Apply filters to get the
               latest class-level insights.
@@ -86,6 +92,12 @@ const DirectorDashboard = () => {
               >
                 Open Subject-wise Faculty
               </Link>
+              <Link
+                to="/director/approveLeaves"
+                className="inline-flex items-center gap-2 rounded-lg bg-lime-600 px-4 py-2 text-sm font-semibold text-white hover:bg-lime-700"
+              >
+                Manage Leaves
+              </Link>
             </div>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-sm">
@@ -108,7 +120,7 @@ const DirectorDashboard = () => {
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 mt-4">
           <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
             <p className="text-xs uppercase tracking-widest text-cyan-500">Marks</p>
             <h3 className="mt-2 text-2xl font-semibold text-slate-900">Marks Monitor</h3>
@@ -148,6 +160,19 @@ const DirectorDashboard = () => {
               Open Faculty Monitor
             </Link>
           </div>
+          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+            <p className="text-xs uppercase tracking-widest text-lime-500">Leaves</p>
+            <h3 className="mt-2 text-2xl font-semibold text-slate-900">Leave Management</h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Review and approve leave requests for faculty members.
+            </p>
+            <Link
+              to="/director/approveLeaves"
+             className="mt-4 inline-flex items-center gap-2 rounded-lg bg-lime-600 px-4 py-2 text-sm font-semibold text-white hover:bg-lime-700"
+            >
+             Manage Leaves
+            </Link>
+          </div>
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
@@ -179,7 +204,11 @@ const DirectorDashboard = () => {
             </p>
           </div>
         </div>
-      </div>
+      </div>   
+
+                  
+         </div>
+
     </div>
   );
 };

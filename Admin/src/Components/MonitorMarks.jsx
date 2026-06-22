@@ -33,25 +33,15 @@ const formatTotal = ({ obtained, total }) => {
   return `${obtained}/${total}`;
 };
 
-const getAttendancePercent = (student, semester) => {
-  let totalLec = 0;
-  let totalAttend = 0;
-
-  if (Array.isArray(student?.attendance)) {
-    student.attendance.forEach((attend) => {
-      if (Array.isArray(attend?.subject)) {
-        attend.subject.forEach((subj) => {
-          if (!semester || String(subj?.name || "").includes(semester)) {
-            totalAttend += Number(subj?.noofLecAttended || 0);
-            totalLec += Number(subj?.totalnoLec || 0);
-          }
-        });
-      }
+const getAvailableMarkSemesters = (students, currentSemester) => {
+  const semesters = new Set();
+  if (currentSemester) semesters.add(currentSemester);
+  students.forEach((student) => {
+    (student?.marks || []).forEach((mark) => {
+      if (mark?.semester) semesters.add(mark.semester);
     });
-  }
-
-  if (!totalLec) return "N/A";
-  return `${((totalAttend / totalLec) * 100).toFixed(2)}%`;
+  });
+  return Array.from(semesters);
 };
 
 const MonitorMarks = () => {
@@ -61,6 +51,7 @@ const MonitorMarks = () => {
   const [batch, setbatch] = useState("");
   const [students, setstudents] = useState([]);
   const [semester, setsemester] = useState("");
+  const [selectedMarksSemester, setSelectedMarksSemester] = useState("");
   const [selectedExam, setSelectedExam] = useState("ST1");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -84,7 +75,7 @@ const MonitorMarks = () => {
 
     const marks = Array.isArray(student?.marks) ? student.marks : [];
     const currentSemesterMarks = marks.filter(
-      (mark) => !semester || mark?.semester === semester
+      (mark) => !activeMarksSemester || mark?.semester === activeMarksSemester
     );
 
     const renderExamTable = (exam) => {
@@ -143,6 +134,7 @@ const MonitorMarks = () => {
           <h1>Marks Report</h1>
           <div class="meta">Name: ${student.name || "-"} | Roll No: ${student.rollno || "-"}</div>
           <div class="meta">Father's Name: ${student.father_name || "-"}</div>
+          <div class="meta">Semester: ${activeMarksSemester || "-"}</div>
           ${renderExamTable("ST1")}
           ${renderExamTable("ST2")}
           ${renderExamTable("PUT")}
@@ -181,6 +173,7 @@ const MonitorMarks = () => {
         );
         setstudents(sortedStudents);
         setsemester(responce.data.findSection.semester);
+        setSelectedMarksSemester(responce.data.findSection.semester || "");
         toast.success(responce.data.message);
       } else {
         setstudents([]);
@@ -219,16 +212,18 @@ const MonitorMarks = () => {
     setSearchMessage("");
     setPopupStudent(null);
   };
+  const availableMarkSemesters = getAvailableMarkSemesters(students, semester);
+  const activeMarksSemester = selectedMarksSemester || semester;
 
   const popupMarks = popupStudent
     ? selectedExam === "ALL"
       ? (popupStudent.marks || []).filter(
-          (mark) => !semester || mark?.semester === semester
+          (mark) => !activeMarksSemester || mark?.semester === activeMarksSemester
         )
-      : getMarksForExam(popupStudent, selectedExam, semester)
+      : getMarksForExam(popupStudent, selectedExam, activeMarksSemester)
     : [];
   const popupTotals = popupStudent
-    ? getExamTotals(popupStudent, selectedExam, semester)
+    ? getExamTotals(popupStudent, selectedExam, activeMarksSemester)
     : { obtained: 0, total: 0 };
 
   const navigate = useNavigate();
@@ -310,6 +305,24 @@ const MonitorMarks = () => {
         {searchMessage ? (
           <p className="mt-2 text-sm text-slate-600">{searchMessage}</p>
         ) : null}
+        {hasSearched && students.length > 0 ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <label className="text-sm font-semibold text-slate-700">
+              Marks Semester
+            </label>
+            <select
+              value={activeMarksSemester}
+              onChange={(e) => setSelectedMarksSemester(e.target.value)}
+              className="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              {availableMarkSemesters.map((sem) => (
+                <option key={sem} value={sem}>
+                  {sem}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-5">
@@ -342,9 +355,6 @@ const MonitorMarks = () => {
                 <th className="border border-gray-300 text-xs sm:text-lg sm:px-4 py-2 bg-gray-100 text-left">
                   Name
                 </th>
-                <th className="border border-gray-300 text-xs sm:text-lg sm:px-4 py-2 bg-gray-100 text-left">
-                  Attendance
-                </th>
                 <th className="border border-gray-300 text-xs sm:text-lg sm:px-4 py-2 bg-gray-100 text-center">
                   Father&apos;s Name
                 </th>
@@ -363,18 +373,15 @@ const MonitorMarks = () => {
             </thead>
             <tbody>
               {students.map((student) => {
-                const st1Total = getExamTotals(student, "ST1", semester);
-                const st2Total = getExamTotals(student, "ST2", semester);
-                const putTotal = getExamTotals(student, "PUT", semester);
+                const st1Total = getExamTotals(student, "ST1", activeMarksSemester);
+                const st2Total = getExamTotals(student, "ST2", activeMarksSemester);
+                const putTotal = getExamTotals(student, "PUT", activeMarksSemester);
 
                 return (
                   <React.Fragment key={student.rollno}>
                     <tr className={`even:bg-gray-50 ${popupStudent ? "opacity-40" : ""}`}>
                       <td className="border border-gray-300 text-xs sm:text-lg sm:px-4 py-2">
                         {student?.name}
-                      </td>
-                      <td className="border border-gray-300 text-xs sm:text-lg sm:px-4 py-2">
-                        {getAttendancePercent(student, semester)}
                       </td>
                       <td className="border border-gray-300 text-xs text-wrap sm:text-lg text-center sm:px-4 py-2">
                         {student?.father_name}
@@ -410,7 +417,7 @@ const MonitorMarks = () => {
 
                     {popupStudent && popupStudent.rollno === student.rollno && (
                       <tr>
-                        <td colSpan={7}>
+                        <td colSpan={6}>
                           <div className="fixed inset-0 flex items-center justify-center bg-transparent bg-opacity-40 z-50">
                             <div className="bg-white p-6 rounded shadow-lg min-w-[300px] max-w-[90vw]">
                               <h2 className="text-lg font-bold mb-2">

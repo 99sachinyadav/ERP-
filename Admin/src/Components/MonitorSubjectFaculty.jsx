@@ -15,6 +15,11 @@ const MonitorSubjectFaculty = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const navigate = useNavigate();
 
+  const formatSubjectName = (subjectName) => {
+    const parts = String(subjectName || "").split("_");
+    return parts.length > 1 ? parts.slice(1).join("_") : subjectName;
+  };
+
   const adminLikeToken =
     localStorage.getItem("adminToken") ||
     localStorage.getItem("deanToken") ||
@@ -165,7 +170,7 @@ const MonitorSubjectFaculty = () => {
                 {subjectFaculty.map((item, idx) => (
                   <tr key={`${item.subject}-${idx}`} className="even:bg-slate-50">
                     <td className="border border-gray-200 px-3 py-2">
-                      {item.subject}
+                      {formatSubjectName(item.subject)}
                     </td>
                     <td className="border border-gray-200 px-3 py-2">
                       {section || "-"}

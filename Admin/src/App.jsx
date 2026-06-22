@@ -22,6 +22,8 @@ import DeanLogin from "./pages/DeanLogin";
 import DirectorLogin from "./pages/DirectorLogin";
 import DeanDashboard from "./pages/DeanDashboard";
 import DirectorDashboard from "./pages/DirectorDashboard";
+import Leave from "./pages/Leave";
+import Approveleaves from "./pages/Approveleaves";
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -147,6 +149,14 @@ function App() {
           }
         />
         <Route
+          path="/director/approveLeaves"
+          element={
+            <RoleProtect tokenKey="directorToken" redirectTo="/directorlogin">
+             <Approveleaves/>
+            </RoleProtect>
+          }
+        />
+        <Route
           path="/sendEmail"
           element={
             <TeacherProTect>
@@ -175,6 +185,14 @@ function App() {
           element={
             <TeacherProTect>
               <MarksDashboard />
+            </TeacherProTect>
+          }
+        />
+        <Route
+          path="/applyLeave"
+          element={
+            <TeacherProTect>
+              <Leave />
             </TeacherProTect>
           }
         />

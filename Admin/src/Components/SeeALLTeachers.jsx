@@ -7,6 +7,12 @@ const SeeALLTeachers = () => {
    const [teachers, setteachers] = useState([])
    const [loading, setLoading] = useState(true);
    const [errorMessage, setErrorMessage] = useState("");
+   const getCurrentSemesterSubjects = (sec) => {
+     const semesterPrefix = `${sec?.semester || ""}_`;
+     return (sec?.subjects || [])
+       .filter((subj) => String(subj || "").startsWith(semesterPrefix))
+       .map((subj) => String(subj || "").replace(semesterPrefix, ""));
+   };
 //   const teachers = [
 //   { name: "John Doe", email: "john.doe@example.com", section: "A", year: "2023" },
 //   { name: "Jane Smith", email: "jane.smith@example.com", section: "B", year: "2022" },
@@ -117,14 +123,16 @@ const SeeALLTeachers = () => {
           </td>
           <td className="border border-gray-300 text-sm sm:text-lg text-center sm:px-4 py-2">
             <div className="flex flex-col gap-3">
-              {teacher?.section?.map((sec, idx) => (
+              {teacher?.section?.map((sec, idx) => {
+                const currentSubjects = getCurrentSemesterSubjects(sec);
+                return (
                 <div key={idx} className="rounded-lg border border-slate-200 bg-slate-50 p-2">
                   <div className="text-xs font-semibold text-slate-700">
                     Section {sec?.name?.split("_")[0]} | Batch {sec?.name?.split("_")[1]}
                   </div>
                   <div className="mt-2 flex flex-wrap justify-center gap-2">
-                    {sec?.subjects?.length ? (
-                      sec.subjects.map((subj) => (
+                    {currentSubjects.length ? (
+                      currentSubjects.map((subj) => (
                         <span
                           key={`${sec?.name}-${subj}`}
                           className="rounded-full border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700"
@@ -137,7 +145,8 @@ const SeeALLTeachers = () => {
                     )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </td>
         </tr>

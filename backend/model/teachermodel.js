@@ -26,6 +26,9 @@ const teacherSchema  = new mongoose.Schema({
     },
     section:[{type:mongoose.Schema.Types.ObjectId, ref:'Section', required:true}],
     subjects:[{type:String}]
+
+
+    
 },{timestamps:true})
 
 export const Teacher = mongoose.model('Teacher',teacherSchema)

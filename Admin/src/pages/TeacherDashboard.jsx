@@ -184,7 +184,15 @@ const TeacherDashboard = () => {
                   headers: { teachertoken: localStorage.getItem("teacherToken") }
                 });
                 if (res.data?.findSection?.semester) {
-                  return [sectionName, res.data.findSection.semester, res.data.findSection.subjects || []];
+                  const currentSemester = res.data.findSection.semester;
+                  const currentSubjects = (res.data.findSection.subjects || [])
+                    .filter((subjectName) =>
+                      String(subjectName || "").startsWith(`${currentSemester}_`)
+                    )
+                    .map((subjectName) =>
+                      String(subjectName || "").replace(`${currentSemester}_`, "")
+                    );
+                  return [sectionName, currentSemester, currentSubjects];
                 }
               } catch (err) {
                 // ignore per-section errors
@@ -302,6 +310,12 @@ const TeacherDashboard = () => {
       icon: "ri-file-list-3-line",
       onClick: () => navigate("/marks"),
       className: "from-green-100 to-green-200 border-green-300",
+    },
+    {
+      title: "Apply Leave",
+      icon: "ri-file-paper-2-line",
+      onClick: () => navigate("/applyLeave"),
+      className: "from-pink-100 to-pink-200 border-pink-300",
     },
   ];
 
@@ -540,6 +554,7 @@ const TeacherDashboard = () => {
                 Upload internal marks by exam and subject with clear validation and visibility.
               </p>
             </div>
+           
           </div>
         </section>
       </div>
