@@ -311,12 +311,12 @@ const TeacherDashboard = () => {
       onClick: () => navigate("/marks"),
       className: "from-green-100 to-green-200 border-green-300",
     },
-    {
-      title: "Apply Leave",
-      icon: "ri-file-paper-2-line",
-      onClick: () => navigate("/applyLeave"),
-      className: "from-pink-100 to-pink-200 border-pink-300",
-    },
+    // {
+    //   title: "Apply Leave",
+    //   icon: "ri-file-paper-2-line",
+    //   onClick: () => navigate("/applyLeave"),
+    //   className: "from-pink-100 to-pink-200 border-pink-300",
+    // },
   ];
 
   return (

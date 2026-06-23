@@ -102,12 +102,12 @@ const controlActions = [
     key: "ChangeStudentSection",
     gradient: "from-lime-100 to-green-100 border-lime-300",
   },
-    {title: "Leaves Management",
-    description: "Manage teacher leave requests and approvals.",
-    icon: "ri-calendar-2-line",
-    key: "ManageLeaves",
-    gradient: "from-amber-100 to-orange-100 border-amber-300",
-  },
+  //   {title: "Leaves Management",
+  //   description: "Manage teacher leave requests and approvals.",
+  //   icon: "ri-calendar-2-line",
+  //   key: "ManageLeaves",
+  //   gradient: "from-amber-100 to-orange-100 border-amber-300",
+  // },
 ];
 
 const AdminMenu = ({ setActiveComponent, setIsOpen }) => {
