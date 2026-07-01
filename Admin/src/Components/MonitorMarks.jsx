@@ -51,6 +51,7 @@ const MonitorMarks = () => {
   const [batch, setbatch] = useState("");
   const [students, setstudents] = useState([]);
   const [semester, setsemester] = useState("");
+  const [sectionSubjects, setSectionSubjects] = useState([]);
   const [selectedMarksSemester, setSelectedMarksSemester] = useState("");
   const [selectedExam, setSelectedExam] = useState("ST1");
   const [loading, setLoading] = useState(false);
@@ -172,11 +173,13 @@ const MonitorMarks = () => {
           (a, b) => Number(a.rollno) - Number(b.rollno)
         );
         setstudents(sortedStudents);
+        setSectionSubjects(responce.data.findSection.subjects || []);
         setsemester(responce.data.findSection.semester);
         setSelectedMarksSemester(responce.data.findSection.semester || "");
         toast.success(responce.data.message);
       } else {
         setstudents([]);
+        setSectionSubjects([]);
         setErrorMessage(responce.data.message || "Unable to fetch students.");
       }
     } catch (error) {
@@ -225,6 +228,29 @@ const MonitorMarks = () => {
   const popupTotals = popupStudent
     ? getExamTotals(popupStudent, selectedExam, activeMarksSemester)
     : { obtained: 0, total: 0 };
+
+  const getSubjectsToShow = (student) => {
+    const all = sectionSubjects && sectionSubjects.length > 0 ? sectionSubjects : student?.subjects || [];
+    // Filter by active semester prefix if needed
+    return all.filter((s) => {
+      if (!s) return false;
+      if (!activeMarksSemester) return true;
+      return String(s).startsWith(`${activeMarksSemester}_`) || String(s).startsWith(activeMarksSemester);
+    });
+  };
+
+  const findMarkFor = (student, exam, sem, subjectName) => {
+    const marks = Array.isArray(student?.marks) ? student.marks : [];
+    const exact = marks.find((m) => {
+      const sameExam = String(m?.exam || "").toUpperCase() === String(exam || "").toUpperCase();
+      const sameSem = !sem || m?.semester === sem;
+      const subj = String(m?.subject || "");
+      const name = String(subjectName || "");
+      const sameSubj = subj === name || subj.includes(name) || name.includes(subj) || subj.startsWith(name) || name.startsWith(subj);
+      return sameExam && sameSem && sameSubj;
+    });
+    return exact || null;
+  };
 
   const navigate = useNavigate();
   return (
@@ -438,61 +464,79 @@ const MonitorMarks = () => {
                                   : `Subject-wise Marks (${selectedExam})`}
                               </h3>
 
-                              {popupMarks.length > 0 ? (
-                                <table className="w-full text-xs mb-2">
-                                  <thead>
-                                    <tr>
-                                      {selectedExam === "ALL" ? (
-                                        <>
-                                          <th className="border px-2 py-1">Exam</th>
-                                          <th className="border px-2 py-1">Subject</th>
-                                        </>
-                                      ) : (
+                              {selectedExam === "ALL" ? (
+                                popupMarks.length > 0 ? (
+                                  <table className="w-full text-xs mb-2">
+                                    <thead>
+                                      <tr>
+                                        <th className="border px-2 py-1">Exam</th>
                                         <th className="border px-2 py-1">Subject</th>
-                                      )}
-                                      <th className="border px-2 py-1">Obtained</th>
-                                      <th className="border px-2 py-1">Total</th>
-                                      <th className="border px-2 py-1">Percentage</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {popupMarks.map((mark, i) => {
-                                      const obtained = Number(mark?.obtainedMarks || 0);
-                                      const total = Number(mark?.totalMarks || 0);
-                                      return (
-                                        <tr key={`${mark?.subject}-${i}`} className="even:bg-gray-50">
-                                          {selectedExam === "ALL" ? (
-                                            <>
-                                              <td className="border px-2 py-1">{mark?.exam || "-"}</td>
-                                              <td className="border px-2 py-1">{mark?.subject || "-"}</td>
-                                            </>
-                                          ) : (
-                                            <td className="border px-2 py-1">{mark?.subject || "-"}</td>
-                                          )}
-                                          <td className="border px-2 py-1">{obtained}</td>
-                                          <td className="border px-2 py-1">{total}</td>
-                                          <td className="border px-2 py-1">
-                                            {total ? `${((obtained / total) * 100).toFixed(2)}%` : "-"}
-                                          </td>
-                                        </tr>
-                                      );
-                                    })}
-                                    {selectedExam !== "ALL" ? (
-                                      <tr className="bg-blue-50 font-semibold">
-                                        <td className="border px-2 py-1 text-right">Total</td>
-                                        <td className="border px-2 py-1">{popupTotals.obtained}</td>
-                                        <td className="border px-2 py-1">{popupTotals.total}</td>
-                                        <td className="border px-2 py-1">
-                                          {popupTotals.total
-                                            ? `${((popupTotals.obtained / popupTotals.total) * 100).toFixed(2)}%`
-                                            : "-"}
-                                        </td>
+                                        <th className="border px-2 py-1">Obtained</th>
+                                        <th className="border px-2 py-1">Total</th>
+                                        <th className="border px-2 py-1">Percentage</th>
                                       </tr>
-                                    ) : null}
-                                  </tbody>
-                                </table>
+                                    </thead>
+                                    <tbody>
+                                      {popupMarks.map((mark, i) => {
+                                        const obtained = Number(mark?.obtainedMarks || 0);
+                                        const total = Number(mark?.totalMarks || 0);
+                                        return (
+                                          <tr key={`${mark?.subject}-${i}`} className="even:bg-gray-50">
+                                            <td className="border px-2 py-1">{mark?.exam || "-"}</td>
+                                            <td className="border px-2 py-1">{mark?.subject || "-"}</td>
+                                            <td className="border px-2 py-1">{obtained}</td>
+                                            <td className="border px-2 py-1">{total}</td>
+                                            <td className="border px-2 py-1">
+                                              {total ? `${((obtained / total) * 100).toFixed(2)}%` : "-"}
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
+                                    </tbody>
+                                  </table>
+                                ) : (
+                                  <div>No marks available for this semester.</div>
+                                )
                               ) : (
-                                <div>No marks available for this semester.</div>
+                                // Single exam view: show all section subjects (or student subjects) and display '-' when mark missing
+                                (() => {
+                                  const subjects = getSubjectsToShow(popupStudent);
+                                  return subjects && subjects.length > 0 ? (
+                                    <table className="w-full text-xs mb-2">
+                                      <thead>
+                                        <tr>
+                                          <th className="border px-2 py-1">Subject</th>
+                                          <th className="border px-2 py-1">Obtained</th>
+                                          <th className="border px-2 py-1">Total</th>
+                                          <th className="border px-2 py-1">Percentage</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {subjects.map((subj, i) => {
+                                          const mark = findMarkFor(popupStudent, selectedExam, activeMarksSemester, subj);
+                                          const obtained = mark ? Number(mark.obtainedMarks || 0) : null;
+                                          const total = mark ? Number(mark.totalMarks || 0) : null;
+                                          return (
+                                            <tr key={`${subj}-${i}`} className="even:bg-gray-50">
+                                              <td className="border px-2 py-1">{subj || "-"}</td>
+                                              <td className="border px-2 py-1">{obtained !== null ? obtained : "-"}</td>
+                                              <td className="border px-2 py-1">{total !== null ? total : "-"}</td>
+                                              <td className="border px-2 py-1">{total ? `${((obtained / total) * 100).toFixed(2)}%` : "-"}</td>
+                                            </tr>
+                                          );
+                                        })}
+                                        <tr className="bg-blue-50 font-semibold">
+                                          <td className="border px-2 py-1 text-right">Total</td>
+                                          <td className="border px-2 py-1">{popupTotals.obtained}</td>
+                                          <td className="border px-2 py-1">{popupTotals.total}</td>
+                                          <td className="border px-2 py-1">{popupTotals.total ? `${((popupTotals.obtained / popupTotals.total) * 100).toFixed(2)}%` : "-"}</td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  ) : (
+                                    <div>No marks available for this semester.</div>
+                                  );
+                                })()
                               )}
 
                               <div className="mt-4 flex flex-wrap gap-3">

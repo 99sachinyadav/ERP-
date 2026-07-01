@@ -108,6 +108,18 @@ const controlActions = [
     key: "ManageLeaves",
     gradient: "from-amber-100 to-orange-100 border-amber-300",
   },
+    {title: "Special Student Management",
+    description: "Manage special student records and their unique requirements.",
+    icon: "ri-user-star-line",
+    key: "ManageSpecialStudents",
+    gradient: "from-blue-100 to-indigo-100 border-blue-300",
+  },
+    {title: "Special Student Monitoring",
+    description: "Monitor special student records and their unique requirements.",
+    icon: "ri-bar-chart-box-line",
+    key: "MonitorSpecialStudents",
+    gradient: "from-cyan-100 to-sky-100 border-cyan-300",
+  },
 ];
 
 const AdminMenu = ({ setActiveComponent, setIsOpen }) => {

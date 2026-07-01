@@ -18,6 +18,8 @@ import { useNavigate } from "react-router-dom";
 import ChangeSemesterOrSection from "../Components/ChangeSemesterOrSection";
 import ChangeStudentSection from "../Components/ChangeStudentSection";
 import ManageLeaves from "@/Components/ManageLeaves";
+import SpecialstudentMove from "@/Components/SpecialstudentMove";
+import {SpecialStudentMonitor} from "@/Components/SpecialStudentMonitor";
 const Home = () => {
   const [activeComponent, setActiveComponent] = useState("AdminMenu");
   const [isOpen, setIsOpen] = useState(false);
@@ -39,6 +41,9 @@ const Home = () => {
     { key: "ChangeStudentpassword", icon: "ri-shield-user-line", label: "Student Password" },
     { key: "MonitorAttendence", icon: "ri-bar-chart-box-line", label: "Monitor Attendance" },
     { key: "MonitorSubjectFaculty", icon: "ri-book-2-line", label: "Subject-wise Faculty" },
+    { key: "ManageSpecialStudents", icon: "ri-user-star-line", label: "Special Student Management" },
+    { key: "MonitorSpecialStudents", icon: "ri-bar-chart-box-line", label: "Special Student Monitoring" },
+
   ];
 
   const handleSelect = (componentName) => {
@@ -143,6 +148,8 @@ const Home = () => {
             {activeComponent === "MonitorAttendence" && <MonitorAttendence />}
             {activeComponent === "MonitorSubjectFaculty" && <MonitorSubjectFaculty />}
             {activeComponent === "ManageLeaves" && <ManageLeaves/>}
+            {activeComponent === "ManageSpecialStudents" && <SpecialstudentMove/>}
+            {activeComponent === "MonitorSpecialStudents" && <SpecialStudentMonitor/>}
           </div>
         </main>
       </div>

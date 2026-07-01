@@ -28,15 +28,93 @@ const getAvailableAttendanceSemesters = (students, currentSemester) => {
   return Array.from(semesters);
 };
 
+const dateKey = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+};
+
+const getDateRangeLabel = (startDate, endDate) => {
+  if (startDate && endDate) return `${startDate} to ${endDate}`;
+  if (startDate) return `From ${startDate}`;
+  if (endDate) return `Up to ${endDate}`;
+  return "All dates";
+};
+
+const matchesAttendanceFilter = (subject, semester, startDate, endDate) => {
+  const subjectName = String(subject?.name || "");
+  const matchesSemester = !semester || subjectName.startsWith(`${semester}_`);
+  const subjectDate = dateKey(subject?.date);
+  const matchesStartDate = !startDate || subjectDate >= startDate;
+  const matchesEndDate = !endDate || subjectDate <= endDate;
+  const matchesDate = subjectDate && matchesStartDate && matchesEndDate;
+  return matchesSemester && matchesDate;
+};
+
+const getStudentAttendanceSummary = (
+  student,
+  semester,
+  startDate,
+  endDate,
+  availableSubjects = []
+) => {
+  const subjects = new Map();
+  let totalLec = 0;
+  let totalAttend = 0;
+
+  availableSubjects
+    .filter((subjectName) => {
+      const name = String(subjectName || "");
+      return !semester || name.startsWith(`${semester}_`);
+    })
+    .forEach((subjectName) => {
+      subjects.set(subjectName, {
+        subjectName,
+        totalLec: 0,
+        totalAttend: 0,
+      });
+    });
+
+  (student?.attendance || []).forEach((record) => {
+    (record?.subject || []).forEach((subject) => {
+      if (!matchesAttendanceFilter(subject, semester, startDate, endDate)) return;
+
+      const subjectName = subject?.name || "N/A";
+      const total = Number(subject?.totalnoLec || 0);
+      const attended = Number(subject?.noofLecAttended || 0);
+      const current = subjects.get(subjectName) || {
+        subjectName,
+        totalLec: 0,
+        totalAttend: 0,
+      };
+
+      current.totalLec += total;
+      current.totalAttend += attended;
+      subjects.set(subjectName, current);
+      totalLec += total;
+      totalAttend += attended;
+    });
+  });
+
+  return {
+    totalLec,
+    totalAttend,
+    subjects: Array.from(subjects.values()),
+  };
+};
+
 const MonitorAttendence = () => {
   const [popupStudent, setPopupStudent] = useState(null);
   const [section, setsection] = useState("");
   const [year, setyear] = useState("");
   const [batch, setbatch] = useState("");
   const [students, setstudents] = useState([]);
-  const [Attendance, setAttendance] = useState([]);
+  const [sectionSubjects, setSectionSubjects] = useState([]);
   const [semester, setsemester] = useState("");
   const [selectedAttendanceSemester, setSelectedAttendanceSemester] = useState("");
+  const [attendanceStartDate, setAttendanceStartDate] = useState("");
+  const [attendanceEndDate, setAttendanceEndDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
@@ -52,36 +130,29 @@ const MonitorAttendence = () => {
     const popupWindow = window.open("", "_blank", "width=900,height=700");
     if (!popupWindow) return;
 
-    let subjectRows = "";
-    if (student.attendance && student.attendance.length > 0) {
-      student.attendance.forEach((attend) => {
-        let totalLec = 0;
-        let totalAttend = 0;
-        let subjectName = "";
-        attend.subject &&
-          attend.subject.forEach((subj) => {
-            if (
-              subj.name &&
-              subj.name.startsWith(`${activeAttendanceSemester}_`)
-            ) {
-              totalAttend += subj.noofLecAttended || 0;
-              totalLec += subj.totalnoLec || 0;
-              subjectName = subj.name || "";
-            }
-          });
-        if (subjectName && totalLec) {
-          const percent = ((totalAttend / totalLec) * 100).toFixed(2);
-          subjectRows += `
+    const summary = getStudentAttendanceSummary(
+      student,
+      activeAttendanceSemester,
+      attendanceStartDate,
+      attendanceEndDate,
+      sectionSubjects.length > 0 ? sectionSubjects : student?.subjects || []
+    );
+    const subjectRows = summary.subjects
+      .map((subject) => {
+        const percent =
+          subject.totalLec > 0
+            ? `${((subject.totalAttend / subject.totalLec) * 100).toFixed(2)}%`
+            : "N/A";
+        return `
             <tr>
-              <td>${subjectName}</td>
-              <td>${totalLec}</td>
-              <td>${totalAttend}</td>
-              <td>${percent}%</td>
+              <td>${subject.subjectName}</td>
+              <td>${subject.totalLec}</td>
+              <td>${subject.totalAttend}</td>
+              <td>${percent}</td>
             </tr>
           `;
-        }
-      });
-    }
+      })
+      .join("");
 
     const html = `
       <html>
@@ -102,6 +173,7 @@ const MonitorAttendence = () => {
           <div class="meta">Name: ${student.name || "-"} | Roll No: ${student.rollno || "-"}</div>
           <div class="meta">Father's Name: ${student.father_name || "-"}</div>
           <div class="meta">Semester: ${activeAttendanceSemester || "-"}</div>
+          <div class="meta">Date Range: ${getDateRangeLabel(attendanceStartDate, attendanceEndDate)}</div>
           <h2>Subject-wise Attendance</h2>
           <table>
             <thead>
@@ -153,12 +225,13 @@ const MonitorAttendence = () => {
           (a, b) => Number(a.rollno) - Number(b.rollno)
         );
         setstudents(sortedStudents);
-        setAttendance(responce.data.attendance);
+        setSectionSubjects(responce.data.findSection.subjects || []);
         setsemester(responce.data.findSection.semester);
         setSelectedAttendanceSemester(responce.data.findSection.semester || "");
         toast.success(responce.data.message);
       } else {
         setstudents([]);
+        setSectionSubjects([]);
         setErrorMessage(responce.data.message || "Unable to fetch students.");
       }
     } catch (error) {
@@ -280,20 +353,61 @@ const MonitorAttendence = () => {
         ) : null}
         {hasSearched && students.length > 0 ? (
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <label className="text-sm font-semibold text-slate-700">
-              Attendance Semester
-            </label>
-            <select
-              value={activeAttendanceSemester}
-              onChange={(e) => setSelectedAttendanceSemester(e.target.value)}
-              className="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-slate-700">
+                Attendance Semester
+              </label>
+              <select
+                value={activeAttendanceSemester}
+                onChange={(e) => setSelectedAttendanceSemester(e.target.value)}
+                className="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              >
+                {availableAttendanceSemesters.map((sem) => (
+                  <option key={sem} value={sem}>
+                    {sem}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-slate-700">
+                Start Date
+              </label>
+              <input
+                type="date"
+                value={attendanceStartDate}
+                max={attendanceEndDate || undefined}
+                onChange={(e) => setAttendanceStartDate(e.target.value)}
+                className="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-slate-700">
+                End Date
+              </label>
+              <input
+                type="date"
+                value={attendanceEndDate}
+                min={attendanceStartDate || undefined}
+                onChange={(e) => setAttendanceEndDate(e.target.value)}
+                className="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setAttendanceStartDate("");
+                setAttendanceEndDate("");
+              }}
+              className="self-end rounded border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
             >
-              {availableAttendanceSemesters.map((sem) => (
-                <option key={sem} value={sem}>
-                  {sem}
-                </option>
-              ))}
-            </select>
+              All Dates
+            </button>
+            {attendanceStartDate || attendanceEndDate ? (
+              <span className="self-end text-sm text-slate-500">
+                Showing data {getDateRangeLabel(attendanceStartDate, attendanceEndDate)}
+              </span>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -340,24 +454,13 @@ const MonitorAttendence = () => {
         </thead>
         <tbody>
           {students &&
-            students.map((student, idx) => {
-              // Calculate total lectures and attendance
-              let totalLec = 0;
-              let totalAttend = 0;
-              if (student.attendance) {
-                student.attendance.forEach((attend) => {
-                  if (Array.isArray(attend.subject)) {
-                    attend.subject.forEach((att) => {
-                      // Replace 'noofLecAttended' and 'totalnoLec' with actual property names from your data
-                      //  console.log(att)
-                      if(att.name.startsWith(`${activeAttendanceSemester}_`)){
-                         totalAttend += att.noofLecAttended || 0;
-                      totalLec += att.totalnoLec || 0;
-                      }
-                    });
-                  }
-                });
-              }
+            students.map((student) => {
+              const { totalLec, totalAttend } = getStudentAttendanceSummary(
+                student,
+                activeAttendanceSemester,
+                attendanceStartDate,
+                attendanceEndDate
+              );
               const attendancePercentage =
                 totalLec > 0 ? Number(((totalAttend / totalLec) * 100).toFixed(2)) : 0;
 
@@ -405,85 +508,78 @@ const MonitorAttendence = () => {
                             </p>
                             <h3 className="font-semibold mt-4 mb-2">
                               Subject-wise Attendance ({activeAttendanceSemester || "N/A"})
+                              {attendanceStartDate || attendanceEndDate
+                                ? ` - ${getDateRangeLabel(attendanceStartDate, attendanceEndDate)}`
+                                : ""}
                             </h3>
-                            {popupStudent.attendance &&
-                            popupStudent.attendance.length > 0 ? (
-                              popupStudent.attendance.map((attend, i) => {
-                                let totalLec = 0;
-                                let totalAttend = 0;
-                                let subjectName = "";
-                                {
-                                  attend.subject &&
-                                    attend.subject.forEach((subj) => {
-                                       if(subj.name.startsWith(`${activeAttendanceSemester}_`)){
-                                           totalAttend += subj.noofLecAttended || 0;
-                                           totalLec += subj.totalnoLec || 0;
-                                           subjectName = subj.name || "";
-                                       }
-                                    });
-                                }
+                            {(() => {
+                              const summary = getStudentAttendanceSummary(
+                                popupStudent,
+                                activeAttendanceSemester,
+                                attendanceStartDate,
+                                attendanceEndDate,
+                                sectionSubjects.length > 0
+                                  ? sectionSubjects
+                                  : popupStudent?.subjects || []
+                              );
+                              return summary.subjects.length > 0 ? (
+                                summary.subjects.map((subject, i) => {
+                                  const attendancePercent =
+                                    subject.totalLec > 0
+                                      ? (subject.totalAttend / subject.totalLec) * 100
+                                      : 0;
                                 return (
                                   <div key={i} className="mb-2">
-                                    {Array.isArray(attend.subject) && totalLec!=0 && totalAttend!=0 &&
-                                    attend.subject.length > 0 ? (
-                                      <table className="w-full text-xs mb-2">
-                                        <thead>
-                                          <tr>
-                                            <th className="border px-2 py-1">
-                                              Subject
-                                            </th>
-                                            <th className="border px-2 py-1">
-                                              Total Lectures
-                                            </th>
-                                            <th className="border px-2 py-1">
-                                              Lectures Attended
-                                            </th>
-                                            <th className="border px-2 py-1">
-                                              Attendance %
-                                            </th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          <tr
-                                            key={i}
-                                            className={`${
-                                              (
-                                                (totalAttend / totalLec) *
-                                                100
-                                              ).toFixed(2) < 75
-                                                ? "bg-red-400"
-                                                : "even:bg-gray-50"
-                                            }`}
-                                          >
-                                            <td className="border px-2 py-1">
-                                              {subjectName || "N/A"}
-                                            </td>
-                                            <td className="border px-2 py-1">
-                                              {totalLec || 0}
-                                            </td>
-                                            <td className="border px-2 py-1">
-                                              {totalAttend || 0}
-                                            </td>
-                                            <td className="border px-2 py-1">
-                                              {totalLec > 0
-                                                ? `${(
-                                                    (totalAttend / totalLec) *
-                                                    100
-                                                  ).toFixed(2)}%`
-                                                : "N/A"}
-                                            </td>
-                                          </tr>
-                                        </tbody>
-                                      </table>
-                                    ) : (
-                                      null
-                                    )}
+                                    <table className="w-full text-xs mb-2">
+                                      <thead>
+                                        <tr>
+                                          <th className="border px-2 py-1">
+                                            Subject
+                                          </th>
+                                          <th className="border px-2 py-1">
+                                            Total Lectures
+                                          </th>
+                                          <th className="border px-2 py-1">
+                                            Lectures Attended
+                                          </th>
+                                          <th className="border px-2 py-1">
+                                            Attendance %
+                                          </th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr
+                                          key={i}
+                                          className={`${
+                                            subject.totalLec > 0 && attendancePercent < 75
+                                              ? "bg-red-400"
+                                              : "even:bg-gray-50"
+                                          }`}
+                                        >
+                                          <td className="border px-2 py-1">
+                                            {subject.subjectName || "N/A"}
+                                          </td>
+                                          <td className="border px-2 py-1">
+                                            {subject.totalLec || '-'}
+                                          </td>
+                                          <td className="border px-2 py-1">
+                                            {subject.totalAttend || '-'}
+                                          </td>
+                                          <td className="border px-2 py-1">
+                                            {subject.totalLec > 0
+                                              ? `${attendancePercent.toFixed(2)}%`
+                                              : "N/A"}
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
                                   </div>
                                 );
                               })
                             ) : (
-                              <div>No attendance data available.</div>
-                            )}
+                                <div>No attendance data available.</div>
+                              );
+                            })()}
                             <div className="mt-4 flex flex-wrap gap-3">
                               <button
                                 className="px-4 py-2 bg-blue-500 text-white rounded"
