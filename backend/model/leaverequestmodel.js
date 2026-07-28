@@ -54,12 +54,15 @@ const leaveRequestSchema = new mongoose.Schema(
     teacher: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Teacher",
-      required: true,
+    },
+    staff: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Staff",
     },
     department: {
       type: String,
       required: true,
-      enum: ["AIML", "EN", "CSE", "APPLIED", "ADMINISTRATOR", "STAFF"],
+      enum: ["AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR"],
     },
     semester: {
       type: String,
@@ -72,7 +75,18 @@ const leaveRequestSchema = new mongoose.Schema(
     leaveType: {
       type: String,
       required: true,
-      enum: ["EL", "CL", "ML", "OD", "COMPOFF"],
+      enum: [
+        "EL",
+        "CL",
+        "ML",
+        "OD",
+        "WINTER_LEAVE",
+        "SUMMER_LEAVE",
+        "COMPOFF",
+        "MATERNITY_LEAVE",
+        "STUDY_LEAVE",
+        "SPECIAL_DISABILITY_LEAVE",
+      ],
     },
     requestKind: {
       type: String,
@@ -105,14 +119,23 @@ const leaveRequestSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: [
+        "PENDING_HOD",
         "PENDING_ADMIN",
         "FORWARDED_TO_DIRECTOR",
         "APPROVED",
+        "REJECTED_BY_HOD",
         "REJECTED_BY_ADMIN",
         "REJECTED_BY_DIRECTOR",
+        "ROLLBACK_REQUESTED",
+        "ROLLED_BACK",
+        "ROLLBACK_REJECTED",
         "CANCELLED",
       ],
-      default: "PENDING_ADMIN",
+      default: "PENDING_HOD",
+    },
+    hodApproval: {
+      type: approvalSchema,
+      default: () => ({}),
     },
     adminApproval: {
       type: approvalSchema,
@@ -122,11 +145,21 @@ const leaveRequestSchema = new mongoose.Schema(
       type: approvalSchema,
       default: () => ({}),
     },
+    rollbackApproval: {
+      type: approvalSchema,
+      default: () => ({}),
+    },
+    rollbackReason: {
+      type: String,
+      trim: true,
+      default: "",
+    },
   },
   { timestamps: true }
 );
 
 leaveRequestSchema.index({ teacher: 1, createdAt: -1 });
+leaveRequestSchema.index({ staff: 1, createdAt: -1 });
 leaveRequestSchema.index({ department: 1, status: 1 });
 leaveRequestSchema.index({ status: 1, leaveType: 1 });
 

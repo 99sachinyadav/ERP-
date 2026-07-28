@@ -45,6 +45,12 @@ const DirectorDashboard = () => {
               >
                 Subject-wise Faculty
               </Link>
+              <Link
+                to="/director/approveLeaves"
+                className="rounded-full bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur hover:bg-white/25"
+              >
+                Manage Leaves
+              </Link>
               <button
                 type="button"
                 onClick={handleLogout}
@@ -99,6 +105,104 @@ const DirectorDashboard = () => {
                 Manage Leaves
               </Link>
             </div>
+
+            {/* Structured Leave Allocations Area */}
+            <div className="mt-8 border-t border-slate-100 pt-6">
+              <p className="text-xs uppercase tracking-widest text-orange-500 font-bold">Quota Allocation controls</p>
+              <h4 className="mt-1 text-xl font-bold text-slate-900">
+                Leave Quota Allocations
+              </h4>
+              <p className="text-xs text-slate-500 mt-1">
+                Assign and modify leave balances. Manage semester quotas, yearly quotas, and individual special leaves.
+              </p>
+              
+              <div className="mt-6 grid gap-6 md:grid-cols-2">
+                {/* Teacher Allocations Card */}
+                <div className="bg-slate-50 p-5 rounded-xl border border-slate-200/60 flex flex-col justify-between">
+                  <div>
+                    <h5 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-orange-500"></span>
+                      Faculty Quota Allocations (Teacher)
+                    </h5>
+                  </div>
+                  <div className="mt-4 space-y-2 flex-grow">
+                    <Link
+                      to="/director/assign-semester-quota-teacher"
+                      className="flex justify-between items-center w-full bg-white border border-slate-200 hover:border-orange-500 hover:text-orange-600 transition-all rounded-lg p-3 text-xs font-semibold text-slate-700 shadow-sm"
+                    >
+                      <div className="text-left">
+                        Semester Quota Allocation
+                        <span className="text-[10px] font-normal text-slate-400 block mt-0.5">Earned Leave (EL) & Casual Leave (CL)</span>
+                      </div>
+                      <span className="text-slate-400">&rarr;</span>
+                    </Link>
+                    <Link
+                      to="/director/assign-yearly-quota-teacher"
+                      className="flex justify-between items-center w-full bg-white border border-slate-200 hover:border-orange-500 hover:text-orange-600 transition-all rounded-lg p-3 text-xs font-semibold text-slate-700 shadow-sm"
+                    >
+                      <div className="text-left">
+                        Yearly Quota Allocation
+                        <span className="text-[10px] font-normal text-slate-400 block mt-0.5">ML, OD, Winter Leave & Summer Leave</span>
+                      </div>
+                      <span className="text-slate-400">&rarr;</span>
+                    </Link>
+                    <Link
+                      to="/director/assign-special-leave-teacher"
+                      className="flex justify-between items-center w-full bg-orange-50 border border-orange-100 hover:border-orange-500 hover:text-orange-700 transition-all rounded-lg p-3 text-xs font-semibold text-orange-800 shadow-sm"
+                    >
+                      <div className="text-left">
+                        Individual Special Leave Allocation
+                        <span className="text-[10px] font-normal text-orange-600/80 block mt-0.5">Maternity, Study & Special Disability Leaves</span>
+                      </div>
+                      <span className="text-orange-500 font-bold">&rarr;</span>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Staff Allocations Card */}
+                <div className="bg-slate-50 p-5 rounded-xl border border-slate-200/60 flex flex-col justify-between">
+                  <div>
+                    <h5 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-blue-500"></span>
+                      Support Staff Quota Allocations (Staff)
+                    </h5>
+                  </div>
+                  <div className="mt-4 space-y-2 flex-grow">
+                    <Link
+                      to="/director/assign-semester-quota-staff"
+                      className="flex justify-between items-center w-full bg-white border border-slate-200 hover:border-blue-500 hover:text-blue-600 transition-all rounded-lg p-3 text-xs font-semibold text-slate-700 shadow-sm"
+                    >
+                      <div className="text-left">
+                        Semester Quota Allocation
+                        <span className="text-[10px] font-normal text-slate-400 block mt-0.5">Earned Leave (EL) & Casual Leave (CL)</span>
+                      </div>
+                      <span className="text-slate-400">&rarr;</span>
+                    </Link>
+                    <Link
+                      to="/director/assign-yearly-quota-staff"
+                      className="flex justify-between items-center w-full bg-white border border-slate-200 hover:border-blue-500 hover:text-blue-600 transition-all rounded-lg p-3 text-xs font-semibold text-slate-700 shadow-sm"
+                    >
+                      <div className="text-left">
+                        Yearly Quota Allocation
+                        <span className="text-[10px] font-normal text-slate-400 block mt-0.5">ML, OD, Winter Leave & Summer Leave</span>
+                      </div>
+                      <span className="text-slate-400">&rarr;</span>
+                    </Link>
+                    <Link
+                      to="/director/assign-special-leave-staff"
+                      className="flex justify-between items-center w-full bg-blue-50 border border-blue-100 hover:border-blue-500 hover:text-blue-700 transition-all rounded-lg p-3 text-xs font-semibold text-blue-800 shadow-sm"
+                    >
+                      <div className="text-left">
+                        Individual Special Leave Allocation
+                        <span className="text-[10px] font-normal text-blue-600/80 block mt-0.5">Maternity, Study & Special Disability Leaves</span>
+                      </div>
+                      <span className="text-blue-500 font-bold">&rarr;</span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
           <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-sm">
             <p className="text-xs uppercase tracking-widest text-cyan-200">Focus</p>

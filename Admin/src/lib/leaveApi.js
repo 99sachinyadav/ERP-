@@ -47,6 +47,37 @@ export const getTeacherLeaveDetails = (teacherId, tokenKey = "adminToken") =>
 export const getDirectorPendingLeaves = () =>
   axios.get(`${API_URL}/leaves/director/pending`, adminHeaders("directorToken"));
 
+export const getDirectorLeaveSemesters = () =>
+  axios.get(`${API_URL}/leaves/admin/semesters`, adminHeaders("directorToken"));
+
+export const assignLeavesToAllTeachers = (data) =>
+  axios.post(
+    `${API_URL}/leaves/director/assign/teachers`,
+    data,
+    adminHeaders("directorToken")
+  );
+
+export const assignLeavesToTeacherByEmail = (data) =>
+  axios.post(
+    `${API_URL}/leaves/director/assign/teacher/email`,
+    data,
+    adminHeaders("directorToken")
+  );
+
+export const assignLeavesToAllStaff = (data) =>
+  axios.post(
+    `${API_URL}/leaves/director/assign/staff`,
+    data,
+    adminHeaders("directorToken")
+  );
+
+export const assignLeavesToStaffByEmail = (data) =>
+  axios.post(
+    `${API_URL}/leaves/director/assign/staff/email`,
+    data,
+    adminHeaders("directorToken")
+  );
+
 export const approveLeaveByDirector = (id, remark) =>
   axios.put(
     `${API_URL}/leaves/director/${id}/approve`,
@@ -64,11 +95,24 @@ export const rejectLeaveByDirector = (id, remark) =>
 export const applyTeacherLeave = (data) =>
   axios.post(`${API_URL}/leaves/apply`, data, teacherHeaders());
 
+export const applyStaffLeave = (data) =>
+  axios.post(`${API_URL}/leaves/apply-staff`, data, teacherHeaders());
+
 export const applyCompoffCredit = (data) =>
   axios.post(`${API_URL}/leaves/apply-compoff-credit`, data, teacherHeaders());
+
+export const applyStaffCompoffCredit = (data) =>
+  axios.post(`${API_URL}/leaves/apply-staff-compoff-credit`, data, teacherHeaders());
 
 export const getMyLeaveRequests = () =>
   axios.get(`${API_URL}/leaves/my-requests`, teacherHeaders());
 
 export const getMyLeaveBalance = () =>
   axios.get(`${API_URL}/leaves/my-balance`, teacherHeaders());
+
+export const requestLeaveRollback = (id, reason = "") =>
+  axios.put(
+    `${API_URL}/leaves/${id}/rollback-request`,
+    { reason },
+    teacherHeaders()
+  );

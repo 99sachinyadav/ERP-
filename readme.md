@@ -1,276 +1,517 @@
 # ERP@ - College ERP System
 
-A full-stack college ERP platform with separate Admin and Student web apps plus a Node.js/Express backend. The system manages students, teachers, sections/semesters, attendance, subjects, and marks, and can email low-attendance alerts.
+A full-stack college ERP system for managing students, teachers, staff, sections, subjects, attendance, marks, email alerts, and leave approvals.
+
+The project contains three main applications:
+
+- `backend`: Node.js/Express REST API with MongoDB.
+- `Admin`: React admin/teacher/staff/director/dean web app.
+- `frontend`: React student web app.
 
 ---
 
-**Table Of Contents**
+## Table Of Contents
+
 1. Project Overview
-2. Key Features
-3. Architecture
-4. Tech Stack
-5. Repository Layout
-6. Environment Variables
-7. Getting Started
+2. Features
+3. Tech Stack
+4. Repository Structure
+5. Environment Variables
+6. Getting Started
+7. Authentication
 8. API Reference
-9. Data Model Overview
-10. Notes And Known Constraints
+9. Leave Management
+10. Data Models
+11. Operational Notes
 
 ---
 
-**Project Overview**
-This repository contains three apps that work together.
-1. Backend API: REST services for authentication, sections, attendance, subjects, and marks.
-2. Admin Web App: Admin-only UI for managing teachers, sections, subjects, students, attendance, and marks.
-3. Student Web App: Student UI for login, profile, and attendance views.
+## Project Overview
 
-The backend uses JWT-based auth with different headers for admin, teacher, and student access. It stores data in MongoDB via Mongoose. Attendance and marks are recorded per student and per subject with section, semester, and batch rules enforced at the API level.
+ERP@ supports daily academic administration for a college environment. The backend exposes REST APIs for authentication, student registration, teacher and staff management, sections, subjects, attendance, marks, low-attendance emails, and leave management.
+
+The Admin app is used by Admin, Dean, Director, Teachers, HODs, and Staff depending on login role. The Student app is used by students for registration, login, profile, and attendance views.
 
 ---
 
-**Key Features**
-Admin
-- Admin login and token validation.
-- Create sections with year, batch, semester, and assigned teacher.
-- Update section name or semester and propagate to students.
-- Change a student to a new section and update subject list accordingly.
-- Manage teachers and update passwords.
-- Manage students and update passwords.
+## Features
 
-Teacher
-- Teacher login and token validation.
-- Mark daily attendance with lecture counts and date.
-- View all attendance for a section.
-- Add subjects to a section and automatically assign to students.
-- Upload or update student marks (ST1, ST2, PUT).
-- Send low-attendance email alerts to students in a section.
+### Admin
 
-Student
-- Student registration with photo upload and contact info.
-- Student login and profile fetch.
-- View attendance for a specific date.
+- Admin login.
+- Register teachers and staff.
+- View and manage teachers, staff, and students.
+- Update teacher and student passwords.
+- Create sections with year, batch, semester, and teacher assignment.
+- Change section, year, semester, and student section assignments.
+- Assign subjects to sections.
+- Manage HOD assignment.
+- Manage leave semesters and administrator-routed leave requests.
 
-Email Notifications
-- Low-attendance alerts are sent using Nodemailer (Gmail) with an HTML template.
-- The email flow pulls section students through the backend and emails those below 75 percent.
+### Dean
+
+- Dean login.
+- Monitor attendance.
+- Monitor marks.
+- Monitor subject-wise faculty allocation.
+
+### Director
+
+- Director login.
+- Monitor attendance, marks, and subject-wise faculty allocation.
+- Review and approve/reject forwarded leave requests.
+- Assign leave quotas for teachers and staff.
+- Assign quotas to all users or to a specific email.
+- Manage semester quota, yearly quota, and individual special leave allocation.
+
+### Teacher
+
+- Teacher login.
+- View assigned sections and subjects.
+- Mark attendance.
+- Monitor students and attendance.
+- Upload and update marks for `ST1`, `ST2`, and `PUT`.
+- Send low-attendance email alerts.
+- Apply for leave and comp-off credit.
+- View leave balances, pending leave count, approved leave count, and request history.
+- Request rollback for approved leave.
+
+### HOD
+
+- HOD is a teacher role with department-level leave review access.
+- View department leave requests.
+- Inspect teacher leave balances and request history.
+- Forward valid requests to Director.
+- Reject requests with remarks.
+
+### Staff
+
+- Staff login uses the teacher/staff login flow.
+- Apply for leave and comp-off credit.
+- View personal leave balances and request history.
+
+### Student
+
+- Student registration with photo upload.
+- Student email verification flow.
+- Student login.
+- View profile.
+- View attendance by date.
+
+### Email
+
+- Sends student verification emails.
+- Sends low-attendance warning emails to students below attendance criteria.
 
 ---
 
-**Architecture**
-- Backend: Express API on `/api` with three route groups (student, teacher, admin).
-- Admin UI: Vite + React app (separate folder).
-- Student UI: Vite + React app (separate folder).
-- Shared data layer: MongoDB collections for students, teachers, sections.
+## Tech Stack
 
-Auth Headers
-- Admin endpoints use `admintoken` header.
-- Teacher endpoints use `teachertoken` header, or `admintoken` for elevated access.
-- Student endpoints use `token` header.
+### Backend
 
----
+- Node.js
+- Express
+- MongoDB
+- Mongoose
+- JWT
+- bcryptjs
+- Multer
+- Nodemailer
+- Resend support is present in config
 
-**Tech Stack**
-Backend
-- Node.js, Express, MongoDB, Mongoose
-- JWT auth, bcrypt hashing
-- Multer for image upload (in-memory)
-- Nodemailer for email
+### Frontend
 
-Frontend
-- React 19, Vite 6
+- React 19
+- Vite 6
 - Tailwind CSS v4
 - React Router v7
-- Recharts, React Datepicker, React Calendar
-- React Hot Toast, Remix Icons
+- Axios
+- Recharts
+- React Hot Toast
+- Remix Icon
+- Radix UI Dialog
 
 ---
 
-**Repository Layout**
-```
+## Repository Structure
+
+```text
 ERP@ - Copy/
-Admin/                 # Admin web app (Vite + React)
-  src/
-backend/               # Express API
-  config/
-  controller/
-  middelware/
-  model/
-  routes/
-frontend/              # Student web app (Vite + React)
-  src/
-readme.md
+  Admin/                  Admin, Teacher, Staff, Dean, and Director app
+    src/
+      Components/
+      pages/
+      lib/
+      assets/
+  backend/                Express API
+    config/
+    controller/
+    middelware/
+    model/
+    routes/
+  frontend/               Student app
+    src/
+      Components/
+      pages/
+      assets/
+  readme.md
 ```
 
 ---
 
-**Environment Variables**
-Create the following `.env` files with your own values. Do not commit secrets to source control.
+## Environment Variables
 
-Backend `backend/.env`
-- `PORT`
-- `MONGOURI`
-- `JWT_SECRET`
-- `ADMIN_EMAIL`
-- `ADMIN_PASSWORD`
-- `DEAN_EMAIL`
-- `DEAN_PASSWORD`
-- `DIRECTOR_EMAIL`
-- `DIRECTOR_PASSWORD`
-- `RESEND_API_KEY` (optional, present but not required if Nodemailer is used)
-- `GMAIL_USER`
-- `GMAIL_PASS`
-- `BACKEND_URL` (optional, defaults to deployed URL for internal email flow)
+Create `.env` files locally. Do not commit real secrets.
 
-Admin app `Admin/.env`
-- `VITE_BACKEND_URL`
+### `backend/.env`
 
-Student app `frontend/.env`
-- `VITE_BACKEND_URL`
+```env
+PORT=4000
+MONGOURI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=admin_password
+
+DEAN_EMAIL=dean@example.com
+DEAN_PASSWORD=dean_password
+
+DIRECTOR_EMAIL=director@example.com
+DIRECTOR_PASSWORD=director_password
+
+GMAIL_USER=your_gmail_address
+GMAIL_PASS=your_gmail_app_password
+
+RESEND_API_KEY=optional_resend_key
+BACKEND_URL=http://localhost:4000
+```
+
+### `Admin/.env`
+
+```env
+VITE_BACKEND_URL=http://localhost:4000
+```
+
+### `frontend/.env`
+
+```env
+VITE_BACKEND_URL=http://localhost:4000
+```
 
 ---
 
-**Getting Started**
-1. Install dependencies
+## Getting Started
 
-Backend
+### 1. Install Dependencies
+
+Backend:
+
 ```bash
 cd backend
 npm install
 ```
 
-Admin app
+Admin app:
+
 ```bash
-cd ..\Admin
+cd Admin
 npm install
 ```
 
-Student app
+Student app:
+
 ```bash
-cd ..\frontend
+cd frontend
 npm install
 ```
 
-2. Run the apps
+### 2. Run Locally
 
-Backend
+Backend:
+
 ```bash
 cd backend
 npm run server
 ```
 
-Admin app
+Admin app:
+
 ```bash
-cd ..\Admin
+cd Admin
 npm run dev
 ```
 
-Student app
+Student app:
+
 ```bash
-cd ..\frontend
+cd frontend
 npm run dev
+```
+
+### 3. Build Frontend Apps
+
+Admin app:
+
+```bash
+cd Admin
+npm run build
+```
+
+Student app:
+
+```bash
+cd frontend
+npm run build
 ```
 
 ---
 
-**API Reference**
-Base URL
-- `http://localhost:4000/api` by default (see `PORT`)
+## Authentication
 
-Admin Routes
-- `POST /loginAdmin` logs in admin.
-- `POST /loginDean` logs in dean (separate credentials).
-- `POST /loginDirector` logs in director (separate credentials).
-- `GET /getAllTeacher` returns teachers, admin auth required.
-- `PUT /updateTeacherPassword` updates teacher password, admin auth required.
-- `PUT /updateStudentPassword` updates student password, admin auth required.
-- `PUT /updateSectionorSemester` change section name or semester, admin auth required.
-- `PUT /changeStudentSection` move student to another section, admin auth required.
+The backend uses JWT tokens passed through role-specific headers.
 
-Teacher Routes
-- `POST /registerTeacher` create teacher, admin auth required.
-- `POST /loginTeacher` teacher login.
-- `POST /markAttendance` mark attendance, teacher auth required.
-- `PUT /updateTeacher` assign a teacher to a section, admin auth required.
-- `GET /getattandanceStudent` view attendance for a section, teacher auth required.
-- `POST /addSubjects` add subject to a section, admin auth required.
-- `GET /gelStudentBySection` list students by section, teacher auth required.
-- `POST /send-email` send low-attendance emails, teacher auth required.
-- `POST /uploadMarks` upload or update marks, teacher auth required.
+| Role | Header |
+| --- | --- |
+| Admin | `admintoken` |
+| Teacher, HOD, Staff | `teachertoken` |
+| Student | `token` |
+| Dean | `deanToken` in frontend storage |
+| Director | `directorToken` in frontend storage |
 
-Student Routes
-- `POST /registerStudent` register a student with image upload.
-- `POST /requestStudentVerification` send registration verification code to email.
-- `POST /registerStudentWithCode` register a student after verification (multipart + `verificationCode`).
-- `POST /loginStudent` student login.
-- `GET /getProfile` get student profile, student auth required.
-- `GET /getStudent` list all students, admin auth required.
-- `POST /changeYear` update section year, admin auth required.
-- `GET /getStudentAttendance` view attendance by date, student auth required.
-- `POST /createSection` create section, admin auth required.
-
-Auth Header Summary
-- Admin: `admintoken: <jwt>`
-- Teacher: `teachertoken: <jwt>`
-- Student: `token: <jwt>`
-
-
-
-Important Request Notes
-- `POST /registerStudent` uses `multipart/form-data` with `image` as file field.
-- `POST /registerStudentWithCode` uses `multipart/form-data` and requires `verificationCode`.
-- Attendance checks enforce lecture counts and assigned subjects.
-- Marks upload enforces exam types `ST1`, `ST2`, `PUT` and maximum totals.
+Some monitoring endpoints accept elevated admin/dean/director access through middleware.
 
 ---
 
-**Data Model Overview**
-Section
-- `name` combines section + year + batch (example: `A2_2025` pattern).
-- `semester` enum with `Ist` through `VIIIth`.
-- `subjects` stored as `Semester_Subject` strings.
-- `teacher` references a Teacher document.
-- `students` is an array of Student references.
+## API Reference
 
-Student
-- Basic profile fields, contact info, and avatar base64.
-- `subjects` list derived from section subjects.
-- `attendance` array stores per-subject per-date lecture totals.
-- `marks` array stores exam marks per subject and semester.
+Base path:
 
-Teacher
-- Profile fields, hashed password.
-- `section` references assigned sections.
-- `subjects` list stores keys like `Semester_Subject_SectionYearBatch`.
+```text
+/api
+```
+
+### Admin And Leadership
+
+- `POST /loginAdmin`
+- `POST /loginDean`
+- `POST /loginDirector`
+- `GET /getAllTeacher`
+- `PUT /updateTeacherPassword`
+- `PUT /updateStudentPassword`
+- `PUT /updateSectionorSemester`
+- `PUT /changeStudentSection`
+- `POST /changeYear`
+
+### Teacher And Staff
+
+- `POST /registerTeacher`
+- `POST /registerStaff`
+- `POST /loginTeacher`
+- `PUT /updateTeacher`
+- `GET /getTeacherAssignments`
+- `POST /markAttendance`
+- `GET /getattandanceStudent`
+- `GET /gelStudentBySection`
+- `POST /addSubjects`
+- `POST /uploadMarks`
+- `POST /send-email`
+
+### Student
+
+- `POST /requestStudentVerification`
+- `POST /registerStudent`
+- `POST /registerStudentWithCode`
+- `POST /loginStudent`
+- `GET /getProfile`
+- `GET /getStudent`
+- `GET /getStudentAttendance`
+- `POST /createSection`
+
+### Leave
+
+- `POST /leaves/apply`
+- `POST /leaves/apply-staff`
+- `POST /leaves/apply-compoff-credit`
+- `POST /leaves/apply-staff-compoff-credit`
+- `GET /leaves/my-requests`
+- `GET /leaves/my-balance`
+- `PUT /leaves/:id/rollback-request`
+- `GET /leaves/hod/pending`
+- `PUT /leaves/hod/:id/forward`
+- `PUT /leaves/hod/:id/reject`
+- `GET /leaves/admin/pending`
+- `POST /leaves/admin/semester`
+- `GET /leaves/admin/semesters`
+- `PUT /leaves/admin/:id/forward`
+- `PUT /leaves/admin/:id/reject`
+- `POST /leaves/admin/close-semester`
+- `GET /leaves/director/pending`
+- `PUT /leaves/director/:id/approve`
+- `PUT /leaves/director/:id/reject`
+- `POST /leaves/director/assign/teachers`
+- `POST /leaves/director/assign/teacher/email`
+- `POST /leaves/director/assign/staff`
+- `POST /leaves/director/assign/staff/email`
+- `GET /leaves/records`
+- `GET /leaves/department/:department`
+- `GET /leaves/teacher/:teacherId`
+- `GET /leaves/summary`
 
 ---
 
-**Notes And Known Constraints**
-- The backend `.env` in this repository is populated. Rotate secrets and remove it before sharing publicly.
-- Student photo upload is stored as base64 in MongoDB, which can grow quickly.
-- Attendance rules rely on subject keys that include semester and section identifiers. Keep naming consistent when adding subjects.
-- Admin and teacher tokens are not interchangeable; each endpoint expects a specific header.
+## Leave Management
+
+The leave system manages balances and requests for teachers and staff. Requests move through HOD/Admin review and final Director approval.
+
+### Supported Leave Types
+
+| Code | Name | Allocation Type |
+| --- | --- | --- |
+| `EL` | Earned Leave | Semester quota |
+| `CL` | Casual Leave | Semester quota |
+| `ML` | Medical Leave | Yearly quota |
+| `OD` | On-Duty Leave | Yearly quota |
+| `WINTER_LEAVE` | Winter Leave | Yearly quota |
+| `SUMMER_LEAVE` | Summer Leave | Yearly quota |
+| `COMPOFF` | Compensatory Off | Balance/credit based |
+| `MATERNITY_LEAVE` | Maternity Leave | Individual special allocation |
+| `STUDY_LEAVE` | Study Leave | Individual special allocation |
+| `SPECIAL_DISABILITY_LEAVE` | Special Disability Leave | Individual special allocation |
+
+### Request Types
+
+- `LEAVE_USAGE`: Normal leave request that consumes balance after approval.
+- `COMPOFF_CREDIT`: Credit request that adds comp-off balance after approval.
+
+### Status Values
+
+- `PENDING_HOD`
+- `PENDING_ADMIN`
+- `FORWARDED_TO_DIRECTOR`
+- `APPROVED`
+- `REJECTED_BY_HOD`
+- `REJECTED_BY_ADMIN`
+- `REJECTED_BY_DIRECTOR`
+- `ROLLBACK_REQUESTED`
+- `ROLLED_BACK`
+- `ROLLBACK_REJECTED`
+- `CANCELLED`
+
+### Approval Flow
+
+1. Teacher or staff submits a leave request.
+2. Backend validates department, leave type, date range, requested days, attachment, and balance.
+3. Department requests go to HOD as `PENDING_HOD`.
+4. Administrator department requests go directly to Director or Admin flow depending on route/status handling.
+5. HOD/Admin forwards valid requests to Director.
+6. Director approves or rejects the request.
+7. Approved leave increments the matching used balance.
+8. Approved comp-off credit increments comp-off total.
+9. Approved rollback credits used leave back.
+
+### Leave Quota Assignment
+
+Director can assign quotas to:
+
+- all teachers
+- one teacher by email
+- all staff
+- one staff member by email
+
+Quota groups:
+
+- Semester quota: `EL`, `CL`
+- Yearly quota: `ML`, `OD`, `WINTER_LEAVE`, `SUMMER_LEAVE`
+- Individual special quota: `MATERNITY_LEAVE`, `STUDY_LEAVE`, `SPECIAL_DISABILITY_LEAVE`
+
+### Leave UI Coverage
+
+- Teacher/Staff Leave Desk shows balances, pending count, approved count, request form, current requests, history, attachments, and rollback action.
+- HOD panel shows department requests and teacher leave details.
+- Admin Manage Leaves screen supports semester creation, semester close, filtering, summaries, and request forwarding/rejection.
+- Director dashboard supports final approval and leave quota assignment.
 
 ---
 
-**Updates (March 26, 2026)**
-Backend
-- Added dean/director login endpoints (`/loginDean`, `/loginDirector`) with separate env credentials.
-- Teacher auth now accepts admin/dean/director tokens for shared monitoring endpoints.
-- Added student email verification flow with new verification email helper and `StudentVerification` model.
-- Added `/requestStudentVerification` and `/registerStudentWithCode` routes.
+## Data Models
 
-Admin Web App
-- Teacher dashboard: assigned subjects now load even when no section is allocated.
-- Upload Marks: prefill existing marks by exam/subject and improved save flow.
-- Mark Attendance: prefill existing attendance by date + subject to ease edits.
-- Added reusable Teacher action buttons (Home, Upload Marks, Mark Attendance, Monitor Student, Monitor Marks) shown only on Upload Marks and Mark Attendance, hidden on mobile.
-- Monitor Marks/Monitor Student: Back button placed near search controls with cleaner layout.
-- Subject-wise Faculty: Back button placed next to Track.
+### Student
 
-Student Web App
-- Student registration now uses email verification with popup,and  resend option, countdown timer, and expiry message.
+- Stores profile, contact, roll number, email, password hash, and image.
+- Stores attendance by subject/date.
+- Stores marks by subject, semester, and exam.
+- Subjects are derived from assigned section subjects.
+
+### Teacher
+
+- Stores name, email, password hash, department, role, assigned sections, and subjects.
+- `role` may be teacher/HOD style depending on assignment.
+- Department enum values are `AIML/CSE/IT`, `ECE/EN`, `APPLIED/STAFF`, and `ADMINISTRATOR`.
+
+### Staff
+
+- Stores staff profile, login details, department, and role.
+- Staff role defaults to staff behavior in the teacher/staff login flow.
+
+### Section
+
+- Stores section name, year, batch, semester, subjects, assigned teacher, and students.
+- Subject keys include semester information.
+
+### LeaveRequest
+
+- References either `teacher` or `staff`.
+- Stores department, semester, academic year, leave type, request kind, date range, days, reason, optional attachment, status, approval remarks, and rollback details.
+
+### LeaveBalance
+
+- References either `teacher` or `staff`.
+- Unique per user, semester, and academic year.
+- Tracks total and used values for all leave types.
+- Includes semester, yearly, comp-off, and special leave balances.
 
 ---
 
-**License**
-This project appears to be for college attendance management and internal use. If you plan to distribute it, add a proper license and remove all secrets from source control .
+## Operational Notes
+
+- Keep department values consistent across backend enums and frontend dropdowns.
+- Current department values are `AIML/CSE/IT`, `ECE/EN`, `APPLIED/STAFF`, and `ADMINISTRATOR`.
+- Student image uploads are stored as base64 in MongoDB, which can increase document size.
+- Student registration with verification uses multipart form data plus a verification code.
+- Attendance and subject logic depends on consistent section, semester, batch, and subject key naming.
+- Marks are currently handled for `ST1`, `ST2`, and `PUT`.
+- Admin, Teacher/Staff, Student, Dean, and Director tokens are role-specific.
+- Leave balances should be created/assigned before users apply for leave.
+- Closing a semester carries forward eligible EL and preserves yearly leave values within the same academic year.
+- Rotate secrets before sharing or deploying publicly.
+
+---
+
+## Verification
+
+Useful checks:
+
+```bash
+cd backend
+node --check controller/leavecontroller.js
+node --check model/leavebalancemodel.js
+node --check model/leaverequestmodel.js
+node --check model/staffmodel.js
+node --check model/teachermodel.js
+```
+
+```bash
+cd Admin
+npm run build
+```
+
+```bash
+cd frontend
+npm run build
+```
+
+---
+
+## License
+
+This project appears to be intended for internal college ERP usage. Add a formal license before public distribution.

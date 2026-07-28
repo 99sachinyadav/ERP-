@@ -1,0 +1,109 @@
+Goal Description
+The objective is to introduce a leave request mechanism for staff alongside the existing teacher workflow. Additionally, we will empower the Director to assign leaves (EL, CL, ML, OD) from the director dashboard. CL and EL will be set per semester, whereas ML and OD will be configured yearly (academic year-wide).
+
+Proposed Changes
+[Component Name: Mongoose Models]
+[NEW] 
+staffmodel.js
+Create the schema and model for Staff containing: name, email, password, department (defaults to "STAFF"), and role (defaults to "Staff").
+[MODIFY] 
+leavebalancemodel.js
+Allow teacher field to be optional (remove required: true).
+Add staff field referring to the Staff collection:
+javascript
+staff: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Staff",
+}
+Configure partial unique indexes for teacher and staff balances:
+javascript
+leaveBalanceSchema.index(
+  { teacher: 1, semester: 1, academicYear: 1 },
+  { unique: true, partialFilterExpression: { teacher: { $exists: true } } }
+);
+leaveBalanceSchema.index(
+  { staff: 1, semester: 1, academicYear: 1 },
+  { unique: true, partialFilterExpression: { staff: { $exists: true } } }
+);
+[MODIFY] 
+leaverequestmodel.js
+Allow teacher field to be optional.
+Add staff: { type: mongoose.Schema.Types.ObjectId, ref: "Staff" }.
+Add an index for staff requests: leaveRequestSchema.index({ staff: 1, createdAt: -1 });.
+[Component Name: Backend Middleware & Routes]
+[MODIFY] 
+teacherAuth.js
+Update authentication middleware to check if the decodable credentials match either Teacher or Staff.
+Set both req.body.teacherId = decodedToken.id (for backward-compatibility) and key identify properties like req.body.userType ("Teacher" / "Staff").
+[MODIFY] 
+teacherRoute.js
+Add /registerStaff (protected, adminAuth) route.
+Add /loginStaff route.
+[MODIFY] 
+leaveRoute.js
+Add post route /leaves/director/assign (protected, authRole("DIRECTOR")).
+Update /leaves/admin/semesters to allow authRole("ADMIN", "DIRECTOR").
+[Component Name: Backend Control Logic]
+[MODIFY] 
+teacherconroller.js
+Implement registerStaff (admin registers staff details).
+Implement staffLogin (logs in staff members and passes token+user details to the React context).
+[MODIFY] 
+leavecontroller.js
+Update applyLeave and applyCompoffCredit:
+Check user exists in Teacher or Staff. Set isStaff context flag.
+Skip standard department HOD verification lookup for Staff requests, and route them directly to the Director (status = "FORWARDED_TO_DIRECTOR").
+Update search and listing endpoints (getMyLeaveRequests, getMyLeaveBalance, getTeacherLeaves, getHODPendingLeaves, etc.):
+Populate both teacher and staff details.
+Return balances corresponding to the query targets.
+Implement assignLeaves:
+Input: target ("teacher"/"staff"), semesterName, academicYear, el, cl, ml, od.
+For EL/CL, assign them semester-wise (update/create within target semester).
+For ML/OD, assign them yearly (update/create across all semesters of that academic year).
+[Component Name: Frontend UI Panels]
+[NEW] 
+StaffRegister.jsx
+Form to add new staff members (hits /api/registerStaff).
+[MODIFY] 
+Home.jsx
+ and 
+AdminMenu.jsx
+Add "Register Staff" option to the core management section of the Admin Dashboard.
+[NEW] 
+AssignLeaves.jsx
+Interface for the Director:
+Form asking for Academic Year, Semester, EL, CL (semester-wise) and ML, OD (yearly).
+Action buttons/routes to assign parameters to either Teachers or Staff.
+[MODIFY] 
+DirectorDashboard.jsx
+Add two buttons: "Assign Leave to Teacher" and "Assign Leave to Staff".
+[MODIFY] 
+App.jsx
+Add routes for /director/assign-leaves-teacher and /director/assign-leaves-staff mapping to AssignLeaves with target prop.
+[MODIFY] 
+TeacherDashboard.jsx
+Check if user role is "Staff". If true, display a simplified view containing only "Welcome Staff", profile details, and the "Apply Leave" action button, while hiding academic performance metrics.
+[MODIFY] 
+Approveleaves.jsx
+Update row cells to read request.teacher?.name || request.staff?.name and displays details accordingly.
+Open Questions
+IMPORTANT
+
+Staff Department / HOD Routing: Since staff members do not have academic HODs, should their leave requests bypass HOD verification and be routed directly to the Director's queue (as status "FORWARDED_TO_DIRECTOR")? Our proposed plan automatically handles this bypass for staff.
+Staff Login: Can staff members log in via the identical "Faculty Access" screen, which will automatically verify their Staff credentials and open the Staff Dashboard?
+Verification Plan
+Automated Tests
+Postman or curl tests validating /api/registerStaff, /api/loginStaff, /api/leaves/director/assign.
+Manual Verification
+Log in as Director, assign leaves to classroom teachers, apply for a leave as a teacher, and verify the assigned leave balances are exact.
+Log in as Admin, register a Staff member, log in as Staff, and verify they are redirected to a clean request-leave dashboard.
+Log in as Director, assign leaves to Staff, log in as Staff, check balance and apply for a leave. Finally, verify the Director sees and approves it.
+
+
+
+
+no already registered teacher should be registered as the 
+staff and at director pannel in assigining leave give a additional
+ leave allocation  based on a particular teacher email or a staff
+ email  which consist MATERNITY LEAVE STUDY 
+LEAVE SPECIAL DISABILITY LEAVE to a particular staff or teacher 

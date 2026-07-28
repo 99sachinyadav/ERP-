@@ -1,9 +1,12 @@
 import { Section } from "../model/sectionmodel.js";
 import { Teacher } from "../model/teachermodel.js";
+import { Staff } from "../model/staffmodel.js";
 import { generateToken, hashpasssword } from "./studentcontroller.js";
 
 import { Student } from "../model/studentmodel.js";
  import bcrypt from "bcryptjs";
+
+const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const registerTeacher = async (req, res) => {
   try {
@@ -12,9 +15,15 @@ const registerTeacher = async (req, res) => {
     if (!name || !email || !password) {
       throw new Error("please enter the full details");
     }
+    let trimedemail = email.toLowerCase().trim();
+    const emailQuery = new RegExp(`^${escapeRegex(trimedemail)}$`, "i");
+    const existingStaff = await Staff.findOne({ email: emailQuery });
+    if (existingStaff) {
+      throw new Error("This email is already registered as staff");
+    }
 
     const ExistedTeacher = await Teacher.findOne({
-      $or: [{ email: email }, { password: password }],
+      $or: [{ email: emailQuery }, { password: password }],
     });
     if (ExistedTeacher) {
       throw new Error("Faculty already exists");
@@ -23,7 +32,7 @@ const registerTeacher = async (req, res) => {
     const hashedPassword = await hashpasssword(password);
     const teacher = await Teacher.create({
       name: name,
-      email: email,
+      email: trimedemail,
       password: hashedPassword,
       // section:SectionExist._id,
     });
@@ -61,9 +70,10 @@ const teacherLogin = async (req, res) => {
     if (!email || !password) {
       throw new Error("email or password is missing");
     }
+    let trimedemail = email.toLowerCase().trim();
     // console.log(email, password);
     const findTeacher = await Teacher.findOne({
-      $or: [{ email: email }],
+      $or: [{ email: trimedemail }],
     }).select("+password").populate("section");
     if (!findTeacher) {
       throw new Error("faculty does not exist");
@@ -84,6 +94,84 @@ const teacherLogin = async (req, res) => {
       message: "Login successful",
       refeshTeacherToken,
       findTeacher,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(402).json({ sucess: false, message: error.message });
+  }
+};
+
+const registerStaff = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+      throw new Error("please enter the full details");
+    }
+    let trimedemail = email.toLowerCase().trim();
+    const emailQuery = new RegExp(`^${escapeRegex(trimedemail)}$`, "i");
+    const ExistedTeacher = await Teacher.findOne({ email: emailQuery });
+    if (ExistedTeacher) {
+      throw new Error("This email is already registered as a teacher");
+    }
+
+    const ExistedStaff = await Staff.findOne({ email: emailQuery });
+    if (ExistedStaff) {
+      throw new Error("Staff member already exists");
+    }
+
+    const hashedPassword = await hashpasssword(password);
+    const staff = await Staff.create({
+      name: name,
+      email: trimedemail,
+      password: hashedPassword,
+      
+    });
+
+    const staffToken = generateToken(staff._id);
+
+    return res
+      .status(201)
+      .json({
+        success: true,
+        message: "Staff registered successfully",
+        staffToken,
+      });
+  } catch (error) {
+    console.log(error.message);
+    return res.status(401).json({ sucess: false, message: error.message });
+  }
+};
+
+const staffLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      throw new Error("email or password is missing");
+    }
+    let trimedemail = email.toLowerCase().trim();
+    const findStaff = await Staff.findOne({ email: trimedemail });
+    if (!findStaff) {
+      throw new Error("staff member does not exist");
+    }
+    const ispasswordMatched = await bcrypt.compare(
+      password,
+      findStaff.password
+    );
+    if (!ispasswordMatched) {
+      throw new Error("Invalid Password");
+    }
+
+    const refeshStaffToken = generateToken(findStaff._id);
+    const staffData = findStaff.toObject();
+    delete staffData.password;
+
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      refeshStaffToken,
+      refeshTeacherToken: refeshStaffToken,
+      findStaff: staffData,
+      findTeacher: staffData,
     });
   } catch (error) {
     console.log(error);
@@ -665,8 +753,27 @@ const uploadMarks = async (req, res) => {
     return res.status(401).json({ sucess: false, message: error.message });
   }
 };
+
+
+const   getStaff = async (req,res)=>{
+     try {
+
+    const staffMembers = await Staff.find({}).select("-password");
+    if (!staffMembers || staffMembers.length === 0) {
+      return res.status(404).json({ success: false, message: "No staff members found" });
+    }
+    return res.status(200).json({ success: true, staffMembers ,message: "Staff members fetched successfully" });
+     }
+  catch (error) {
+    console.log(error);
+    return res.status(401).json({ sucess: false, message: error.message });
+  }
+
+}
 export {
   registerTeacher,
+  registerStaff,
+  staffLogin,
   teacherLogin,
   adminLogin,
   deanLogin,
@@ -677,4 +784,5 @@ export {
   getTeacherAssignments,
   getAttendanceofAllStudent,
   uploadMarks,
+  getStaff
 };

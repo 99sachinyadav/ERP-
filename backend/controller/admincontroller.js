@@ -1,6 +1,7 @@
 import { hashpasssword } from "./studentcontroller.js";
 import {Teacher} from "../model/teachermodel.js";
 import {Student} from "../model/studentmodel.js";
+
 const updateTeacherPassword = async (req,res)=>{
     try {
         const { teacheremail, newPassword } = req.body;
@@ -61,4 +62,32 @@ const updateTeacherPassword = async (req,res)=>{
     }
 }
 
-export { updateTeacherPassword, updateStudentPassword };
+const assignHOD = async (req, res) => {
+    try {
+        const { teacheremail, department } = req.body;
+        if (!teacheremail || !department) {
+            return res.status(400).json({ sucess: false, message: "Teacher email and department are required." });
+        }
+
+        const teacher = await Teacher.findOne({ email: teacheremail });
+        if (!teacher) {
+            return res.status(404).json({ sucess: false, message: "Teacher not found." });
+        }
+
+        // Set this teacher as HOD
+        teacher.role = "HOD";
+        teacher.department = department;
+        await teacher.save();
+
+        // Optionally: downgrade others in the same department? 
+        // For simplicity, we just assign. If admin assigns multiple, they all get HOD role.
+        // But the logic will pick one.
+
+        return res.status(200).json({ sucess: true, message: `Teacher ${teacher.name} assigned as HOD of ${department}.` });
+    } catch (error) {
+        console.error("Error assigned HOD:", error);
+        return res.status(500).json({ sucess: false, message: "Internal server error." });
+    }
+}
+
+export { updateTeacherPassword, updateStudentPassword, assignHOD };

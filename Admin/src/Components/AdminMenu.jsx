@@ -64,6 +64,20 @@ const coreActions = [
     key: "ChangeSemesterOrSection",
     gradient: "from-rose-100 to-pink-100 border-rose-300",
   },
+  {
+    title: "Assign HOD",
+    description: "Designate department HOD from faculty.",
+    icon: "ri-user-star-line",
+    key: "AssignHOD",
+    gradient: "from-blue-100 to-indigo-100 border-blue-300",
+  },
+  {
+    title: "Register Staff",
+    description: "Add new staff profiles and credentials.",
+    icon: "ri-user-add-line",
+    key: "StaffRegister",
+    gradient: "from-sky-100 to-blue-100 border-sky-300",
+  },
 ];
 
 const controlActions = [
@@ -118,6 +132,12 @@ const controlActions = [
     description: "Monitor special student records and their unique requirements.",
     icon: "ri-bar-chart-box-line",
     key: "MonitorSpecialStudents",
+    gradient: "from-cyan-100 to-sky-100 border-cyan-300",
+  },
+    {title: "Staff Monitoring",
+    description: "Monitor staff activities and performance.",
+    icon: "ri-bar-chart-box-line",
+    key: "MonitorStaff",
     gradient: "from-cyan-100 to-sky-100 border-cyan-300",
   },
 ];

@@ -9,10 +9,12 @@ import {toast} from "react-hot-toast";
 import { Button } from "@/Components/ui/button";
 import axios from "axios";
 import { backendUrl } from "@/App";
- 
+import DeptLeaveRequests from "@/Components/DeptLeaveRequests";
+ import HODLeavePanel from "@/Components/HODLeavePanel";  
 
 
 const TeacherDashboard = () => {
+  const isHOD = localStorage.getItem("teacherrole") === "HOD";
   const navigate = useNavigate();
   const [students, setstudents] = React.useState([]);
   const [attendance, setAttendance] = React.useState([]);
@@ -35,14 +37,19 @@ const TeacherDashboard = () => {
   const [marksTotal, setMarksTotal] = React.useState("");
    
   const [mydata,setmydata]= React.useState([]);
+  const [leaveBalances, setLeaveBalances] = React.useState(null);
+  const isStaff = localStorage.getItem("teacherrole") === "STAFF";
   const [assignedSections, setAssignedSections] = React.useState([]);
   const [sectionSemesters, setSectionSemesters] = React.useState({});
   const [sectionSubjects, setSectionSubjects] = React.useState({});
   const [assignedSubjects, setAssignedSubjects] = React.useState([]);
   const logout = () => {
     localStorage.removeItem("teacherToken");
+    localStorage.removeItem("teacherId");
     localStorage.removeItem("teachername"); 
     localStorage.removeItem("teachersection");
+    localStorage.removeItem("teacherrole");
+    localStorage.removeItem("teacherdepartment");
     navigate("/teacherlogin");
  
 
@@ -78,6 +85,23 @@ const TeacherDashboard = () => {
   }
 
   useEffect(() => {
+    if (isStaff) {
+      const getStaffBalance = async () => {
+        try {
+          const res = await axios.get(backendUrl + "/api/leaves/my-balance", {
+            headers: { teachertoken: localStorage.getItem("teacherToken") }
+          });
+          if (res.data.success && res.data.leaveBalances) {
+            setLeaveBalances(res.data.currentBalance || res.data.leaveBalances[0] || null);
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      };
+      getStaffBalance();
+      return;
+    }
+
     const parseSections = () => {
       const raw = localStorage.getItem("teachersection") || "";
       return raw
@@ -286,45 +310,63 @@ const TeacherDashboard = () => {
       toast.error(error.response?.data?.message || "Failed to upload marks");
     }
   };
-  const quickActions = [
-    {
-      title: "Mark Attendance",
-      icon: "ri-stack-line",
-      onClick: () => navigate("/dashboard"),
-      className: "from-orange-100 to-orange-200 border-orange-300",
-    },
-    {
-      title: "Monitor Students",
-      icon: "ri-graduation-cap-line",
-      onClick: () => navigate("/monitorStudents"),
-      className: "from-yellow-100 to-yellow-200 border-yellow-300",
-    },
-    {
-      title: "Monitor Marks",
-      icon: "ri-bar-chart-grouped-line",
-      onClick: () => navigate("/monitorMarks"),
-      className: "from-cyan-100 to-cyan-200 border-cyan-300",
-    },
-    {
-      title: "Upload Marks",
-      icon: "ri-file-list-3-line",
-      onClick: () => navigate("/marks"),
-      className: "from-green-100 to-green-200 border-green-300",
-    },
-    // {
-    //   title: "Apply Leave",
-    //   icon: "ri-file-paper-2-line",
-    //   onClick: () => navigate("/applyLeave"),
-    //   className: "from-pink-100 to-pink-200 border-pink-300",
-    // },
-  ];
+  const quickActions = isStaff
+    ? [
+        {
+          title: "Apply Leave",
+          icon: "ri-file-paper-2-line",
+          onClick: () => navigate("/applyLeave"),
+          className: "from-pink-100 to-pink-200 border-pink-300",
+        },
+      ]
+    : [
+        {
+          title: "Mark Attendance",
+          icon: "ri-stack-line",
+          onClick: () => navigate("/dashboard"),
+          className: "from-orange-100 to-orange-200 border-orange-300",
+        },
+        {
+          title: "Monitor Students",
+          icon: "ri-graduation-cap-line",
+          onClick: () => navigate("/monitorStudents"),
+          className: "from-yellow-100 to-yellow-200 border-yellow-300",
+        },
+        {
+          title: "Monitor Marks",
+          icon: "ri-bar-chart-grouped-line",
+          onClick: () => navigate("/monitorMarks"),
+          className: "from-cyan-100 to-cyan-200 border-cyan-300",
+        },
+        {
+          title: "Upload Marks",
+          icon: "ri-file-list-3-line",
+          onClick: () => navigate("/marks"),
+          className: "from-green-100 to-green-200 border-green-300",
+        },
+        {
+          title: "Apply Leave",
+          icon: "ri-file-paper-2-line",
+          onClick: () => navigate("/applyLeave"),
+          className: "from-pink-100 to-pink-200 border-pink-300",
+        },
+      ];
+
+  if (!isStaff && isHOD) {
+    quickActions.push({
+      title: "Manage Dept Leaves",
+      icon: "ri-calendar-check-line",
+      onClick: () => navigate("/hodPanel"),
+      className: "from-purple-100 to-purple-200 border-purple-300",
+    });
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-bold text-blue-900 sm:text-4xl">
-            Teacher <span className="text-red-500">Panel</span>
+            {isStaff ? "Staff" : "Teacher"} <span className="text-red-500">Panel</span>
           </h1>
           <button
             onClick={logout}
@@ -335,185 +377,240 @@ const TeacherDashboard = () => {
           </button>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <Card className="lg:col-span-2 border-blue-100 shadow-md">
-            <CardHeader>
-              <CardTitle className="text-lg sm:text-xl">Attendance Overview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-72 w-full sm:h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={mydata.length === 0 ? data : mydata}
-                    margin={{ top: 12, right: 12, left: 0, bottom: 36 }}
-                  >
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-35} textAnchor="end" interval={0} />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="attendance" fill="#2563eb" radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-blue-100 shadow-md">
-            <CardContent className="p-5 sm:p-6">
-              <h2 className="text-xl font-bold text-gray-800 sm:text-2xl">
-                Hi, <span className="text-blue-600">{localStorage.getItem("teachername") || "Teacher"}</span>
-              </h2>
-              <p className="mt-2 text-sm text-gray-600 sm:text-base">
-                {assignedSections.length > 0 ? "Assigned Sections" : "No section is assigned yet."}
-              </p>
-              {assignedSections.length > 0 ? (
-                <div className="mt-4 space-y-3">
-                  {assignedSections.map((sectionName) => (
-                    <div
-                      key={sectionName}
-                      className="rounded-xl border border-blue-100 bg-blue-50 p-3"
-                    >
-                      <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-blue-800">
-                        <span className="rounded-full bg-white px-3 py-1 border border-blue-200">
-                          Section: {sectionName}
-                        </span>
-                        <span className="rounded-full bg-white px-3 py-1 border border-blue-200">
-                          Semester: {sectionSemesters[sectionName] || "N/A"}
-                        </span>
-                      </div>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {(sectionSubjects[sectionName] || []).length > 0 ? (
-                          sectionSubjects[sectionName].map((subject) => (
-                            <span
-                              key={`${sectionName}-${subject}`}
-                              className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 border border-slate-200"
-                            >
-                              {subject}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-xs text-slate-500">No subjects assigned.</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-              <div className="mt-5">
-                <h4 className="text-sm font-semibold text-slate-800">
-                  Assigned Subjects
-                </h4>
-                {assignedSubjects.length === 0 ? (
-                  <p className="mt-2 text-xs text-slate-500">
-                    No subjects assigned yet.
+        {isStaff ? (
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <Card className="border-blue-100 shadow-md p-6 bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-2xl flex flex-col justify-between">
+              <div>
+                <span className="text-xs uppercase tracking-widest text-blue-300">Staff Portal</span>
+                <h2 className="text-2xl font-bold mt-2">
+                  Hi, <span className="text-yellow-400">{localStorage.getItem("teachername") || "Staff"}</span>
+                </h2>
+                <div className="mt-6 space-y-2">
+                  <p className="text-sm text-slate-350">
+                    <span className="font-semibold text-white">Department:</span> {localStorage.getItem("teacherdepartment") || "STAFF"}
                   </p>
-                ) : (
-                  <div className="mt-3 overflow-x-auto">
-                    <table className="w-full border-collapse text-xs">
-                      <thead>
-                        <tr>
-                          <th className="border border-slate-200 bg-white px-2 py-1 text-left">
-                            Subject
-                          </th>
-                          <th className="border border-slate-200 bg-white px-2 py-1 text-left">
-                            Section
-                          </th>
-                          <th className="border border-slate-200 bg-white px-2 py-1 text-left">
-                            Year
-                          </th>
-                          <th className="border border-slate-200 bg-white px-2 py-1 text-left">
-                            Batch
-                          </th>
-                          <th className="border border-slate-200 bg-white px-2 py-1 text-left">
-                            Semester
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {assignedSubjects.map((item, idx) => (
-                          <tr key={`${item.subject}-${idx}`} className="even:bg-slate-50">
-                            <td className="border border-slate-200 px-2 py-1">
-                              {item.subject}
-                            </td>
-                            <td className="border border-slate-200 px-2 py-1">
-                              {item.section}
-                            </td>
-                            <td className="border border-slate-200 px-2 py-1">
-                              {item.year}
-                            </td>
-                            <td className="border border-slate-200 px-2 py-1">
-                              {item.batch}
-                            </td>
-                            <td className="border border-slate-200 px-2 py-1">
-                              {item.semester}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                  <p className="text-sm text-slate-350">
+                    <span className="font-semibold text-white">Role:</span> {localStorage.getItem("teacherrole") || "Staff"}
+                  </p>
+                </div>
               </div>
+              <div className="mt-6">
+                <i className="ri-user-star-line text-6xl text-white/10"></i>
+              </div>
+            </Card>
 
-              <div className="mt-6 rounded-xl bg-blue-50 p-4">
-                <h5 className="text-sm font-semibold text-blue-900 sm:text-base">
-                  Low Attendance Email Alert
-                </h5>
-                <p className="mt-1 text-xs text-gray-600 sm:text-sm">
-                  Send warning emails to students below attendance criteria.
+            <Card className="lg:col-span-2 border-blue-100 shadow-md">
+              <CardHeader>
+                <CardTitle className="text-lg sm:text-xl text-blue-900">Your Leave Balances</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {leaveBalances ? (
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                    {[
+                      { type: "CL", label: "Casual Leave", total: leaveBalances.clTotal, used: leaveBalances.clUsed },
+                      { type: "EL", label: "Earned Leave", total: leaveBalances.elTotal, used: leaveBalances.elUsed },
+                      { type: "ML", label: "Medical Leave", total: leaveBalances.mlTotal, used: leaveBalances.mlUsed },
+                      { type: "OD", label: "On-Duty Leave", total: leaveBalances.odTotal , used: leaveBalances.odUsed },
+                      { type: "WINTER_LEAVE", label: "Winter Leave", total: leaveBalances.winterLeaveTotal || 0, used: leaveBalances.winterLeaveUsed || 0 },
+                      { type: "SUMMER_LEAVE", label: "Summer Leave", total: leaveBalances.summerLeaveTotal || 0, used: leaveBalances.summerLeaveUsed || 0 },
+                      { type: "COMPOFF", label: "CompOff", total: leaveBalances.compoffTotal, used: leaveBalances.compoffUsed },
+                    ].map((item) => (
+                      <div key={item.type} className="border border-slate-100 rounded-xl p-4 bg-slate-50 flex flex-col justify-between shadow-sm">
+                        <p className="text-xs font-semibold text-slate-500 uppercase">{item.label}</p>
+                        <div className="mt-2">
+                          <p className="text-3xl font-extrabold text-blue-900">{item.total - item.used}</p>
+                          <p className="text-xs text-slate-400 mt-1">Total: {item.total} | Used: {item.used}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500">No leave balance is assigned to you yet.</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <Card className="lg:col-span-2 border-blue-100 shadow-md">
+              <CardHeader>
+                <CardTitle className="text-lg sm:text-xl">Attendance Overview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-72 w-full sm:h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={mydata.length === 0 ? data : mydata}
+                      margin={{ top: 12, right: 12, left: 0, bottom: 36 }}
+                    >
+                      <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-35} textAnchor="end" interval={0} />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="attendance" fill="#2563eb" radius={[6, 6, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-blue-100 shadow-md">
+              <CardContent className="p-5 sm:p-6">
+                <h2 className="text-xl font-bold text-gray-800 sm:text-2xl">
+                  Hi, <span className="text-blue-600">{localStorage.getItem("teachername") || "Teacher"}</span>
+                </h2>
+                <p className="mt-2 text-sm text-gray-600 sm:text-base">
+                  {assignedSections.length > 0 ? "Assigned Sections" : "No section is assigned yet."}
                 </p>
-                <Dialog
-                  open={open}
-                  onOpenChange={(isOpen) => {
-                    setOpen(isOpen);
-                    if (!isOpen) {
-                      setsentEmail(false);
-                    }
-                  }}
-                >
-                  <DialogTrigger className="mt-3 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
-                    Send Email
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Send Email to Low Attendance Students</DialogTitle>
-                      <DialogDescription className="mt-4 flex flex-col gap-4">
-                        <select
-                          value={year}
-                          onChange={(e) => setyear(e.target.value)}
-                          className="border rounded-lg px-2 py-2 text-base font-semibold bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        >
-                          <option value="Ist">Ist</option>
-                          <option value="IInd">IInd</option>
-                          <option value="IIIrd">IIIrd</option>
-                          <option value="IVth">IVth</option>
-                        </select>
-                        <Input value={section} onChange={(e) => setsection(e.target.value)} type="text" placeholder="Enter section" />
-                        <Input
-                          value={batch}
-                          onChange={(e) => setbatch(e.target.value.replace(/\D/g, ""))}
-                          type="text"
-                          inputMode="numeric"
-                          pattern="\\d*"
-                          placeholder="Enter batch"
-                        />
-                        <Button
-                          onClick={sendEmailStudents}
-                          disabled={isSendingEmail || sentEmail}
-                          className={`${sentEmail ? "bg-green-500" : "bg-blue-500"} hover:bg-blue-600`}
-                        >
-                          {isSendingEmail ? "Sending..." : sentEmail ? "Email Sent" : "Send Email"}
-                        </Button>
-                        <p className="text-xs text-gray-500">
-                          Send once and wait for confirmation before sending again.
-                        </p>
-                      </DialogDescription>
-                    </DialogHeader>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                {assignedSections.length > 0 ? (
+                  <div className="mt-4 space-y-3">
+                    {assignedSections.map((sectionName) => (
+                      <div
+                        key={sectionName}
+                        className="rounded-xl border border-blue-100 bg-blue-50 p-3"
+                      >
+                        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-blue-800">
+                          <span className="rounded-full bg-white px-3 py-1 border border-blue-200">
+                            Section: {sectionName}
+                          </span>
+                          <span className="rounded-full bg-white px-3 py-1 border border-blue-200">
+                            Semester: {sectionSemesters[sectionName] || "N/A"}
+                          </span>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {(sectionSubjects[sectionName] || []).length > 0 ? (
+                            sectionSubjects[sectionName].map((subject) => (
+                              <span
+                                key={`${sectionName}-${subject}`}
+                                className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 border border-slate-200"
+                              >
+                                {subject}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-xs text-slate-500">No subjects assigned.</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+                <div className="mt-5">
+                  <h4 className="text-sm font-semibold text-slate-800">
+                    Assigned Subjects
+                  </h4>
+                  {assignedSubjects.length === 0 ? (
+                    <p className="mt-2 text-xs text-slate-500">
+                      No subjects assigned yet.
+                    </p>
+                  ) : (
+                    <div className="mt-3 overflow-x-auto">
+                      <table className="w-full border-collapse text-xs">
+                        <thead>
+                          <tr>
+                            <th className="border border-slate-200 bg-white px-2 py-1 text-left">
+                              Subject
+                            </th>
+                            <th className="border border-slate-200 bg-white px-2 py-1 text-left">
+                              Section
+                            </th>
+                            <th className="border border-slate-200 bg-white px-2 py-1 text-left">
+                              Year
+                            </th>
+                            <th className="border border-slate-200 bg-white px-2 py-1 text-left">
+                              Batch
+                            </th>
+                            <th className="border border-slate-200 bg-white px-2 py-1 text-left">
+                              Semester
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {assignedSubjects.map((item, idx) => (
+                            <tr key={`${item.subject}-${idx}`} className="even:bg-slate-50">
+                              <td className="border border-slate-200 px-2 py-1">
+                                {item.subject}
+                              </td>
+                              <td className="border border-slate-200 px-2 py-1">
+                                {item.section}
+                              </td>
+                              <td className="border border-slate-200 px-2 py-1">
+                                {item.year}
+                              </td>
+                              <td className="border border-slate-200 px-2 py-1">
+                                {item.batch}
+                              </td>
+                              <td className="border border-slate-200 px-2 py-1">
+                                {item.semester}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-6 rounded-xl bg-blue-50 p-4">
+                  <h5 className="text-sm font-semibold text-blue-900 sm:text-base">
+                    Low Attendance Email Alert
+                  </h5>
+                  <p className="mt-1 text-xs text-gray-600 sm:text-sm">
+                    Send warning emails to students below attendance criteria.
+                  </p>
+                  <Dialog
+                    open={open}
+                    onOpenChange={(isOpen) => {
+                      setOpen(isOpen);
+                      if (!isOpen) {
+                        setsentEmail(false);
+                      }
+                    }}
+                  >
+                    <DialogTrigger className="mt-3 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                      Send Email
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Send Email to Low Attendance Students</DialogTitle>
+                        <DialogDescription className="mt-4 flex flex-col gap-4">
+                          <select
+                            value={year}
+                            onChange={(e) => setyear(e.target.value)}
+                            className="border rounded-lg px-2 py-2 text-base font-semibold bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          >
+                            <option value="Ist">Ist</option>
+                            <option value="IInd">IInd</option>
+                            <option value="IIIrd">IIIrd</option>
+                            <option value="IVth">IVth</option>
+                          </select>
+                          <Input value={section} onChange={(e) => setsection(e.target.value)} type="text" placeholder="Enter section" />
+                          <Input
+                            value={batch}
+                            onChange={(e) => setbatch(e.target.value.replace(/\D/g, ""))}
+                            type="text"
+                            inputMode="numeric"
+                            pattern="\\d*"
+                            placeholder="Enter batch"
+                          />
+                          <Button
+                            onClick={sendEmailStudents}
+                            disabled={isSendingEmail || sentEmail}
+                            className={`${sentEmail ? "bg-green-500" : "bg-blue-500"} hover:bg-blue-600`}
+                          >
+                            {isSendingEmail ? "Sending..." : sentEmail ? "Email Sent" : "Send Email"}
+                          </Button>
+                          <p className="text-xs text-gray-500">
+                            Send once and wait for confirmation before sending again.
+                          </p>
+                        </DialogDescription>
+                      </DialogHeader>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <section className="mt-8">
           <h2 className="text-xl font-bold text-blue-900 sm:text-3xl">Quick Actions</h2>
@@ -530,6 +627,12 @@ const TeacherDashboard = () => {
             ))}
           </div>
         </section>
+
+        {/* {isHOD && (
+          <section id="dept-leaves-section" className="mt-8">
+            <DeptLeaveRequests />
+          </section>
+        )} */}
 
         <section className="mt-10 pb-10">
           <h2 className="text-xl font-bold text-blue-900 sm:text-3xl">

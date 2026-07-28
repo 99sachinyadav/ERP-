@@ -24,6 +24,9 @@ import DeanDashboard from "./pages/DeanDashboard";
 import DirectorDashboard from "./pages/DirectorDashboard";
 import Leave from "./pages/Leave";
 import Approveleaves from "./pages/Approveleaves";
+import HODLeavePanel from "./Components/HODLeavePanel";
+import AssignLeaves from "./pages/AssignLeaves";
+import StaffRegister from "./pages/StaffRegister";
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -48,6 +51,14 @@ function App() {
           element={
             <AdminProtect>
               <TeacherRegister />
+            </AdminProtect>
+          }
+        />
+        <Route
+          path="/staffRegister"
+          element={
+            <AdminProtect>
+              <StaffRegister />
             </AdminProtect>
           }
         />
@@ -157,6 +168,54 @@ function App() {
           }
         />
         <Route
+          path="/director/assign-semester-quota-teacher"
+          element={
+            <RoleProtect tokenKey="directorToken" redirectTo="/directorlogin">
+             <AssignLeaves target="teacher" mode="semester" />
+            </RoleProtect>
+          }
+        />
+        <Route
+          path="/director/assign-yearly-quota-teacher"
+          element={
+            <RoleProtect tokenKey="directorToken" redirectTo="/directorlogin">
+             <AssignLeaves target="teacher" mode="yearly" />
+            </RoleProtect>
+          }
+        />
+        <Route
+          path="/director/assign-special-leave-teacher"
+          element={
+            <RoleProtect tokenKey="directorToken" redirectTo="/directorlogin">
+             <AssignLeaves target="teacher" mode="special" />
+            </RoleProtect>
+          }
+        />
+        <Route
+          path="/director/assign-semester-quota-staff"
+          element={
+            <RoleProtect tokenKey="directorToken" redirectTo="/directorlogin">
+             <AssignLeaves target="staff" mode="semester" />
+            </RoleProtect>
+          }
+        />
+        <Route
+          path="/director/assign-yearly-quota-staff"
+          element={
+            <RoleProtect tokenKey="directorToken" redirectTo="/directorlogin">
+             <AssignLeaves target="staff" mode="yearly" />
+            </RoleProtect>
+          }
+        />
+        <Route
+          path="/director/assign-special-leave-staff"
+          element={
+            <RoleProtect tokenKey="directorToken" redirectTo="/directorlogin">
+             <AssignLeaves target="staff" mode="special" />
+            </RoleProtect>
+          }
+        />
+        <Route
           path="/sendEmail"
           element={
             <TeacherProTect>
@@ -193,6 +252,14 @@ function App() {
           element={
             <TeacherProTect>
               <Leave />
+            </TeacherProTect>
+          }
+        />
+        <Route
+          path="/hodPanel"
+          element={
+            <TeacherProTect>
+              <HODLeavePanel/>
             </TeacherProTect>
           }
         />

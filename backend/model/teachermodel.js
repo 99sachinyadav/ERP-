@@ -24,8 +24,20 @@ const teacherSchema  = new mongoose.Schema({
         ],
         
     },
-    section:[{type:mongoose.Schema.Types.ObjectId, ref:'Section', required:true}],
-    subjects:[{type:String}]
+    section: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Section', required: true }],
+    subjects: [{ type: String }],
+    department: {
+        type: String,
+        enum: ["AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR"],
+        // required: true,
+        // default: "STAFF"
+    },
+    role: {
+        type: String,
+        enum: ["Faculty", "HOD",'STAFF'],
+        // default: "Faculty"
+
+    }
 
 
     

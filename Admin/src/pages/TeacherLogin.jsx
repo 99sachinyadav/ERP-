@@ -23,17 +23,38 @@ const TeacherLogin = () => {
 
       if (responce.data.success) {
         localStorage.setItem("teacherToken", responce.data.refeshTeacherToken);
+        localStorage.setItem("teacherId", responce.data.findTeacher._id);
         localStorage.setItem("teachername", responce.data.findTeacher.name);
         responce.data.findTeacher?.section?.forEach((elem) => {
           section = section + "," + elem.name + " ";
         });
         localStorage.setItem("teachersection", section);
+        localStorage.setItem("teacherrole", responce.data.findTeacher.role);
+        localStorage.setItem("teacherdepartment", responce.data.findTeacher.department);
         navigate("/teacherdashboard");
         toast.success(responce.data.message);
       }
     } catch (error) {
-      console.log(error);
-      toast.error(error.response.data.message);
+      try {
+        const responce = await axios.post(backendUrl + "/api/loginStaff", {
+          email: email,
+          password: password,
+        });
+
+        if (responce.data.success) {
+          localStorage.setItem("teacherToken", responce.data.refeshStaffToken);
+          localStorage.setItem("teacherId", responce.data.findStaff._id);
+          localStorage.setItem("teachername", responce.data.findStaff.name);
+          localStorage.setItem("teachersection", "");
+          localStorage.setItem("teacherrole", responce.data.findStaff.role);
+          localStorage.setItem("teacherdepartment", responce.data.findStaff.department);
+          navigate("/teacherdashboard");
+          toast.success(responce.data.message);
+        }
+      } catch (err) {
+        console.log(err);
+        toast.error(err.response?.data?.message || "Login failed");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -45,11 +66,11 @@ const TeacherLogin = () => {
         <div className="p-8 md:p-10 bg-slate-800 text-white flex flex-col justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-cyan-200">
-              Faculty Portal
+              Faculty & Staff Portal
             </p>
-            <h1 className="mt-4 text-3xl font-semibold">Teacher Access</h1>
+            <h1 className="mt-4 text-3xl font-semibold">Faculty Access</h1>
             <p className="mt-3 text-slate-200 text-sm leading-relaxed">
-              Mark attendance, upload marks, and manage your assigned sections.
+              Teachers can manage academics, and staff can apply for leave.
             </p>
           </div>
           <div className="mt-10">
@@ -86,7 +107,7 @@ const TeacherLogin = () => {
           <div>
             <h2 className="text-2xl font-semibold text-slate-900">Sign in</h2>
             <p className="text-sm text-slate-500">
-              Use your faculty credentials to continue.
+              Use your faculty or staff credentials to continue.
             </p>
           </div>
 

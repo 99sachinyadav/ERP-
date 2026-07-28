@@ -5,12 +5,15 @@ const leaveBalanceSchema = new mongoose.Schema(
     teacher: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Teacher",
-      required: true,
+    },
+    staff: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Staff",
     },
     department: {
       type: String,
-      required: true,
-      enum: ["AIML", "EN", "CSE", "APPLIED", "ADMINISTRATOR", "STAFF"],
+       
+      enum: ["AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR"],
     },
     semester: {
       type: String,
@@ -22,7 +25,7 @@ const leaveBalanceSchema = new mongoose.Schema(
     },
     elTotal: {
       type: Number,
-      default: 6,
+      default: 0,
       min: 0,
     },
     elUsed: {
@@ -32,7 +35,7 @@ const leaveBalanceSchema = new mongoose.Schema(
     },
     clTotal: {
       type: Number,
-      default: 6,
+      default: 0,
       min: 0,
     },
     clUsed: {
@@ -42,7 +45,7 @@ const leaveBalanceSchema = new mongoose.Schema(
     },
     mlTotal: {
       type: Number,
-      default: 5,
+      default: 0,
       min: 0,
     },
     mlUsed: {
@@ -50,7 +53,32 @@ const leaveBalanceSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    odTotal: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     odUsed: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    winterLeaveTotal: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    winterLeaveUsed: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    summerLeaveTotal: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    summerLeaveUsed: {
       type: Number,
       default: 0,
       min: 0,
@@ -65,13 +93,48 @@ const leaveBalanceSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    maternityLeaveTotal: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    maternityLeaveUsed: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    studyLeaveTotal: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    studyLeaveUsed: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    specialDisabilityLeaveTotal: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    specialDisabilityLeaveUsed: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   { timestamps: true }
 );
 
 leaveBalanceSchema.index(
   { teacher: 1, semester: 1, academicYear: 1 },
-  { unique: true }
+  { unique: true, partialFilterExpression: { teacher: { $type: "objectId" } } }
+);
+
+leaveBalanceSchema.index(
+  { staff: 1, semester: 1, academicYear: 1 },
+  { unique: true, partialFilterExpression: { staff: { $type: "objectId" } } }
 );
 
 export const LeaveBalance = mongoose.model("LeaveBalance", leaveBalanceSchema);

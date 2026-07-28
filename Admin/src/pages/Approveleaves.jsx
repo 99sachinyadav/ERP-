@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import {
   approveLeaveByDirector,
@@ -12,23 +13,38 @@ import {
 const COLORS = ["#F59E0B", "#10B981", "#EF4444"];
 
 const emptyFilters = {
-  status: "FORWARDED_TO_DIRECTOR",
+  status: "ALL",
   department: "ALL",
   leaveType: "ALL",
   requestKind: "ALL",
   search: "",
 };
 
-const departments = ["ALL", "AIML", "EN", "CSE", "APPLIED", "ADMINISTRATOR", "STAFF"];
-const leaveTypes = ["ALL", "EL", "CL", "ML", "OD", "COMPOFF"];
+const departments = ["ALL","AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR"];
+const leaveTypes = [
+  "ALL",
+  "EL",
+  "CL",
+  "ML",
+  "OD",
+  "WINTER_LEAVE",
+  "SUMMER_LEAVE",
+  "COMPOFF",
+  "MATERNITY_LEAVE",
+  "STUDY_LEAVE",
+  "SPECIAL_DISABILITY_LEAVE",
+];
 const requestKinds = ["ALL", "LEAVE_USAGE", "COMPOFF_CREDIT"];
 const statusOptions = [
   "ALL",
-  "PENDING_ADMIN",
+  "PENDING_HOD",
   "FORWARDED_TO_DIRECTOR",
+  "ROLLBACK_REQUESTED",
   "APPROVED",
-  "REJECTED_BY_ADMIN",
+  "ROLLED_BACK",
+  "REJECTED_BY_HOD",
   "REJECTED_BY_DIRECTOR",
+  "ROLLBACK_REJECTED",
   "CANCELLED",
 ];
 
@@ -42,11 +58,14 @@ const formatDate = (value) => {
 };
 
 const statusClass = {
-  PENDING_ADMIN: "bg-amber-100 text-amber-700",
+  PENDING_HOD: "bg-purple-100 text-purple-700",
   FORWARDED_TO_DIRECTOR: "bg-blue-100 text-blue-700",
   APPROVED: "bg-emerald-100 text-emerald-700",
-  REJECTED_BY_ADMIN: "bg-red-100 text-red-700",
+  ROLLBACK_REQUESTED: "bg-amber-100 text-amber-700",
+  ROLLED_BACK: "bg-slate-100 text-slate-700",
+  REJECTED_BY_HOD: "bg-red-100 text-red-700",
   REJECTED_BY_DIRECTOR: "bg-red-100 text-red-700",
+  ROLLBACK_REJECTED: "bg-red-100 text-red-700",
   CANCELLED: "bg-slate-100 text-slate-700",
 };
 
@@ -54,14 +73,54 @@ const leaveBalanceRows = (balance) => [
   ["EL", balance.elTotal, balance.elUsed, balance.elTotal - balance.elUsed],
   ["CL", balance.clTotal, balance.clUsed, balance.clTotal - balance.clUsed],
   ["ML", balance.mlTotal, balance.mlUsed, balance.mlTotal - balance.mlUsed],
-  ["OD", "-", balance.odUsed, "-"],
+  ["OD", (balance.odTotal || 15), balance.odUsed, (balance.odTotal || 15) - balance.odUsed],
+  [
+    "WINTER_LEAVE",
+    balance.winterLeaveTotal || 0,
+    balance.winterLeaveUsed || 0,
+    (balance.winterLeaveTotal || 0) - (balance.winterLeaveUsed || 0),
+  ],
+  [
+    "SUMMER_LEAVE",
+    balance.summerLeaveTotal || 0,
+    balance.summerLeaveUsed || 0,
+    (balance.summerLeaveTotal || 0) - (balance.summerLeaveUsed || 0),
+  ],
   [
     "COMPOFF",
     balance.compoffTotal,
     balance.compoffUsed,
     balance.compoffTotal - balance.compoffUsed,
   ],
+  [
+    "MATERNITY_LEAVE",
+    balance.maternityLeaveTotal || 0,
+    balance.maternityLeaveUsed || 0,
+    (balance.maternityLeaveTotal || 0) - (balance.maternityLeaveUsed || 0),
+  ],
+  [
+    "STUDY_LEAVE",
+    balance.studyLeaveTotal || 0,
+    balance.studyLeaveUsed || 0,
+    (balance.studyLeaveTotal || 0) - (balance.studyLeaveUsed || 0),
+  ],
+  [
+    "SPECIAL_DISABILITY_LEAVE",
+    balance.specialDisabilityLeaveTotal || 0,
+    balance.specialDisabilityLeaveUsed || 0,
+    (balance.specialDisabilityLeaveTotal || 0) -
+      (balance.specialDisabilityLeaveUsed || 0),
+  ],
 ];
+
+const leaveTypeLabel = (type) =>
+  ({
+    MATERNITY_LEAVE: "Maternity Leave",
+    STUDY_LEAVE: "Study Leave",
+    SPECIAL_DISABILITY_LEAVE: "Special Disability Leave",
+    WINTER_LEAVE: "Winter Leave",
+    SUMMER_LEAVE: "Summer Leave",
+  }[type] || type);
 
 const attachmentHref = (attachment) => {
   if (!attachment?.data || !attachment?.mimeType) return "";
@@ -69,6 +128,7 @@ const attachmentHref = (attachment) => {
 };
 
 const Approveleaves = () => {
+  const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
   const [summary, setSummary] = useState([]);
   const [remarks, setRemarks] = useState({});
@@ -125,7 +185,7 @@ const Approveleaves = () => {
   const approveLeave = async (id) => {
     try {
       await approveLeaveByDirector(id, remarks[id] || "");
-      toast.success("Leave approved");
+      toast.success("Request approved");
       loadRequests();
     } catch (error) {
       toast.error(error.response?.data?.message || "Unable to approve leave");
@@ -135,7 +195,7 @@ const Approveleaves = () => {
   const rejectLeave = async (id) => {
     try {
       await rejectLeaveByDirector(id, remarks[id] || "");
-      toast.success("Leave rejected");
+      toast.success("Request rejected");
       loadRequests();
     } catch (error) {
       toast.error(error.response?.data?.message || "Unable to reject leave");
@@ -143,22 +203,22 @@ const Approveleaves = () => {
   };
 
   const openTeacherDetails = async (request) => {
-    const teacherId = request.teacher?._id || request.teacher;
-    if (!teacherId) {
-      toast.error("Teacher details are not available for this request");
+    const userId = request.teacher?._id || request.teacher || request.staff?._id || request.staff;
+    if (!userId) {
+      toast.error("Details are not available for this request");
       return;
     }
 
     try {
       setDetailsLoading(true);
-      const response = await getTeacherLeaveDetails(teacherId, "directorToken");
+      const response = await getTeacherLeaveDetails(userId, "directorToken");
       setTeacherDetails({
-        teacher: request.teacher,
+        teacher: request.teacher || request.staff,
         leaveRequests: response.data.leaveRequests || [],
         leaveBalances: response.data.leaveBalances || [],
       });
     } catch (error) {
-      toast.error(error.response?.data?.message || "Unable to load teacher leave details");
+      toast.error(error.response?.data?.message || "Unable to load leave details");
     } finally {
       setDetailsLoading(false);
     }
@@ -167,7 +227,7 @@ const Approveleaves = () => {
   return (
     <div className="min-h-screen bg-slate-100 p-4 sm:p-6">
       <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600">
               Director Approval
@@ -176,21 +236,30 @@ const Approveleaves = () => {
               Final Leave Approval Queue
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Approve forwarded leave requests and comp off credits.
+              Approve forwarded leave requests, comp off credits, and rollback requests.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={loadRequests}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-          >
-            <i className="ri-refresh-line"></i>
-            Refresh
-          </button>
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <button
+              type="button"
+              onClick={() => navigate("/director")}
+              className="w-full sm:w-auto rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50"
+            >
+              Back to Dashboard
+            </button>
+            <button
+              type="button"
+              onClick={loadRequests}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+            >
+              <i className="ri-refresh-line"></i>
+              Refresh
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="mb-6 grid gap-4 md:grid-cols-4">
+      <div className="mb-6 grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {chartData.map((item, index) => (
           <div
             key={item.name}
@@ -205,22 +274,43 @@ const Approveleaves = () => {
             </h2>
           </div>
         ))}
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        {/* <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-sm text-slate-500">Total Tracked</p>
           <h2 className="mt-2 text-3xl font-bold text-blue-700">
             {totalRequests}
           </h2>
+        </div> */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
+          <p className="text-sm text-slate-500">Status Distribution</p>
+          <div className="relative h-20 mt-1">
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  dataKey="value"
+                  innerRadius={22}
+                  outerRadius={35}
+                  paddingAngle={4}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={entry.name} fill={COLORS[index]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
-      <div className="mb-6 grid gap-6 xl:grid-cols-[2fr,1fr]">
+      <div className="mb-6">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
+          <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="w-full">
               <h2 className="text-lg font-semibold text-slate-900">
-                Teacher Leave Records
+                Leave Records
               </h2>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="mt-3 grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 w-full">
                 <select
                   value={filters.status}
                   onChange={(event) => updateFilter("status", event.target.value)}
@@ -250,7 +340,7 @@ const Approveleaves = () => {
                 >
                   {leaveTypes.map((type) => (
                     <option key={type} value={type}>
-                      {type}
+                      {leaveTypeLabel(type)}
                     </option>
                   ))}
                 </select>
@@ -268,7 +358,7 @@ const Approveleaves = () => {
                 <input
                   value={filters.search}
                   onChange={(event) => updateFilter("search", event.target.value)}
-                  placeholder="Search teacher"
+                  placeholder="Search applicant"
                   className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
                 />
               </div>
@@ -280,15 +370,15 @@ const Approveleaves = () => {
             <table className="w-full min-w-[900px] text-sm">
               <thead>
                 <tr className="border-b bg-slate-50 text-left text-slate-600">
-                  <th className="p-3">Teacher</th>
+                  <th className="p-3">Applicant</th>
                   <th className="p-3">Department</th>
                   <th className="p-3">Type</th>
                   <th className="p-3">Kind</th>
                   <th className="p-3">Duration</th>
-                  <th className="p-3">Teacher Remark</th>
+                  <th className="p-3">Applicant Remark</th>
                   <th className="p-3">Document</th>
                   <th className="p-3">Status</th>
-                  <th className="p-3">Admin Remark</th>
+                  <th className="p-3">HOD Remark</th>
                   <th className="p-3">Director Remark</th>
                   <th className="p-3">Actions</th>
                 </tr>
@@ -297,21 +387,23 @@ const Approveleaves = () => {
                 {requests.map((request) => (
                   <tr key={request._id} className="border-b hover:bg-slate-50">
                     <td className="p-3 font-medium text-slate-900">
-                      {request.teacher?.name || "Teacher"}
+                      {request.teacher?.name || request.staff?.name || "Applicant"}
                       <p className="text-xs font-normal text-slate-500">
-                        {request.teacher?.email}
+                        {request.teacher?.email || request.staff?.email}
                       </p>
                     </td>
                     <td className="p-3">{request.department}</td>
                     <td className="p-3">
                       <span className="rounded-full bg-blue-50 px-3 py-1 font-semibold text-blue-700">
-                        {request.leaveType}
+                        {leaveTypeLabel(request.leaveType)}
                       </span>
                     </td>
                     <td className="p-3">
-                      {request.requestKind === "COMPOFF_CREDIT"
-                        ? "Comp off credit"
-                        : "Leave usage"}
+                      {request.status === "ROLLBACK_REQUESTED"
+                        ? "ROLLBACK REQUEST"
+                        : request.requestKind === "COMPOFF_CREDIT"
+                        ? "COMP_OFF CREDIT"
+                        : "LEAVE_USES"}
                     </td>
                     <td className="p-3">
                       {formatDate(request.fromDate)} - {formatDate(request.toDate)}
@@ -320,7 +412,9 @@ const Approveleaves = () => {
                       </p>
                     </td>
                     <td className="max-w-[180px] p-3 text-slate-600">
-                      {request.reason || "-"}
+                      {request.status === "ROLLBACK_REQUESTED"
+                        ? request.rollbackReason || "-"
+                        : request.reason || "-"}
                     </td>
                     <td className="p-3">
                       {request.attachment?.data ? (
@@ -345,20 +439,26 @@ const Approveleaves = () => {
                       </span>
                     </td>
                     <td className="max-w-[180px] p-3 text-slate-600">
-                      {request.adminApproval?.remark || "-"}
+                      {request.hodApproval?.remark || "-"}
                     </td>
                     <td className="p-3">
-                      {request.status === "FORWARDED_TO_DIRECTOR" ? (
+                      {["FORWARDED_TO_DIRECTOR", "ROLLBACK_REQUESTED"].includes(request.status) ? (
                         <input
                           value={remarks[request._id] || ""}
                           onChange={(event) =>
                             updateRemark(request._id, event.target.value)
                           }
-                          placeholder="Director remark"
+                          placeholder={
+                            request.status === "ROLLBACK_REQUESTED"
+                              ? "Rollback remark"
+                              : "Director remark"
+                          }
                           className="w-44 rounded-lg border border-slate-300 px-3 py-2"
                         />
                       ) : (
-                        request.directorApproval?.remark || "-"
+                        request.rollbackApproval?.remark ||
+                        request.directorApproval?.remark ||
+                        "-"
                       )}
                     </td>
                     <td className="p-3">
@@ -370,21 +470,25 @@ const Approveleaves = () => {
                         >
                           View
                         </button>
-                        {request.status === "FORWARDED_TO_DIRECTOR" && (
+                        {["FORWARDED_TO_DIRECTOR", "ROLLBACK_REQUESTED"].includes(request.status) && (
                           <>
                             <button
                               type="button"
                               onClick={() => approveLeave(request._id)}
                               className="rounded-lg bg-emerald-600 px-3 py-2 font-semibold text-white hover:bg-emerald-700"
                             >
-                              Approve
+                              {request.status === "ROLLBACK_REQUESTED"
+                                ? "Approve Rollback"
+                                : "Approve"}
                             </button>
                             <button
                               type="button"
                               onClick={() => rejectLeave(request._id)}
                               className="rounded-lg bg-red-600 px-3 py-2 font-semibold text-white hover:bg-red-700"
                             >
-                              Reject
+                              {request.status === "ROLLBACK_REQUESTED"
+                                ? "Reject Rollback"
+                                : "Reject"}
                             </button>
                           </>
                         )}
@@ -404,35 +508,6 @@ const Approveleaves = () => {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900">
-            Approval Analytics
-          </h2>
-          <div className="relative mt-4 h-72">
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  dataKey="value"
-                  innerRadius={70}
-                  outerRadius={100}
-                  paddingAngle={4}
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={entry.name} fill={COLORS[index]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <h2 className="text-4xl font-bold text-slate-900">
-                {totalRequests}
-              </h2>
-              <p className="text-sm text-slate-500">Requests</p>
-            </div>
-          </div>
-        </div>
       </div>
 
       {(teacherDetails || detailsLoading) && (
@@ -440,10 +515,10 @@ const Approveleaves = () => {
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-slate-900">
-                Teacher Leave Details
+                Applicant Leave Details
               </h2>
               <p className="text-sm text-slate-500">
-                {teacherDetails?.teacher?.name || "Selected teacher"}{" "}
+                {teacherDetails?.teacher?.name || "Selected applicant"}{" "}
                 {teacherDetails?.teacher?.email ? `- ${teacherDetails.teacher.email}` : ""}
               </p>
             </div>
@@ -457,9 +532,9 @@ const Approveleaves = () => {
           </div>
 
           {detailsLoading ? (
-            <p className="text-sm text-slate-500">Loading teacher leave details...</p>
+            <p className="text-sm text-slate-500">Loading leave details...</p>
           ) : (
-            <div className="grid gap-6 xl:grid-cols-2">
+            <div className="grid gap-6 lg:grid-cols-2">
               <div>
                 <h3 className="mb-3 font-semibold text-slate-900">All Leave Balances</h3>
                 <div className="space-y-4">
@@ -482,7 +557,7 @@ const Approveleaves = () => {
                           <tbody>
                             {leaveBalanceRows(balance).map(([type, total, used, remaining]) => (
                               <tr key={type} className="border-b last:border-0">
-                                <td className="py-2 font-medium">{type}</td>
+                                <td className="py-2 font-medium">{leaveTypeLabel(type)}</td>
                                 <td className="py-2">{total}</td>
                                 <td className="py-2">{used}</td>
                                 <td className="py-2">{remaining}</td>
@@ -507,7 +582,7 @@ const Approveleaves = () => {
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="font-semibold text-slate-900">
-                            {request.leaveType} - {request.days} day(s)
+                            {leaveTypeLabel(request.leaveType)} - {request.days} day(s)
                           </p>
                           <p className="text-sm text-slate-500">
                             {formatDate(request.fromDate)} to {formatDate(request.toDate)}
@@ -522,7 +597,7 @@ const Approveleaves = () => {
                         </span>
                       </div>
                       <p className="mt-2 text-sm text-slate-600">
-                        Teacher: {request.reason || "-"}
+                        Reason: {request.reason || "-"}
                       </p>
                       <p className="mt-1 text-sm text-slate-600">
                         Document:{" "}
@@ -539,7 +614,7 @@ const Approveleaves = () => {
                         )}
                       </p>
                       <p className="mt-1 text-sm text-slate-600">
-                        Admin: {request.adminApproval?.remark || "-"}
+                        HOD: {request.hodApproval?.remark || "-"}
                       </p>
                       <p className="mt-1 text-sm text-slate-600">
                         Director: {request.directorApproval?.remark || "-"}

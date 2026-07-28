@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import TeacherRegister from "./TeacherRegister";
+import StaffRegister from "./StaffRegister";
 
 import "remixicon/fonts/remixicon.css";
 import AdminMenu from "../Components/AdminMenu";
@@ -20,6 +21,8 @@ import ChangeStudentSection from "../Components/ChangeStudentSection";
 import ManageLeaves from "@/Components/ManageLeaves";
 import SpecialstudentMove from "@/Components/SpecialstudentMove";
 import {SpecialStudentMonitor} from "@/Components/SpecialStudentMonitor";
+import AssignHOD from "../Components/AssignHOD";
+import {ShowStaff} from "../Components/ShowStaff";
 const Home = () => {
   const [activeComponent, setActiveComponent] = useState("AdminMenu");
   const [isOpen, setIsOpen] = useState(false);
@@ -27,6 +30,7 @@ const Home = () => {
 
   const menuItems = [
     { key: "TeacherRegister", icon: "ri-user-add-line", label: "Register Teacher" },
+ 
     { key: "ManageLeaves", icon: "ri-calendar-2-line", label: "Manage Leaves" },
     { key: "UpdateTeacher", icon: "ri-user-settings-line", label: "Update Teacher" },
     { key: "SeeALLTeachers", icon: "ri-team-line", label: "All Teachers" },
@@ -43,6 +47,9 @@ const Home = () => {
     { key: "MonitorSubjectFaculty", icon: "ri-book-2-line", label: "Subject-wise Faculty" },
     { key: "ManageSpecialStudents", icon: "ri-user-star-line", label: "Special Student Management" },
     { key: "MonitorSpecialStudents", icon: "ri-bar-chart-box-line", label: "Special Student Monitoring" },
+    { key: "AssignHOD", icon: "ri-user-star-line", label: "Assign HOD" },
+    { key: "StaffRegister", icon: "ri-user-add-line", label: "Register Staff" },
+    { key: "MonitorStaff", icon: "ri-bar-chart-box-line", label: "Monitor Staff" },
 
   ];
 
@@ -134,6 +141,7 @@ const Home = () => {
               />
             )}
             {activeComponent === "TeacherRegister" && <TeacherRegister />}
+            {activeComponent === "StaffRegister" && <StaffRegister />}
             {activeComponent === "UpdateTeacher" && <UpdateTeacher />}
             {activeComponent === "SeeALLTeachers" && <SeeALLTeachers />}
             {activeComponent === "SeeALLStudents" && <SeeAllStudent />}
@@ -150,6 +158,8 @@ const Home = () => {
             {activeComponent === "ManageLeaves" && <ManageLeaves/>}
             {activeComponent === "ManageSpecialStudents" && <SpecialstudentMove/>}
             {activeComponent === "MonitorSpecialStudents" && <SpecialStudentMonitor/>}
+            {activeComponent === "AssignHOD" && <AssignHOD />}
+            {activeComponent === "MonitorStaff" && <ShowStaff /> }
           </div>
         </main>
       </div>
