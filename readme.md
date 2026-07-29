@@ -510,6 +510,60 @@ cd frontend
 npm run build
 ```
 
+``` bash
+Teacher/Staff profile me department store karna
+backend/model/teachermodel.js
+backend/model/staffmodel.js
+Allowed values: AIML/CSE/IT, ECE/EN, APPLIED/STAFF, ADMINISTRATOR
+
+HOD assign karna
+Admin/src/Components/AssignHOD.jsx
+backend/controller/admincontroller.js
+Admin teacher email + department select karta hai. Backend us teacher ko us department ka HOD bana deta hai.
+Agar same department ka pehle se HOD hai, uska role/department unset ho raha hai.
+
+Leave apply karte time routing decide karna
+Admin/src/pages/Leave.jsx
+backend/controller/leavecontroller.js
+Teacher/staff leave form me department select hota hai.
+Agar department ADMINISTRATOR hai, request direct Director ko jaati hai.
+Agar normal department hai, backend us department ka HOD dhundhta hai aur request PENDING_HOD me bhejta hai.
+
+HOD dashboard me sirf apne department ki leave requests dikhana
+Admin/src/pages/TeacherLogin.jsx login ke baad teacherdepartment localStorage me save karta hai.
+Admin/src/Components/HODLeavePanel.jsx
+Admin/src/Components/DeptLeaveRequests.jsx
+HOD panel localStorage se department leta hai aur backend ko filter bhejta hai, taaki HOD ko sirf apne department ki leaves milen.
+
+Leave records filtering
+Admin/src/pages/Approveleaves.jsx
+backend/controller/leavecontroller.js
+Director/approval screen me department filter hai. ALL select ho to sab, warna selected department ki requests.
+
+Leave request record me department save karna
+backend/model/leaverequestmodel.js
+Har leave request ke andar department required hai.
+Is par index bhi hai: { department: 1, status: 1 }, meaning department + status ke basis par queries fast karne ke liye.
+
+Leave balance ke saath department save karna
+backend/model/leavebalancemodel.js
+getBalance() jab naya balance create karta hai to department save karta hai.
+Semester close/carry-forward me bhi old balance ka department next balance me copy hota hai.
+
+Department-wise leave list / summary
+Route: GET /leaves/department/:department
+Backend function: getDepartmentLeaves
+Summary aggregation me department + leaveType + status ke basis par grouping hoti hai.
+
+Frontend public Department page
+frontend/src/pages/Department.jsx
+Ye mostly display/static page hai, backend logic se connected nahi lag raha.
+
+Short me: department sabse important leave system me hai: HOD allocation, leave request routing, HOD filtering, director filtering, leave records, leave balances, aur summaries.
+
+
+```
+
 ---
 
 ## License
