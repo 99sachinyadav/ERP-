@@ -224,11 +224,11 @@ const Leave = () => {
       const payload = { ...form };
       delete payload.leaveType;
       if (isStaff) {
-        await applyStaffCompoffCredit(payload);
-        toast.success("Comp off credit request sent to Director");
+      const res = await applyStaffCompoffCredit(payload);
+        toast.success(res.data.message);
       } else {
-        await applyCompoffCredit(payload);
-        toast.success("Comp off credit request sent to admin");
+        const res = await applyCompoffCredit(payload);
+        toast.success(res.data.message);
       }
       setForm(emptyForm);
       setFileInputKey((current) => current + 1);

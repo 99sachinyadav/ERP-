@@ -15,12 +15,12 @@ const AssignLeaves = ({ target, mode = "semester" }) => {
   const [academicYear, setAcademicYear] = useState("");
   
   // Leave values
-  const [el, setEl] = useState(5);
-  const [cl, setCl] = useState(6);
-  const [ml, setMl] = useState(7);
-  const [od, setOd] = useState(15);
-  const [winterLeave, setWinterLeave] = useState(0);
-  const [summerLeave, setSummerLeave] = useState(0);
+  const [el, setEl] = useState("");
+  const [cl, setCl] = useState("");
+  const [ml, setMl] = useState("");
+  const [od, setOd] = useState("");
+  const [winterLeave, setWinterLeave] = useState("");
+  const [summerLeave, setSummerLeave] = useState("");
   
   // Special leave values
   const [maternityLeave, setMaternityLeave] = useState("");
@@ -89,14 +89,32 @@ const AssignLeaves = ({ target, mode = "semester" }) => {
         targetEmail: assignMode === "individual" ? trimmedEmail : "",
       };
 
+      const addNumberIfPresent = (key, value) => {
+        if (value !== "") {
+          leavePayload[key] = Number(value);
+        }
+      };
+
       if (mode === "semester") {
-        leavePayload.el = Number(el);
-        leavePayload.cl = Number(cl);
+        addNumberIfPresent("el", el);
+        addNumberIfPresent("cl", cl);
+
+        if (!["el", "cl"].some((key) => key in leavePayload)) {
+          toast.error("Enter at least one semester quota to assign");
+          setIsLoading(false);
+          return;
+        }
       } else if (mode === "yearly") {
-        leavePayload.ml = Number(ml);
-        leavePayload.od = Number(od);
-        leavePayload.winterLeave = Number(winterLeave);
-        leavePayload.summerLeave = Number(summerLeave);
+        addNumberIfPresent("ml", ml);
+        addNumberIfPresent("od", od);
+        addNumberIfPresent("winterLeave", winterLeave);
+        addNumberIfPresent("summerLeave", summerLeave);
+
+        if (!["ml", "od", "winterLeave", "summerLeave"].some((key) => key in leavePayload)) {
+          toast.error("Enter at least one yearly quota to assign");
+          setIsLoading(false);
+          return;
+        }
       } else if (mode === "special") {
         leavePayload.maternityLeave = maternityLeave === "" ? undefined : Number(maternityLeave);
         leavePayload.studyLeave = studyLeave === "" ? undefined : Number(studyLeave);
@@ -320,8 +338,8 @@ const AssignLeaves = ({ target, mode = "semester" }) => {
                       min="0"
                       value={el}
                       onChange={(e) => setEl(e.target.value)}
+                      placeholder="Keep unchanged"
                       className={`mt-1.5 block w-full px-3 py-2 text-sm border border-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme.ring}`}
-                      required
                     />
                   </div>
                   <div>
@@ -334,11 +352,14 @@ const AssignLeaves = ({ target, mode = "semester" }) => {
                       min="0"
                       value={cl}
                       onChange={(e) => setCl(e.target.value)}
+                      placeholder="Keep unchanged"
                       className={`mt-1.5 block w-full px-3 py-2 text-sm border border-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme.ring}`}
-                      required
                     />
                   </div>
                 </div>
+                <p className="text-[10px] text-slate-400">
+                  Empty semester inputs will keep their existing values. Fill only EL or CL quotas that you want to update.
+                </p>
               </div>
             )}
 
@@ -360,8 +381,9 @@ const AssignLeaves = ({ target, mode = "semester" }) => {
                       min="0"
                       value={ml}
                       onChange={(e) => setMl(e.target.value)}
+                      placeholder="Keep unchanged"
                       className={`mt-1.5 block w-full px-3 py-2 text-sm border border-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme.ring}`}
-                      required
+                      
                     />
                   </div>
                   <div>
@@ -374,8 +396,9 @@ const AssignLeaves = ({ target, mode = "semester" }) => {
                       min="0"
                       value={od}
                       onChange={(e) => setOd(e.target.value)}
+                      placeholder="Keep unchanged"
                       className={`mt-1.5 block w-full px-3 py-2 text-sm border border-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme.ring}`}
-                      required
+                       
                     />
                   </div>
                   <div>
@@ -388,8 +411,8 @@ const AssignLeaves = ({ target, mode = "semester" }) => {
                       min="0"
                       value={winterLeave}
                       onChange={(e) => setWinterLeave(e.target.value)}
+                      placeholder="Keep unchanged"
                       className={`mt-1.5 block w-full px-3 py-2 text-sm border border-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme.ring}`}
-                      required
                     />
                   </div>
                   <div>
@@ -402,11 +425,14 @@ const AssignLeaves = ({ target, mode = "semester" }) => {
                       min="0"
                       value={summerLeave}
                       onChange={(e) => setSummerLeave(e.target.value)}
+                      placeholder="Keep unchanged"
                       className={`mt-1.5 block w-full px-3 py-2 text-sm border border-slate-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-1 ${theme.ring}`}
-                      required
                     />
                   </div>
                 </div>
+                <p className="text-[10px] text-slate-400">
+                  Empty yearly inputs will keep their existing values. Fill only ML, OD, Winter, or Summer quotas that you want to update.
+                </p>
               </div>
             )}
 

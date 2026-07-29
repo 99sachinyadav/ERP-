@@ -23,10 +23,14 @@ const HALF_DAY_MINIMUM_TYPES = ["EL", "COMPOFF"];
 const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
 
 const teacherIdFromRequest = (req) => req.body.teacherId || req.body.teacher;
-const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escapeRegex = (value) =>
+  String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 // pass
 const getCurrentSemester = async () => {
-  const semester = await Semester.findOne({ isCurrent: true, status: "ACTIVE" });
+  const semester = await Semester.findOne({
+    isCurrent: true,
+    status: "ACTIVE",
+  });
   if (!semester) throw new Error("No active semester found");
   return semester;
 };
@@ -41,7 +45,14 @@ const getDays = (fromDate, toDate, days) => {
   return Math.floor((end - start) / millisecondsPerDay) + 1;
 };
 // pass
-const validateLeaveInput = ({ department, leaveType, fromDate, toDate, days, reason }) => {
+const validateLeaveInput = ({
+  department,
+  leaveType,
+  fromDate,
+  toDate,
+  days,
+  reason,
+}) => {
   if (!department || !leaveType || !fromDate || !toDate || !reason) {
     return "Please fill all required fields";
   }
@@ -69,7 +80,6 @@ const validateLeaveInput = ({ department, leaveType, fromDate, toDate, days, rea
   return "";
 };
 
-
 // pass
 const normalizeAttachment = (attachment) => {
   if (!attachment) return { attachment: null, error: "" };
@@ -87,8 +97,14 @@ const normalizeAttachment = (attachment) => {
   const byteLength = Buffer.byteLength(data, "base64");
   const effectiveSize = size || byteLength;
 
-  if (effectiveSize > MAX_ATTACHMENT_BYTES || byteLength > MAX_ATTACHMENT_BYTES) {
-    return { attachment: null, error: "Attachment size cannot be more than 2 MB" };
+  if (
+    effectiveSize > MAX_ATTACHMENT_BYTES ||
+    byteLength > MAX_ATTACHMENT_BYTES
+  ) {
+    return {
+      attachment: null,
+      error: "Attachment size cannot be more than 2 MB",
+    };
   }
 
   return {
@@ -102,7 +118,6 @@ const normalizeAttachment = (attachment) => {
   };
 };
 
-
 // pass it find the balace of teache/staff if balance not found it will create a new balance with default values and return it.
 const getBalance = async (userId, department, semester, isStaff = false) => {
   const query = isStaff ? { staff: userId } : { teacher: userId };
@@ -111,7 +126,7 @@ const getBalance = async (userId, department, semester, isStaff = false) => {
     semester: semester.name,
     academicYear: semester.academicYear,
   });
-//  find the leave balance for the respected teacher/staff based on id semester and year. If not found, create a new leave balance with default values for the respected teacher/staff and return it.
+  //  find the leave balance for the respected teacher/staff based on id semester and year. If not found, create a new leave balance with default values for the respected teacher/staff and return it.
   if (!balance) {
     // const sampleQuery = isStaff ? { staff: { $exists: true } } : { teacher: { $exists: true } };
     // const existingSample = await LeaveBalance.findOne({
@@ -120,10 +135,10 @@ const getBalance = async (userId, department, semester, isStaff = false) => {
     //   academicYear: semester.academicYear,
     // });
 
-    const elTotal =  0;
-    const clTotal =  0;
-    const mlTotal =  0;
-    const odTotal =  0;
+    const elTotal = 0;
+    const clTotal = 0;
+    const mlTotal = 0;
+    const odTotal = 0;
     const winterLeaveTotal = 0;
     const summerLeaveTotal = 0;
 
@@ -182,18 +197,27 @@ const useLeaveBalance = (balance, leaveType, days) => {
   }
 };
 
-
 // pass credit back the leave balance when the leave is rejected or rolled back. This function ensures that the used leave count does not go below zero, maintaining data integrity.
 const creditLeaveBalance = (balance, leaveType, days) => {
-  if (leaveType === "EL") balance.elUsed = Math.max((balance.elUsed || 0) - days, 0);
-  if (leaveType === "CL") balance.clUsed = Math.max((balance.clUsed || 0) - days, 0);
-  if (leaveType === "ML") balance.mlUsed = Math.max((balance.mlUsed || 0) - days, 0);
-  if (leaveType === "OD") balance.odUsed = Math.max((balance.odUsed || 0) - days, 0);
+  if (leaveType === "EL")
+    balance.elUsed = Math.max((balance.elUsed || 0) - days, 0);
+  if (leaveType === "CL")
+    balance.clUsed = Math.max((balance.clUsed || 0) - days, 0);
+  if (leaveType === "ML")
+    balance.mlUsed = Math.max((balance.mlUsed || 0) - days, 0);
+  if (leaveType === "OD")
+    balance.odUsed = Math.max((balance.odUsed || 0) - days, 0);
   if (leaveType === "WINTER_LEAVE") {
-    balance.winterLeaveUsed = Math.max((balance.winterLeaveUsed || 0) - days, 0);
+    balance.winterLeaveUsed = Math.max(
+      (balance.winterLeaveUsed || 0) - days,
+      0,
+    );
   }
   if (leaveType === "SUMMER_LEAVE") {
-    balance.summerLeaveUsed = Math.max((balance.summerLeaveUsed || 0) - days, 0);
+    balance.summerLeaveUsed = Math.max(
+      (balance.summerLeaveUsed || 0) - days,
+      0,
+    );
   }
   if (leaveType === "COMPOFF") {
     balance.compoffUsed = Math.max((balance.compoffUsed || 0) - days, 0);
@@ -201,7 +225,7 @@ const creditLeaveBalance = (balance, leaveType, days) => {
   if (leaveType === "MATERNITY_LEAVE") {
     balance.maternityLeaveUsed = Math.max(
       (balance.maternityLeaveUsed || 0) - days,
-      0
+      0,
     );
   }
   if (leaveType === "STUDY_LEAVE") {
@@ -210,7 +234,7 @@ const creditLeaveBalance = (balance, leaveType, days) => {
   if (leaveType === "SPECIAL_DISABILITY_LEAVE") {
     balance.specialDisabilityLeaveUsed = Math.max(
       (balance.specialDisabilityLeaveUsed || 0) - days,
-      0
+      0,
     );
   }
 };
@@ -237,11 +261,16 @@ const balanceIncrement = (leaveRequest) => {
   return incrementMap[leaveRequest.leaveType] || {};
 };
 
-
 // pass function to create a new semester Pass for now
 const createSemester = async (req, res) => {
   try {
-    const { name, academicYear, startDate, endDate, isCurrent = false } = req.body;
+    const {
+      name,
+      academicYear,
+      startDate,
+      endDate,
+      isCurrent = false,
+    } = req.body;
 
     if (!name || !academicYear || !startDate || !endDate) {
       return res
@@ -271,7 +300,6 @@ const createSemester = async (req, res) => {
   }
 };
 
-
 // pass
 const getSemesters = async (req, res) => {
   try {
@@ -286,7 +314,6 @@ const getSemesters = async (req, res) => {
   }
 };
 
-
 // pass function to apply for leave
 const applyLeave = async (req, res) => {
   try {
@@ -294,7 +321,7 @@ const applyLeave = async (req, res) => {
     const { department, leaveType, fromDate, toDate, reason } = req.body;
     const days = getDays(fromDate, toDate, req.body.days);
     const { attachment, error: attachmentError } = normalizeAttachment(
-      req.body.attachment
+      req.body.attachment,
     );
 
     const error = validateLeaveInput({
@@ -311,14 +338,15 @@ const applyLeave = async (req, res) => {
       return res.status(400).json({ success: false, message: attachmentError });
     }
 
-
-    //   find if the teacher exists in the teacher 
+    //   find if the teacher exists in the teacher
     let userExists = await Teacher.findById(teacher).select("_id");
     let isStaff = false;
     if (!userExists) {
       userExists = await Staff.findById(teacher).select("_id");
       // if (!userExists) {
-        return res.status(404).json({ success: false, message: "Teacher not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Teacher not found" });
       // }
       // isStaff = true;
     }
@@ -329,20 +357,23 @@ const applyLeave = async (req, res) => {
     if (availableLeave(balance, leaveType) < days) {
       return res
         .status(400)
-        .json({ success: false, message: `${leaveType} balance is not enough` });
+        .json({
+          success: false,
+          message: `${leaveType} balance is not enough`,
+        });
     }
 
-    if ( department !== "ADMINISTRATOR") {
+    if (department !== "ADMINISTRATOR") {
       // Check if the teacher's department has an HOD
-      const departmentHOD = await Teacher.findOne({ 
-        department: department, 
-        role: "HOD" 
+      const departmentHOD = await Teacher.findOne({
+        department: department,
+        role: "HOD",
       }).select("_id");
 
       if (!departmentHOD) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "hod not allocated" 
+        return res.status(400).json({
+          success: false,
+          message: "hod not allocated",
         });
       }
     }
@@ -360,12 +391,18 @@ const applyLeave = async (req, res) => {
       attachment,
       semester: semester.name,
       academicYear: semester.academicYear,
-      status: department==="ADMINISTRATOR" ? "FORWARDED_TO_DIRECTOR" : "PENDING_HOD"
+      status:
+        department === "ADMINISTRATOR"
+          ? "FORWARDED_TO_DIRECTOR"
+          : "PENDING_HOD",
     });
-// Leave request sent to HOD
+    // Leave request sent to HOD
     return res.status(201).json({
       success: true,
-      message: department==="ADMINISTRATOR" ? "Leave request sent to Director" : "Leave request sent to HOD",
+      message:
+        department === "ADMINISTRATOR"
+          ? "Leave request sent to Director"
+          : "Leave request sent to HOD",
       leaveRequest,
     });
   } catch (error) {
@@ -380,7 +417,7 @@ const applyCompoffCredit = async (req, res) => {
     const { department, fromDate, toDate, reason } = req.body;
     const days = getDays(fromDate, toDate, req.body.days);
     const { attachment, error: attachmentError } = normalizeAttachment(
-      req.body.attachment
+      req.body.attachment,
     );
 
     const error = validateLeaveInput({
@@ -402,7 +439,9 @@ const applyCompoffCredit = async (req, res) => {
     if (!userExists) {
       userExists = await Staff.findById(teacher).select("_id");
       if (!userExists) {
-        return res.status(404).json({ success: false, message: "User not found" });
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
       }
       isStaff = true;
     }
@@ -411,15 +450,15 @@ const applyCompoffCredit = async (req, res) => {
 
     if (department !== "ADMINISTRATOR") {
       // Check if the teacher's department has an HOD
-      const departmentHOD = await Teacher.findOne({ 
-        department: department, 
-        role: "HOD" 
+      const departmentHOD = await Teacher.findOne({
+        department: department,
+        role: "HOD",
       }).select("_id");
 
       if (!departmentHOD) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "hod not allocated" 
+        return res.status(400).json({
+          success: false,
+          message: "hod not allocated",
         });
       }
     }
@@ -437,19 +476,24 @@ const applyCompoffCredit = async (req, res) => {
       attachment,
       semester: semester.name,
       academicYear: semester.academicYear,
-      status: department==="ADMINISTRATOR" ? "FORWARDED_TO_DIRECTOR" : "PENDING_HOD",
+      status:
+        department === "ADMINISTRATOR"
+          ? "FORWARDED_TO_DIRECTOR"
+          : "PENDING_HOD",
     });
 
     return res.status(201).json({
       success: true,
-      message: department==="ADMINISTRATOR" ? "Comp off credit request sent to Director" : "Comp off credit request sent to HOD",
+      message:
+        department === "ADMINISTRATOR"
+          ? "Comp off credit request sent to Director"
+          : "Comp off credit request sent to HOD",
       leaveRequest,
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 // pass
 const applyStaffLeave = async (req, res) => {
@@ -458,7 +502,7 @@ const applyStaffLeave = async (req, res) => {
     const { leaveType, fromDate, toDate, reason, department } = req.body;
     const days = getDays(fromDate, toDate, req.body.days);
     const { attachment, error: attachmentError } = normalizeAttachment(
-      req.body.attachment
+      req.body.attachment,
     );
 
     const error = validateLeaveInput({
@@ -477,7 +521,9 @@ const applyStaffLeave = async (req, res) => {
 
     const staffExists = await Staff.findById(staffId).select("_id");
     if (!staffExists) {
-      return res.status(404).json({ success: false, message: "Staff not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Staff not found" });
     }
 
     const semester = await getCurrentSemester();
@@ -486,20 +532,23 @@ const applyStaffLeave = async (req, res) => {
     if (availableLeave(balance, leaveType) < days) {
       return res
         .status(400)
-        .json({ success: false, message: `${leaveType} balance is not enough` });
+        .json({
+          success: false,
+          message: `${leaveType} balance is not enough`,
+        });
     }
 
-      if (department !== "ADMINISTRATOR") {
+    if (department !== "ADMINISTRATOR") {
       // Check if the teacher's department has an HOD
-      const departmentHOD = await Teacher.findOne({ 
-        department: department, 
-        role: "HOD" 
+      const departmentHOD = await Teacher.findOne({
+        department: department,
+        role: "HOD",
       }).select("_id");
 
       if (!departmentHOD) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "hod not allocated" 
+        return res.status(400).json({
+          success: false,
+          message: "hod not allocated",
         });
       }
     }
@@ -516,12 +565,17 @@ const applyStaffLeave = async (req, res) => {
       attachment,
       semester: semester.name,
       academicYear: semester.academicYear,
-      status:  department==="ADMINISTRATOR" ? "FORWARDED_TO_DIRECTOR" : "PENDING_HOD",
+      status:
+        department === "ADMINISTRATOR"
+          ? "FORWARDED_TO_DIRECTOR"
+          : "PENDING_HOD",
     });
 
     return res.status(201).json({
       success: true,
-      message: "Leave request sent to HOD",
+      message: department === "ADMINISTRATOR"
+          ? "Leave request sent to Director"
+          : "Leave request sent to HOD",
       leaveRequest,
     });
   } catch (error) {
@@ -533,10 +587,10 @@ const applyStaffLeave = async (req, res) => {
 const applyStaffCompoffCredit = async (req, res) => {
   try {
     const staffId = teacherIdFromRequest(req);
-    const { fromDate, toDate, reason ,department} = req.body;
+    const { fromDate, toDate, reason, department } = req.body;
     const days = getDays(fromDate, toDate, req.body.days);
     const { attachment, error: attachmentError } = normalizeAttachment(
-      req.body.attachment
+      req.body.attachment,
     );
 
     const error = validateLeaveInput({
@@ -555,7 +609,9 @@ const applyStaffCompoffCredit = async (req, res) => {
 
     const staffExists = await Staff.findById(staffId).select("_id");
     if (!staffExists) {
-      return res.status(404).json({ success: false, message: "Staff not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Staff not found" });
     }
 
     const semester = await getCurrentSemester();
@@ -572,22 +628,23 @@ const applyStaffCompoffCredit = async (req, res) => {
       attachment,
       semester: semester.name,
       academicYear: semester.academicYear,
-      status:  department==="ADMINISTRATOR" ? "FORWARDED_TO_DIRECTOR" : "PENDING_HOD",
+      status:
+        department === "ADMINISTRATOR"
+          ? "FORWARDED_TO_DIRECTOR"
+          : "PENDING_HOD",
     });
 
     return res.status(201).json({
       success: true,
-      message: "Comp off credit request sent to HOD",
+      message: department === "ADMINISTRATOR"
+          ? "Comp off credit request sent to Director"
+          : "Comp off credit request sent to HOD",
       leaveRequest,
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-
-
-
-
 
 //  pass
 const assignLeaves = async (req, res) => {
@@ -609,31 +666,43 @@ const assignLeaves = async (req, res) => {
     } = req.body;
 
     if (!target || !academicYear || !semesterName) {
-      return res.status(400).json({ success: false, message: "Target, semester, and academic year are required" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Target, semester, and academic year are required",
+        });
     }
 
     if (!["teacher", "staff"].includes(target)) {
-      return res.status(400).json({ success: false, message: "Invalid target" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid target" });
     }
 
-    const normalizedEmail = String(targetEmail || "").trim().toLowerCase();
+    const normalizedEmail = String(targetEmail || "")
+      .trim()
+      .toLowerCase();
     const specialFields = {
       maternityLeaveTotal: maternityLeave,
       studyLeaveTotal: studyLeave,
       specialDisabilityLeaveTotal: specialDisabilityLeave,
     };
     const hasSpecialValues = Object.values(specialFields).some(
-      (value) => value !== undefined && value !== null && value !== ""
+      (value) => value !== undefined && value !== null && value !== "",
     );
 
     if (hasSpecialValues && !normalizedEmail) {
       return res.status(400).json({
         success: false,
-        message: "Teacher or staff email is required for special leave allocation",
+        message:
+          "Teacher or staff email is required for special leave allocation",
       });
     }
 
-    const yearSemesters = await Semester.find({ academicYear }).select("name academicYear");
+    const yearSemesters = await Semester.find({ academicYear }).select(
+      "name academicYear",
+    );
     const semestersToUpdate = yearSemesters.length
       ? yearSemesters
       : [{ name: semesterName, academicYear }];
@@ -646,7 +715,9 @@ const assignLeaves = async (req, res) => {
       const user = await Model.findOne({ email: emailQuery });
 
       if (!user) {
-        const otherUser = await otherModel.findOne({ email: emailQuery }).select("_id");
+        const otherUser = await otherModel
+          .findOne({ email: emailQuery })
+          .select("_id");
         const otherTarget = target === "teacher" ? "staff" : "teacher";
         return res.status(404).json({
           success: false,
@@ -658,7 +729,8 @@ const assignLeaves = async (req, res) => {
 
       users = [user];
     } else {
-      users = target === "teacher" ? await Teacher.find({}) : await Staff.find({});
+      users =
+        target === "teacher" ? await Teacher.find({}) : await Staff.find({});
     }
 
     const buildQuery = (userId) =>
@@ -667,12 +739,15 @@ const assignLeaves = async (req, res) => {
     const buildOwner = (userId) =>
       target === "teacher" ? { teacher: userId } : { staff: userId };
 
-    const hasSemesterValues = el !== undefined || cl !== undefined;
+    const hasValue = (value) =>
+      value !== undefined && value !== null && value !== "";
+
+    const hasSemesterValues = hasValue(el) || hasValue(cl);
     const hasYearlyValues =
-      ml !== undefined ||
-      od !== undefined ||
-      winterLeave !== undefined ||
-      summerLeave !== undefined;
+      hasValue(ml) ||
+      hasValue(od) ||
+      hasValue(winterLeave) ||
+      hasValue(summerLeave);
 
     for (const user of users) {
       const selectedQuery = {
@@ -685,20 +760,24 @@ const assignLeaves = async (req, res) => {
         department: user.department && user.department,
       };
       const selectedInc = {};
-      if (el !== undefined) selectedInc.elTotal = Number(el);
-      if (cl !== undefined) selectedSet.clTotal = Number(cl);
-      if (ml !== undefined) selectedSet.mlTotal = Number(ml);
-      if (od !== undefined) selectedSet.odTotal = Number(od);
-      if (winterLeave !== undefined) selectedSet.winterLeaveTotal = Number(winterLeave);
-      if (summerLeave !== undefined) selectedSet.summerLeaveTotal = Number(summerLeave);
-      if (maternityLeave !== undefined && maternityLeave !== "") {
+      if (hasValue(el)) selectedInc.elTotal = Number(el);
+      if (hasValue(cl)) selectedSet.clTotal = Number(cl);
+      if (hasValue(ml)) selectedSet.mlTotal = Number(ml);
+      if (hasValue(od)) selectedSet.odTotal = Number(od);
+      if (hasValue(winterLeave))
+        selectedSet.winterLeaveTotal = Number(winterLeave);
+      if (hasValue(summerLeave))
+        selectedSet.summerLeaveTotal = Number(summerLeave);
+      if (hasValue(maternityLeave)) {
         selectedSet.maternityLeaveTotal = Number(maternityLeave);
       }
-      if (studyLeave !== undefined && studyLeave !== "") {
+      if (hasValue(studyLeave)) {
         selectedSet.studyLeaveTotal = Number(studyLeave);
       }
-      if (specialDisabilityLeave !== undefined && specialDisabilityLeave !== "") {
-        selectedSet.specialDisabilityLeaveTotal = Number(specialDisabilityLeave);
+      if (hasValue(specialDisabilityLeave)) {
+        selectedSet.specialDisabilityLeaveTotal = Number(
+          specialDisabilityLeave,
+        );
       }
 
       if (hasSemesterValues || hasYearlyValues || hasSpecialValues) {
@@ -710,11 +789,10 @@ const assignLeaves = async (req, res) => {
           selectedUpdate.$inc = selectedInc;
         }
 
-        await LeaveBalance.findOneAndUpdate(
-          selectedQuery,
-          selectedUpdate,
-          { upsert: true, new: true }
-        );
+        await LeaveBalance.findOneAndUpdate(selectedQuery, selectedUpdate, {
+          upsert: true,
+          new: true,
+        });
       }
 
       if (hasYearlyValues) {
@@ -722,10 +800,12 @@ const assignLeaves = async (req, res) => {
           const yearlySet = {
             department: user.department && user.department,
           };
-          if (ml !== undefined) yearlySet.mlTotal = Number(ml);
-          if (od !== undefined) yearlySet.odTotal = Number(od);
-          if (winterLeave !== undefined) yearlySet.winterLeaveTotal = Number(winterLeave);
-          if (summerLeave !== undefined) yearlySet.summerLeaveTotal = Number(summerLeave);
+          if (hasValue(ml)) yearlySet.mlTotal = Number(ml);
+          if (hasValue(od)) yearlySet.odTotal = Number(od);
+          if (hasValue(winterLeave))
+            yearlySet.winterLeaveTotal = Number(winterLeave);
+          if (hasValue(summerLeave))
+            yearlySet.summerLeaveTotal = Number(summerLeave);
 
           await LeaveBalance.findOneAndUpdate(
             {
@@ -734,7 +814,7 @@ const assignLeaves = async (req, res) => {
               academicYear: semester.academicYear,
             },
             { $set: yearlySet, $setOnInsert: buildOwner(user._id) },
-            { upsert: true, new: true }
+            { upsert: true, new: true },
           );
         }
       }
@@ -775,8 +855,6 @@ const assignLeavesToStaffByEmail = async (req, res) => {
   return assignLeaves(req, res);
 };
 
-
-
 // pass
 const getMyLeaveRequests = async (req, res) => {
   try {
@@ -812,7 +890,7 @@ const getMyLeaveBalance = async (req, res) => {
       ? leaveBalances.find(
           (balance) =>
             balance.semester === currentSemester.name &&
-            balance.academicYear === currentSemester.academicYear
+            balance.academicYear === currentSemester.academicYear,
         )
       : null;
 
@@ -827,17 +905,18 @@ const getMyLeaveBalance = async (req, res) => {
   }
 };
 
-
 // pass
 const getHODPendingLeaves = async (req, res) => {
   try {
     const { department } = req.query;
     if (!department) {
-      return res.status(400).json({ success: false, message: "Department is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Department is required" });
     }
-    const leaveRequests = await LeaveRequest.find({ 
+    const leaveRequests = await LeaveRequest.find({
       status: "PENDING_HOD",
-      department: department 
+      department: department,
     })
       .populate("teacher", "name email")
       .populate("staff", "name email")
@@ -854,7 +933,9 @@ const forwardLeaveToDirectorByHOD = async (req, res) => {
   try {
     const leaveRequest = await LeaveRequest.findById(req.params.id);
     if (!leaveRequest) {
-      return res.status(404).json({ success: false, message: "Leave not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Leave not found" });
     }
 
     if (leaveRequest.status !== "PENDING_HOD") {
@@ -883,13 +964,14 @@ const forwardLeaveToDirectorByHOD = async (req, res) => {
   }
 };
 
-
 // pass
 const rejectLeaveByHOD = async (req, res) => {
   try {
     const leaveRequest = await LeaveRequest.findById(req.params.id);
     if (!leaveRequest) {
-      return res.status(404).json({ success: false, message: "Leave not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Leave not found" });
     }
 
     if (leaveRequest.status !== "PENDING_HOD") {
@@ -936,7 +1018,9 @@ const forwardLeaveToDirector = async (req, res) => {
   try {
     const leaveRequest = await LeaveRequest.findById(req.params.id);
     if (!leaveRequest) {
-      return res.status(404).json({ success: false, message: "Leave not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Leave not found" });
     }
 
     if (leaveRequest.status !== "PENDING_ADMIN") {
@@ -969,7 +1053,9 @@ const rejectLeaveByAdmin = async (req, res) => {
   try {
     const leaveRequest = await LeaveRequest.findById(req.params.id);
     if (!leaveRequest) {
-      return res.status(404).json({ success: false, message: "Leave not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Leave not found" });
     }
 
     if (leaveRequest.status !== "PENDING_ADMIN") {
@@ -1021,7 +1107,9 @@ const requestLeaveRollback = async (req, res) => {
     const leaveRequest = await LeaveRequest.findById(req.params.id);
 
     if (!leaveRequest) {
-      return res.status(404).json({ success: false, message: "Leave not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Leave not found" });
     }
 
     const ownsLeave =
@@ -1029,15 +1117,27 @@ const requestLeaveRollback = async (req, res) => {
       String(leaveRequest.staff || "") === String(userId);
 
     if (!ownsLeave) {
-      return res.status(403).json({ success: false, message: "You cannot rollback this leave" });
+      return res
+        .status(403)
+        .json({ success: false, message: "You cannot rollback this leave" });
     }
 
     if (leaveRequest.status !== "APPROVED") {
-      return res.status(400).json({ success: false, message: "Only approved leaves can be rolled back" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Only approved leaves can be rolled back",
+        });
     }
 
     if (leaveRequest.requestKind !== "LEAVE_USAGE") {
-      return res.status(400).json({ success: false, message: "Only leave usage requests can be rolled back" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Only leave usage requests can be rolled back",
+        });
     }
 
     leaveRequest.status = "ROLLBACK_REQUESTED";
@@ -1080,8 +1180,16 @@ const getLeaveRecords = async (req, res) => {
     const normalizedSearch = search?.trim().toLowerCase();
     const filteredRequests = normalizedSearch
       ? leaveRequests.filter((request) => {
-          const userName = (request.teacher?.name || request.staff?.name || "").toLowerCase();
-          const userEmail = (request.teacher?.email || request.staff?.email || "").toLowerCase();
+          const userName = (
+            request.teacher?.name ||
+            request.staff?.name ||
+            ""
+          ).toLowerCase();
+          const userEmail = (
+            request.teacher?.email ||
+            request.staff?.email ||
+            ""
+          ).toLowerCase();
           return (
             userName.includes(normalizedSearch) ||
             userEmail.includes(normalizedSearch)
@@ -1098,17 +1206,21 @@ const getLeaveRecords = async (req, res) => {
   }
 };
 
-
-
 // pass
 const approveLeaveByDirector = async (req, res) => {
   try {
     const leaveRequest = await LeaveRequest.findById(req.params.id);
     if (!leaveRequest) {
-      return res.status(404).json({ success: false, message: "Leave not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Leave not found" });
     }
 
-    if (!["FORWARDED_TO_DIRECTOR", "ROLLBACK_REQUESTED"].includes(leaveRequest.status)) {
+    if (
+      !["FORWARDED_TO_DIRECTOR", "ROLLBACK_REQUESTED"].includes(
+        leaveRequest.status,
+      )
+    ) {
       return res
         .status(400)
         .json({ success: false, message: "Leave is not pending for director" });
@@ -1121,15 +1233,15 @@ const approveLeaveByDirector = async (req, res) => {
         name: leaveRequest.semester,
         academicYear: leaveRequest.academicYear,
       },
-      !!leaveRequest.staff
+      !!leaveRequest.staff,
     );
 
     if (!balance) {
-  return res.status(404).json({
-    success: false,
-    message: "Leave balance not found",
-  });
-}
+      return res.status(404).json({
+        success: false,
+        message: "Leave balance not found",
+      });
+    }
 
     if (
       leaveRequest.status === "FORWARDED_TO_DIRECTOR" &&
@@ -1169,13 +1281,15 @@ const approveLeaveByDirector = async (req, res) => {
         : LeaveBalance.findByIdAndUpdate(
             balance._id,
             { $inc: balanceIncrement(leaveRequest) },
-            { new: true }
+            { new: true },
           ),
       leaveRequest.save(),
     ]);
-   if(updatedBalance==null){
-    return res.status(500).json({ success: false, message: "Failed to update leave balance" });
-   }
+    if (updatedBalance == null) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to update leave balance" });
+    }
     return res.status(200).json({
       success: true,
       message: isRollbackApproval
@@ -1189,16 +1303,21 @@ const approveLeaveByDirector = async (req, res) => {
   }
 };
 
-
 // pass
 const rejectLeaveByDirector = async (req, res) => {
   try {
     const leaveRequest = await LeaveRequest.findById(req.params.id);
     if (!leaveRequest) {
-      return res.status(404).json({ success: false, message: "Leave not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Leave not found" });
     }
 
-    if (!["FORWARDED_TO_DIRECTOR", "ROLLBACK_REQUESTED"].includes(leaveRequest.status)) {
+    if (
+      !["FORWARDED_TO_DIRECTOR", "ROLLBACK_REQUESTED"].includes(
+        leaveRequest.status,
+      )
+    ) {
       return res
         .status(400)
         .json({ success: false, message: "Leave is not pending for director" });
@@ -1233,7 +1352,6 @@ const rejectLeaveByDirector = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 // pass  one doubt
 const closeSemesterAndCarryForwardEl = async (req, res) => {
@@ -1283,7 +1401,8 @@ const closeSemesterAndCarryForwardEl = async (req, res) => {
         academicYear: nextSemester.academicYear,
       });
 
-      const isSameYear = completedSemester.academicYear === nextSemester.academicYear;
+      const isSameYear =
+        completedSemester.academicYear === nextSemester.academicYear;
 
       // if (nextBalance) {
       //   nextBalance.department = oldBalance.department;
@@ -1305,27 +1424,44 @@ const closeSemesterAndCarryForwardEl = async (req, res) => {
       // }
       if (nextBalance) {
         nextBalance.department = oldBalance.department;
-        nextBalance.elTotal =  remainingEl;
+        nextBalance.elTotal = remainingEl;
         nextBalance.clTotal = 0;
         nextBalance.mlTotal = isSameYear ? oldBalance.mlTotal : 0;
         nextBalance.odTotal = isSameYear ? oldBalance.odTotal : 0;
-        nextBalance.winterLeaveTotal = isSameYear ? oldBalance.winterLeaveTotal : 0;
-        nextBalance.summerLeaveTotal = isSameYear ? oldBalance.summerLeaveTotal : 0;
+        nextBalance.winterLeaveTotal = isSameYear
+          ? oldBalance.winterLeaveTotal
+          : 0;
+        nextBalance.summerLeaveTotal = isSameYear
+          ? oldBalance.summerLeaveTotal
+          : 0;
         nextBalance.mlUsed = isSameYear ? oldBalance.mlUsed : 0;
         nextBalance.odUsed = isSameYear ? oldBalance.odUsed : 0;
-        nextBalance.winterLeaveUsed = isSameYear ? oldBalance.winterLeaveUsed : 0;
-        nextBalance.summerLeaveUsed = isSameYear ? oldBalance.summerLeaveUsed : 0;
+        nextBalance.winterLeaveUsed = isSameYear
+          ? oldBalance.winterLeaveUsed
+          : 0;
+        nextBalance.summerLeaveUsed = isSameYear
+          ? oldBalance.summerLeaveUsed
+          : 0;
         nextBalance.compoffTotal = 0;
         nextBalance.compoffUsed = 0;
-        nextBalance.maternityLeaveTotal = isSameYear ? oldBalance.maternityLeaveTotal : 0;
-        nextBalance.maternityLeaveUsed = isSameYear ? oldBalance.maternityLeaveUsed : 0;
-        nextBalance.studyLeaveTotal = isSameYear ? oldBalance.studyLeaveTotal : 0;
+        nextBalance.maternityLeaveTotal = isSameYear
+          ? oldBalance.maternityLeaveTotal
+          : 0;
+        nextBalance.maternityLeaveUsed = isSameYear
+          ? oldBalance.maternityLeaveUsed
+          : 0;
+        nextBalance.studyLeaveTotal = isSameYear
+          ? oldBalance.studyLeaveTotal
+          : 0;
         nextBalance.studyLeaveUsed = isSameYear ? oldBalance.studyLeaveUsed : 0;
-        nextBalance.specialDisabilityLeaveTotal = isSameYear ? oldBalance.specialDisabilityLeaveTotal : 0;
-        nextBalance.specialDisabilityLeaveUsed = isSameYear ? oldBalance.specialDisabilityLeaveUsed : 0;
+        nextBalance.specialDisabilityLeaveTotal = isSameYear
+          ? oldBalance.specialDisabilityLeaveTotal
+          : 0;
+        nextBalance.specialDisabilityLeaveUsed = isSameYear
+          ? oldBalance.specialDisabilityLeaveUsed
+          : 0;
         await nextBalance.save();
-      }
-       else {
+      } else {
         await LeaveBalance.create({
           ...ownerQuery,
           department: oldBalance.department,
@@ -1349,8 +1485,12 @@ const closeSemesterAndCarryForwardEl = async (req, res) => {
           maternityLeaveUsed: isSameYear ? oldBalance.maternityLeaveUsed : 0,
           studyLeaveTotal: isSameYear ? oldBalance.studyLeaveTotal : 0,
           studyLeaveUsed: isSameYear ? oldBalance.studyLeaveUsed : 0,
-          specialDisabilityLeaveTotal: isSameYear ? oldBalance.specialDisabilityLeaveTotal : 0,
-          specialDisabilityLeaveUsed: isSameYear ? oldBalance.specialDisabilityLeaveUsed : 0,
+          specialDisabilityLeaveTotal: isSameYear
+            ? oldBalance.specialDisabilityLeaveTotal
+            : 0,
+          specialDisabilityLeaveUsed: isSameYear
+            ? oldBalance.specialDisabilityLeaveUsed
+            : 0,
         });
       }
 
@@ -1371,7 +1511,7 @@ const closeSemesterAndCarryForwardEl = async (req, res) => {
 
     await Semester.updateMany(
       { _id: { $nin: [completedSemester._id, nextSemester._id] } },
-      { isCurrent: false }
+      { isCurrent: false },
     );
     await completedSemester.save();
     await nextSemester.save();
@@ -1407,25 +1547,26 @@ const getTeacherLeaves = async (req, res) => {
   try {
     const userId = req.params.teacherId;
     const leaveRequests = await LeaveRequest.find({
-      $or: [{ teacher: userId }, { staff: userId }]
+      $or: [{ teacher: userId }, { staff: userId }],
     })
       .populate("teacher", "name email")
       .populate("staff", "name email")
       .sort({ createdAt: -1 });
 
     const leaveBalances = await LeaveBalance.find({
-      $or: [{ teacher: userId }, { staff: userId }]
+      $or: [{ teacher: userId }, { staff: userId }],
     })
       .populate("teacher", "name email")
       .populate("staff", "name email")
       .sort({ academicYear: -1, semester: -1 });
 
-    return res.status(200).json({ success: true, leaveRequests, leaveBalances });
+    return res
+      .status(200)
+      .json({ success: true, leaveRequests, leaveBalances });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 // pass
 const getLeaveSummary = async (req, res) => {

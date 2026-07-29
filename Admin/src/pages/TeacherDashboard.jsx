@@ -387,7 +387,7 @@ const TeacherDashboard = () => {
                 </h2>
                 <div className="mt-6 space-y-2">
                   <p className="text-sm text-slate-350">
-                    <span className="font-semibold text-white">Department:</span> {localStorage.getItem("teacherdepartment") || "STAFF"}
+                    {/* <span className="font-semibold text-white">Department:</span> {localStorage.getItem("teacherdepartment") || "STAFF"} */}
                   </p>
                   <p className="text-sm text-slate-350">
                     <span className="font-semibold text-white">Role:</span> {localStorage.getItem("teacherrole") || "Staff"}
@@ -640,22 +640,38 @@ const TeacherDashboard = () => {
           </h2>
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="rounded-xl border bg-white p-5 shadow-sm">
-              <b className="text-base text-gray-900">Student Monitor</b>
-              <p className="mt-2 text-sm text-gray-600">
+              <b className="text-base text-gray-900">{isStaff ? "Apply for Leave" : "Student Monitor"}</b>
+             {isStaff ? (
+                <p className="mt-2 text-sm text-gray-600">
+                   Apply for leave, track your leave balances, and view your leave history in one place.
+                </p>
+              ) :  <p className="mt-2 text-sm text-gray-600">
                 Track low performers, irregular attendance, and student-wise progress in one place.
-              </p>
+              </p>}
             </div>
             <div className="rounded-xl border bg-white p-5 shadow-sm">
-              <b className="text-base text-gray-900">Mark Attendance</b>
-              <p className="mt-2 text-sm text-gray-600">
-                Capture lecture attendance quickly and keep records updated class by class.
-              </p>
+              <b className="text-base text-gray-900">{isStaff ? "Apply for Comp Off" : "Mark Attendance"}</b>
+                  {isStaff ? (
+                    <p className="mt-2 text-sm text-gray-600">
+                      Apply for compensatory off, track your comp off balances, and view your comp off history in one place.
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-sm text-gray-600">
+                      Capture lecture attendance quickly and keep records updated class by class.
+                    </p>
+                  )}
             </div>
             <div className="rounded-xl border bg-white p-5 shadow-sm">
-              <b className="text-base text-gray-900">Upload Marks</b>
-              <p className="mt-2 text-sm text-gray-600">
-                Upload internal marks by exam and subject with clear validation and visibility.
-              </p>
+              <b className="text-base text-gray-900">{isStaff ? "Apply for Departmental Leave" : "Upload Marks"}</b>
+                  {isStaff ? (
+                    <p className="mt-2 text-sm text-gray-600">
+                      Apply for departmental leave, track your departmental leave balances, and view your departmental leave history in one place.
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-sm text-gray-600">
+                      Upload internal marks by exam and subject with clear validation and visibility.
+                    </p>
+                  )}
             </div>
            
           </div>
