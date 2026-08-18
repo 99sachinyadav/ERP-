@@ -71,6 +71,7 @@ const teacherLogin = async (req, res) => {
       throw new Error("email or password is missing");
     }
     let trimedemail = email.toLowerCase().trim();
+     trimedemail = new RegExp(`^${escapeRegex(trimedemail)}$`, "i");
     // console.log(email, password);
     const findTeacher = await Teacher.findOne({
       $or: [{ email: trimedemail }],

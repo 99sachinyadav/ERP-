@@ -73,7 +73,7 @@ const leaveBalanceRows = (balance) => [
   ["EL", balance.elTotal, balance.elUsed, balance.elTotal - balance.elUsed],
   ["CL", balance.clTotal, balance.clUsed, balance.clTotal - balance.clUsed],
   ["ML", balance.mlTotal, balance.mlUsed, balance.mlTotal - balance.mlUsed],
-  ["OD", (balance.odTotal || 15), balance.odUsed, (balance.odTotal || 15) - balance.odUsed],
+  ["OD", (balance.odTotal || 0), balance.odUsed, (balance.odTotal || 0) - balance.odUsed],
   [
     "WINTER_LEAVE",
     balance.winterLeaveTotal || 0,
@@ -88,11 +88,12 @@ const leaveBalanceRows = (balance) => [
   ],
   [
     "COMPOFF",
-    balance.compoffTotal,
-    balance.compoffUsed,
-    balance.compoffTotal - balance.compoffUsed,
+    balance.compoffTotal || 0,
+    balance.compoffUsed || 0,
+    (balance.compoffTotal || 0) - (balance.compoffUsed || 0),
   ],
   [
+    
     "MATERNITY_LEAVE",
     balance.maternityLeaveTotal || 0,
     balance.maternityLeaveUsed || 0,
