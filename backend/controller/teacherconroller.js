@@ -150,6 +150,7 @@ const staffLogin = async (req, res) => {
       throw new Error("email or password is missing");
     }
     let trimedemail = email.toLowerCase().trim();
+    trimedemail = new RegExp(`^${escapeRegex(trimedemail)}$`, "i");
     const findStaff = await Staff.findOne({ email: trimedemail });
     if (!findStaff) {
       throw new Error("staff member does not exist");
