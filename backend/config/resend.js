@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 const htmlPath = path.join(__dirname, "Resend.html");
  
 const resend = new Resend(process.env.RESEND_API_KEY);
-const backendUrl = process.env.BACKEND_URL || "https://erpbackend-pearl.vercel.app";
+const backendUrl ='http://192.168.10.18:4000'|| process.env.BACKEND_URL || "https://erpbackend-pearl.vercel.app";
 
 const getSmtpTransporter = () => {
   return nodemailer.createTransport({

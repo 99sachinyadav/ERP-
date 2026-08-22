@@ -76,7 +76,7 @@ const TeacherDashboard = () => {
         toast.error(response.data.message || "Failed to send emails");
       }
     } catch (error) {
-      // console.log(error)
+      console.log(error)
       console.log(error.response?.data?.message || error.message);
       toast.error("Error in sending emails");
     } finally {

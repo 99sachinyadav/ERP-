@@ -1,8 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo,useState } from "react";
 import toast from "react-hot-toast";
 import logo from "../assets/logo.jpg";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/Components/ui/button";
+ 
+
 import {
   applyCompoffCredit,
   applyTeacherLeave,
@@ -12,6 +14,7 @@ import {
   applyStaffCompoffCredit,
   requestLeaveRollback,
 } from "@/lib/leaveApi";
+// import { set } from "node_modules/react-datepicker/dist/date_utils";
 
 const departments = ["AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR"];
 
@@ -74,7 +77,9 @@ const balanceValue = (balance, type) => {
     return (balance.summerLeaveTotal || 0) - (balance.summerLeaveUsed || 0);
   }
   if (type === "MATERNITY_LEAVE") {
-    return (balance.maternityLeaveTotal || 0) - (balance.maternityLeaveUsed || 0);
+    return (
+      (balance.maternityLeaveTotal || 0) - (balance.maternityLeaveUsed || 0)
+    );
   }
   if (type === "STUDY_LEAVE") {
     return (balance.studyLeaveTotal || 0) - (balance.studyLeaveUsed || 0);
@@ -95,7 +100,7 @@ const leaveTypeLabel = (type) =>
     SPECIAL_DISABILITY_LEAVE: "Special Disability Leave",
     WINTER_LEAVE: "Winter Leave",
     SUMMER_LEAVE: "Summer Leave",
-  }[type] || type);
+  })[type] || type;
 
 const approvalRemark = (request) => {
   const remarks = [];
@@ -124,6 +129,9 @@ const Leave = () => {
   const [balances, setBalances] = useState([]);
   const [activeBalance, setActiveBalance] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isSubmit, setisSubmit] = useState(false);
+  const [isCompoffRequested, setisCompoffRequested] = useState(false);
+  
 
   const loadLeaveData = async () => {
     try {
@@ -148,16 +156,16 @@ const Leave = () => {
 
   const currentBalance = useMemo(
     () => activeBalance || balances[0],
-    [activeBalance, balances]
+    [activeBalance, balances],
   );
   const pendingCount = requests.filter(
     (request) =>
       request.status === "PENDING_HOD" ||
       request.status === "PENDING_ADMIN" ||
-      request.status === "FORWARDED_TO_DIRECTOR"
+      request.status === "FORWARDED_TO_DIRECTOR",
   ).length;
   const approvedCount = requests.filter(
-    (request) => request.status === "APPROVED"
+    (request) => request.status === "APPROVED",
   ).length;
 
   const handleChange = (event) => {
@@ -197,45 +205,53 @@ const Leave = () => {
     reader.readAsDataURL(file);
   };
 
-  const isStaff = localStorage.getItem("teacherrole") === "STAFF" ;
+  const isStaff = localStorage.getItem("teacherrole") === "STAFF";
 
   const submitLeave = async (event) => {
     event.preventDefault();
+    setisSubmit(true);
     try {
       if (isStaff) {
-        console.log(form.department)
-       const res = await applyStaffLeave(form);
+        // console.log(form.department)
+        const res = await applyStaffLeave(form);
+        setisSubmit(false);
         toast.success(res.data.message);
       } else {
-        console.log("Hello")
+        // console.log("Hello")
         const res = await applyTeacherLeave(form);
+        setisSubmit(false);
         toast.success(res.data.message);
       }
       setForm(emptyForm);
       setFileInputKey((current) => current + 1);
       loadLeaveData();
     } catch (error) {
+      setisSubmit(false);
       toast.error(error.response?.data?.message || "Unable to apply leave");
     }
   };
 
   const submitCompoffCredit = async () => {
+    setisCompoffRequested(true);
     try {
       const payload = { ...form };
       delete payload.leaveType;
       if (isStaff) {
-      const res = await applyStaffCompoffCredit(payload);
+        const res = await applyStaffCompoffCredit(payload);
+        setisCompoffRequested(false);
         toast.success(res.data.message);
       } else {
         const res = await applyCompoffCredit(payload);
+        setisCompoffRequested(false);
         toast.success(res.data.message);
       }
       setForm(emptyForm);
       setFileInputKey((current) => current + 1);
       loadLeaveData();
     } catch (error) {
+      setisCompoffRequested(false);
       toast.error(
-        error.response?.data?.message || "Unable to apply comp off credit"
+        error.response?.data?.message || "Unable to apply comp off credit",
       );
     }
   };
@@ -249,7 +265,9 @@ const Leave = () => {
       toast.success("Rollback request sent to Director");
       loadLeaveData();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Unable to request rollback");
+      toast.error(
+        error.response?.data?.message || "Unable to request rollback",
+      );
     }
   };
 
@@ -258,7 +276,11 @@ const Leave = () => {
       <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            <img src={logo} alt="college" className="h-14 w-14 rounded-full object-cover shrink-0" />
+            <img
+              src={logo}
+              alt="college"
+              className="h-14 w-14 rounded-full object-cover shrink-0"
+            />
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
                 Leave Desk
@@ -267,7 +289,8 @@ const Leave = () => {
                 Welcome, {localStorage.getItem("teachername") || "Teacher"}
               </h1>
               <p className="mt-1 text-sm text-slate-500">
-                Apply for EL, CL, ML, OD, Winter, Summer, comp off leave, or comp off credit.
+                Apply for EL, CL, ML, OD, Winter, Summer, comp off leave, or
+                comp off credit.
               </p>
             </div>
           </div>
@@ -286,11 +309,19 @@ const Leave = () => {
                 </span>
               </div>
             </div>
-            <Button variant="outline" onClick={() => navigate("/teacherdashboard")} className="w-full sm:w-auto">Back to Dashboard</Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/teacherdashboard")}
+              className="w-full sm:w-auto"
+            >
+              Back to Dashboard
+            </Button>
             <Button
               onClick={() => window.location.reload()}
               className="w-full sm:w-auto gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-            >Refresh</Button>
+            >
+              Refresh
+            </Button>
           </div>
         </div>
       </div>
@@ -402,15 +433,30 @@ const Leave = () => {
             )}
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
-            <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
-              Submit Leave
+            <button
+              disabled={isSubmit}
+              type="submit"
+              className={`${isSubmit ? "bg-green-600," : "bg-blue-600"}  ${
+                isSubmit
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              } rounded-lg px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700`}
+            >
+              {isSubmit ? "Submitting..." : "Submit Leave"}
             </button>
             <button
               type="button"
+              disabled={isCompoffRequested}
               onClick={submitCompoffCredit}
-              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+              className={`
+                ${isCompoffRequested ? "bg-green-600," : "bg-slate-900"}  ${
+                isCompoffRequested
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-slate-900 hover:bg-slate-800"
+              }
+                rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800`}
             >
-              Request Comp Off Credit
+             { isCompoffRequested ? "Comp Off Credit Requested" : "Request Comp Off Credit" }
             </button>
           </div>
         </form>
@@ -420,7 +466,9 @@ const Leave = () => {
             <h2 className="text-lg font-semibold text-slate-900">
               Current Requests
             </h2>
-            {loading && <span className="text-sm text-slate-500">Loading...</span>}
+            {loading && (
+              <span className="text-sm text-slate-500">Loading...</span>
+            )}
           </div>
           <div className="space-y-3">
             {requests.slice(0, 5).map((request) => (
@@ -431,10 +479,12 @@ const Leave = () => {
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="font-semibold text-slate-900">
-                      {leaveTypeLabel(request.leaveType)} - {request.days} day(s)
+                      {leaveTypeLabel(request.leaveType)} - {request.days}{" "}
+                      day(s)
                     </p>
                     <p className="text-sm text-slate-500">
-                      {formatDate(request.fromDate)} to {formatDate(request.toDate)}
+                      {formatDate(request.fromDate)} to{" "}
+                      {formatDate(request.toDate)}
                     </p>
                     <p className="mt-1 text-sm text-slate-600">
                       {request.requestKind === "COMPOFF_CREDIT"
@@ -449,7 +499,9 @@ const Leave = () => {
                     {request.attachment?.data && (
                       <a
                         href={attachmentHref(request.attachment)}
-                        download={request.attachment.fileName || "leave-document"}
+                        download={
+                          request.attachment.fileName || "leave-document"
+                        }
                         className="mt-2 inline-flex text-sm font-semibold text-blue-700 hover:text-blue-800"
                       >
                         View attachment
@@ -458,7 +510,8 @@ const Leave = () => {
                   </div>
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                      statusClass[request.status] || "bg-slate-100 text-slate-700"
+                      statusClass[request.status] ||
+                      "bg-slate-100 text-slate-700"
                     }`}
                   >
                     {request.status}
@@ -507,7 +560,8 @@ const Leave = () => {
                   <td className="p-3">
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        statusClass[request.status] || "bg-slate-100 text-slate-700"
+                        statusClass[request.status] ||
+                        "bg-slate-100 text-slate-700"
                       }`}
                     >
                       {request.status}
@@ -517,7 +571,9 @@ const Leave = () => {
                     {request.attachment?.data ? (
                       <a
                         href={attachmentHref(request.attachment)}
-                        download={request.attachment.fileName || "leave-document"}
+                        download={
+                          request.attachment.fileName || "leave-document"
+                        }
                         className="font-semibold text-blue-700 hover:text-blue-800"
                       >
                         View
