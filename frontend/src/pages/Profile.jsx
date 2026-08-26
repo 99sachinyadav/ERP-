@@ -32,6 +32,7 @@ function Profile() {
       // console.log(response.data.success);
       if (response.data.sucess) {
         setresponce(response.data.profile);
+        console.log(response.data.profile.attendance)
         setAttendance(response.data.profile.attendance);
         setSemester(response.data.profile.semester);
         setMarks(response.data.profile.marks || []);
@@ -473,6 +474,7 @@ function Profile() {
                     let totalnooflec = 0;
                     let noofattend = 0;
                     item?.subject?.forEach((element) => {
+                      // console.log(element.name, semester);
                       if (element.name.includes(semester)) {
                         totalnooflec += element.totalnoLec || 0;
                         noofattend += element.noofLecAttended || 0;

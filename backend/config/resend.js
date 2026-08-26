@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 const htmlPath = path.join(__dirname, "Resend.html");
  
 const resend = new Resend(process.env.RESEND_API_KEY);
-const backendUrl ='http://192.168.10.18:4000'|| process.env.BACKEND_URL || "https://erpbackend-pearl.vercel.app";
+const backendUrl =  'http://192.168.10.18:4000'|| process.env.BACKEND_URL||"https://erpbackend-pearl.vercel.app" ;
 
 const getSmtpTransporter = () => {
   return nodemailer.createTransport({
@@ -59,8 +59,8 @@ const rows = attendance.map(attend => {
     if(totalLec !== 0 && totalAttend !== 0){
         return `<tr>
             <td>${subjectName || "subject"}</td>
-            <td  >${ totalAttend || 0}</td>
-            <td>${ totalLec || 0}</td>
+            <td  >${ totalLec || 0}</td>
+            <td>${ totalAttend || 0}</td>
             <td>${subjectPercent || 0} %</td>
           </tr>`
     };
@@ -201,7 +201,7 @@ const sendEmailStudent = async (req, res) => {
           },
         }
       );
-      // console.log("my responce",responce.data);
+      console.log("my responce",responce.data);
      let students = [];
       let semester = "";
       if (responce.data.sucess) {
