@@ -475,7 +475,11 @@ function Profile() {
                     let noofattend = 0;
                     item?.subject?.forEach((element) => {
                       // console.log(element.name, semester);
-                      if (element.name.includes(semester)) {
+                      let subjectsemester = element.name.split('_')[0];
+                      // console.log(semester, subjectsemester);
+                      // console.log();
+                      // element.name.includes(semester)
+                      if (subjectsemester === semester) {
                         totalnooflec += element.totalnoLec || 0;
                         noofattend += element.noofLecAttended || 0;
                       }

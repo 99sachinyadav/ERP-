@@ -48,7 +48,10 @@ const rows = attendance.map(attend => {
   let subjectName = "";
   attend.subject &&
     attend.subject.forEach((subj) => {
-      if (subj.name.includes(semester)) {
+             let subjectsemester = subj.name.split('_')[0];
+      // subj.name.includes(semester)
+      // subjectsemester === semester
+      if (subjectsemester === semester) {
         totalAttend += subj.noofLecAttended || 0;
         totalLec += subj.totalnoLec || 0;
         subjectName = subj.name || "";
