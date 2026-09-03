@@ -62,19 +62,19 @@ const registerStudent = async (req, res) => {
       imageBase64 = image1.buffer.toString("base64");
     }
 
-    console.log(
-      name,
-      father_name,
-      email,
-      password,
-      rollno,
-      section,
-      year,
-      dob,
-      address,
-      semester,
-      imageBase64,
-    );
+    // console.log(
+    //   name,
+    //   father_name,
+    //   email,
+    //   password,
+    //   rollno,
+    //   section,
+    //   year,
+    //   dob,
+    //   address,
+    //   semester,
+    //   imageBase64,
+    // );
 
     // -----------------------------
     // VALIDATION – NO CHANGE

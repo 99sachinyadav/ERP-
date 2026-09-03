@@ -15,6 +15,7 @@ import MonitorSubjectFaculty from "../Components/MonitorSubjectFaculty";
 import RemoveSubject from "../Components/RemoveSubject";
 import ChangeTeacherpassword from "../Components/ChangeTeacherpassword";
 import ChangeStudentpassword from "../Components/ChangeStudentpassword";
+import ChangeStaffpassword from "../Components/ChangeStaffPassword";
 import { useNavigate } from "react-router-dom";
 import ChangeSemesterOrSection from "../Components/ChangeSemesterOrSection";
 import ChangeStudentSection from "../Components/ChangeStudentSection";
@@ -50,6 +51,7 @@ const Home = () => {
     { key: "AssignHOD", icon: "ri-user-star-line", label: "Assign HOD" },
     { key: "StaffRegister", icon: "ri-user-add-line", label: "Register Staff" },
     { key: "MonitorStaff", icon: "ri-bar-chart-box-line", label: "Monitor Staff" },
+    { key: "ChangeStaffpassword", icon: "ri-lock-password-line", label: "Change Staff Password" },
 
   ];
 
@@ -160,6 +162,7 @@ const Home = () => {
             {activeComponent === "MonitorSpecialStudents" && <SpecialStudentMonitor/>}
             {activeComponent === "AssignHOD" && <AssignHOD />}
             {activeComponent === "MonitorStaff" && <ShowStaff /> }
+            {activeComponent === "ChangeStaffpassword" && <ChangeStaffpassword />}
           </div>
         </main>
       </div>

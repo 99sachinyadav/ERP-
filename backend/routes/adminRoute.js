@@ -1,7 +1,7 @@
 import express  from 'express'   
 import { adminLogin, deanLogin, directorLogin, getAllTeacher } from "../controller/teacherconroller.js"
 import { adminAuth } from '../middelware/adminAuth.js';
-import { updateTeacherPassword, updateStudentPassword, assignHOD } from '../controller/admincontroller.js';
+import { updateTeacherPassword, updateStudentPassword, updateStaffPassword,assignHOD } from '../controller/admincontroller.js';
 import { changeSemesterorSection, changeStudentSection, removeSubjectFromSection } from '../controller/sectioncontroller.js';
  
 
@@ -15,6 +15,7 @@ adminRouter.post('/loginDirector',directorLogin);
 adminRouter.get('/getAllTeacher',adminAuth,getAllTeacher);
 adminRouter.put('/updateTeacherPassword',adminAuth, updateTeacherPassword);
 adminRouter.put('/updateStudentPassword',adminAuth, updateStudentPassword);
+adminRouter.put('/updateStaffPassword',adminAuth, updateStaffPassword);
 adminRouter.put('/updateSectionorSemester',adminAuth, changeSemesterorSection);
  
 adminRouter.put('/changeStudentSection',adminAuth,changeStudentSection)

@@ -1,6 +1,7 @@
 import { hashpasssword } from "./studentcontroller.js";
 import { Teacher } from "../model/teachermodel.js";
 import { Student } from "../model/studentmodel.js";
+import { Staff } from "../model/staffmodel.js";
 
 const updateTeacherPassword = async (req, res) => {
   try {
@@ -91,6 +92,44 @@ const updateStudentPassword = async (req, res) => {
   }
 };
 
+const updateStaffPassword = async (req,res)=>{
+     try {
+        const {email, newPassword} = req.body
+          if(!email || !newPassword){
+            return res.status(400).json({sucess:false, message:"email and new password are required"})
+          }
+           if (newPassword.length < 6) {
+      return res
+        .status(402)
+        .json({
+          susess: false,
+          message: "password must contain atleast 6 Characters",
+        });
+    }
+    // Find the staff member by email
+    const staff = await Staff.findOne({ email: email });
+    if (!staff) {
+      return res
+        .status(404)
+        .json({ sucess: false, message: "Staff member not found." });
+    }
+
+    // Update the password
+    staff.password = await hashpasssword(newPassword);
+    await staff.save();
+
+    return res
+      .status(200)
+      .json({ sucess: true, message: "Password updated successfully." });
+
+     } catch (error) {
+         console.error("Error updating Staff password:", error);
+    return res
+      .status(500)
+      .json({ sucess: false, message: "Internal server error." });
+     }
+}
+
 const assignHOD = async (req, res) => {
   try {
     const { teacheremail, department } = req.body;
@@ -149,4 +188,4 @@ const assignHOD = async (req, res) => {
   }
 };
 
-export { updateTeacherPassword, updateStudentPassword, assignHOD };
+export { updateTeacherPassword, updateStudentPassword, assignHOD ,updateStaffPassword};

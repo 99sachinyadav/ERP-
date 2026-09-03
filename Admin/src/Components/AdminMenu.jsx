@@ -78,6 +78,13 @@ const coreActions = [
     key: "StaffRegister",
     gradient: "from-sky-100 to-blue-100 border-sky-300",
   },
+    {
+    title: "Reset Staff Password",
+    description: "Reset staff login passwords.",
+    icon: "ri-lock-password-line",
+    key: "ChangeStaffpassword",
+    gradient: "from-slate-100 to-gray-200 border-slate-300",
+  },
 ];
 
 const controlActions = [
@@ -140,6 +147,7 @@ const controlActions = [
     key: "MonitorStaff",
     gradient: "from-cyan-100 to-sky-100 border-cyan-300",
   },
+ 
 ];
 
 const AdminMenu = ({ setActiveComponent, setIsOpen }) => {
