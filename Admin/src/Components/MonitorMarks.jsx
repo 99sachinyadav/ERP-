@@ -33,6 +33,14 @@ const formatTotal = ({ obtained, total }) => {
   return `${obtained}/${total}`;
 };
 
+const escapeHtml = (value) =>
+  String(value ?? "-")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
 const getAvailableMarkSemesters = (students, currentSemester) => {
   const semesters = new Set();
   if (currentSemester) semesters.add(currentSemester);
@@ -146,6 +154,83 @@ const MonitorMarks = () => {
     popupWindow.document.close();
     popupWindow.focus();
     popupWindow.print();
+  };
+
+  const printAllStudentsMarks = () => {
+    if (!students.length) return;
+    const popupWindow = window.open("", "_blank", "width=1100,height=800");
+    if (!popupWindow) return;
+
+    const rows = students
+      .map((student) => {
+        const totals = EXAMS.map((exam) =>
+          formatTotal(getExamTotals(student, exam, activeMarksSemester))
+        );
+
+        return `
+          <tr>
+            <td>${escapeHtml(student?.name)}</td>
+            <td>${escapeHtml(student?.father_name)}</td>
+            <td>${escapeHtml(student?.rollno)}</td>
+            ${totals.map((total) => `<td class="center">${escapeHtml(total)}</td>`).join("")}
+          </tr>
+        `;
+      })
+      .join("");
+
+    const html = `
+      <html>
+        <head>
+          <title>All Students Marks</title>
+          <style>
+            * { box-sizing: border-box; }
+            body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
+            h1 { font-size: 22px; margin: 0 0 8px; }
+            .meta { color: #555; font-size: 13px; margin-bottom: 16px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #cfd4dc; padding: 8px; font-size: 12px; text-align: left; }
+            th { background: #f3f4f6; font-weight: 700; }
+            tr:nth-child(even) { background: #f9fafb; }
+            .center { text-align: center; }
+            @media print {
+              body { padding: 12px; }
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>All Students Marks</h1>
+          <div class="meta">
+            Section: ${escapeHtml(section || "-")} |
+            Year: ${escapeHtml(year || "-")} |
+            Batch: ${escapeHtml(batch || "-")} |
+            Semester: ${escapeHtml(activeMarksSemester || "-")}
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Father's Name</th>
+                <th class="center">Roll No</th>
+                ${EXAMS.map((exam) => `<th class="center">${escapeHtml(exam)} Total</th>`).join("")}
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+          <script>
+            window.onload = function () {
+              window.focus();
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    popupWindow.document.write(html);
+    popupWindow.document.close();
   };
 
   const getStudent = async () => {
@@ -333,21 +418,30 @@ const MonitorMarks = () => {
           <p className="mt-2 text-sm text-slate-600">{searchMessage}</p>
         ) : null}
         {hasSearched && students.length > 0 ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <label className="text-sm font-semibold text-slate-700">
-              Marks Semester
-            </label>
-            <select
-              value={activeMarksSemester}
-              onChange={(e) => setSelectedMarksSemester(e.target.value)}
-              className="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="text-sm font-semibold text-slate-700">
+                Marks Semester
+              </label>
+              <select
+                value={activeMarksSemester}
+                onChange={(e) => setSelectedMarksSemester(e.target.value)}
+                className="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              >
+                {availableMarkSemesters.map((sem) => (
+                  <option key={sem} value={sem}>
+                    {sem}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={printAllStudentsMarks}
+              className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
             >
-              {availableMarkSemesters.map((sem) => (
-                <option key={sem} value={sem}>
-                  {sem}
-                </option>
-              ))}
-            </select>
+              <i className="ri-printer-line text-base"></i>
+              Print
+            </button>
           </div>
         ) : null}
       </div>

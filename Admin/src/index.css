@@ -127,3 +127,88 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+@media print {
+  @page {
+    size: A3 landscape;
+    margin: 8mm;
+  }
+
+  html,
+  body {
+    width: 100%;
+    height: auto;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  /* Hide everything that should not be printed */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Remove width restrictions from containers */
+  .table-print-wrapper {
+    width: 100% !important;
+    max-width: none !important;
+    overflow: visible !important;
+  }
+
+  .leave-print-table {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+
+    border-collapse: collapse !important;
+    table-layout: auto !important;
+
+    font-size: 9px !important;
+  }
+
+  .leave-print-table th,
+  .leave-print-table td {
+    padding: 4px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    vertical-align: top !important;
+  }
+
+  .leave-print-table th {
+    font-size: 9px !important;
+    font-weight: 700 !important;
+  }
+
+  /* Keep table rows together when possible */
+  .leave-print-table tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Repeat table header on every printed page */
+  .leave-print-table thead {
+    display: table-header-group !important;
+  }
+
+  .leave-print-table tbody {
+    display: table-row-group !important;
+  }
+
+  /* Don't print buttons/action controls */
+  .leave-print-table .no-print,
+  .leave-print-table button {
+    display: none !important;
+  }
+}

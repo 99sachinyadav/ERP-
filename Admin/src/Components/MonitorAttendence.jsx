@@ -42,6 +42,14 @@ const getDateRangeLabel = (startDate, endDate) => {
   return "All dates";
 };
 
+const escapeHtml = (value) =>
+  String(value ?? "-")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
 const matchesAttendanceFilter = (subject, semester, startDate, endDate) => {
   const subjectName = String(subject?.name || "");
   const matchesSemester = !semester || subjectName.startsWith(`${semester}_`);
@@ -196,6 +204,93 @@ const MonitorAttendence = () => {
     popupWindow.focus();
     popupWindow.print();
   };
+
+  const printAllStudentsAttendance = () => {
+    if (!students.length) return;
+    const popupWindow = window.open("", "_blank", "width=1100,height=800");
+    if (!popupWindow) return;
+
+    const rows = students
+      .map((student) => {
+        const { totalLec, totalAttend } = getStudentAttendanceSummary(
+          student,
+          activeAttendanceSemester,
+          attendanceStartDate,
+          attendanceEndDate
+        );
+        const attendancePercentage =
+          totalLec > 0 ? Number(((totalAttend / totalLec) * 100).toFixed(2)) : 0;
+        const attendanceLabel =
+          totalLec > 0 ? `${attendancePercentage.toFixed(2)}%` : "N/A";
+
+        return `
+          <tr class="${attendancePercentage < 75 && totalLec > 0 ? "low-attendance" : ""}">
+            <td>${escapeHtml(student?.name)}</td>
+            <td class="center">${escapeHtml(attendanceLabel)}</td>
+            <td>${escapeHtml(student?.father_name)}</td>
+            <td class="center">${escapeHtml(student?.rollno)}</td>
+          </tr>
+        `;
+      })
+      .join("");
+
+    const html = `
+      <html>
+        <head>
+          <title>All Students Attendance</title>
+          <style>
+            * { box-sizing: border-box; }
+            body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
+            h1 { font-size: 22px; margin: 0 0 8px; }
+            .meta { color: #555; font-size: 13px; margin-bottom: 16px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #cfd4dc; padding: 8px; font-size: 12px; text-align: left; }
+            th { background: #f3f4f6; font-weight: 700; }
+            tr:nth-child(even) { background: #f9fafb; }
+            .center { text-align: center; }
+            .low-attendance { background: #fca5a5 !important; }
+            @media print {
+              body { padding: 12px; }
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>All Students Attendance</h1>
+          <div class="meta">
+            Section: ${escapeHtml(section || "-")} |
+            Year: ${escapeHtml(year || "-")} |
+            Batch: ${escapeHtml(batch || "-")} |
+            Semester: ${escapeHtml(activeAttendanceSemester || "-")} |
+            Date Range: ${escapeHtml(getDateRangeLabel(attendanceStartDate, attendanceEndDate))}
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th class="center">Attendance</th>
+                <th>Father's Name</th>
+                <th class="center">Roll No</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+          <script>
+            window.onload = function () {
+              window.focus();
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    popupWindow.document.write(html);
+    popupWindow.document.close();
+  };
+
   const getStudent = async () => {
     setLoading(true);
     setErrorMessage("");
@@ -352,7 +447,8 @@ const MonitorAttendence = () => {
           <p className="mt-2 text-sm text-slate-600">{searchMessage}</p>
         ) : null}
         {hasSearched && students.length > 0 ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
             <div className="flex flex-col gap-1">
               <label className="text-sm font-semibold text-slate-700">
                 Attendance Semester
@@ -408,6 +504,14 @@ const MonitorAttendence = () => {
                 Showing data {getDateRangeLabel(attendanceStartDate, attendanceEndDate)}
               </span>
             ) : null}
+            </div>
+            <button
+              onClick={printAllStudentsAttendance}
+              className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+            >
+              <i className="ri-printer-line text-base"></i>
+              Print
+            </button>
           </div>
         ) : null}
       </div>

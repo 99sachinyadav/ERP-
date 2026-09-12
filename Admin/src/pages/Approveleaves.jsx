@@ -249,6 +249,14 @@ const Approveleaves = () => {
               Back to Dashboard
             </button>
             <button
+  type="button"
+  onClick={() => window.print()}
+  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+>
+  <i className="ri-printer-line"></i>
+  Print
+</button>
+            <button
               type="button"
               onClick={loadRequests}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
@@ -367,8 +375,8 @@ const Approveleaves = () => {
             {loading && <span className="text-sm text-slate-500">Loading...</span>}
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-sm">
+          <div className="overflow-x-auto table-print-wrapper">
+            <table className="w-full min-w-[900px] text-sm leave-print-table">
               <thead>
                 <tr className="border-b bg-slate-50 text-left text-slate-600">
                   <th className="p-3">Applicant</th>
