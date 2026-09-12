@@ -239,6 +239,7 @@ const MonitorMarks = () => {
     });
   };
 
+  // || subj.includes(name) || name.includes(subj) || subj.startsWith(name) || name.startsWith(subj);
   const findMarkFor = (student, exam, sem, subjectName) => {
     const marks = Array.isArray(student?.marks) ? student.marks : [];
     const exact = marks.find((m) => {
@@ -246,7 +247,7 @@ const MonitorMarks = () => {
       const sameSem = !sem || m?.semester === sem;
       const subj = String(m?.subject || "");
       const name = String(subjectName || "");
-      const sameSubj = subj === name || subj.includes(name) || name.includes(subj) || subj.startsWith(name) || name.startsWith(subj);
+      const sameSubj = subj === name ;
       return sameExam && sameSem && sameSubj;
     });
     return exact || null;
