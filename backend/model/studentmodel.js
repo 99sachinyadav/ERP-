@@ -80,6 +80,17 @@ const studentSchema = new mongoose.Schema(
         ],
       },
     ],
+    activityattendance:[
+      {
+        subject:[
+            {
+              name:{type:String,required:true},
+              noofLec:{ type: Number, required: true },
+              lastmodified:{type:Date,required:true}
+            }
+        ]
+      }
+    ],
     marks: [
       {
         exam: {

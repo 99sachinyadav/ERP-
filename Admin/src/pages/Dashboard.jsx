@@ -24,6 +24,8 @@ const [semester, setsemester] = useState('')
 const [isLoadingStudents, setIsLoadingStudents] = useState(false)
 const [isSavingAll, setIsSavingAll] = useState(false)
 const [savingRoll, setSavingRoll] = useState("")
+const [activityAttendance, setActivityAttendance] = useState({})
+const [savingActivityRoll, setSavingActivityRoll] = useState("")
     
   
 function formatDate(date) {
@@ -72,6 +74,38 @@ const buildAttendanceMaps = (studentsList, subjectName, dateValue) => {
   });
 
   return { totals, attended };
+};
+
+const getExistingActivityAttendance = (studentItem, subjectName) => {
+  const activityRecords = Array.isArray(studentItem?.activityattendance)
+    ? studentItem.activityattendance
+    : [];
+
+  for (const record of activityRecords) {
+    const subjectRecords = Array.isArray(record?.subject) ? record.subject : [];
+    const found = subjectRecords.find(
+      (entry) =>
+        String(entry?.name || "").toLowerCase() ===
+        String(subjectName || "").toLowerCase()
+    );
+    if (found) return found;
+  }
+
+  return null;
+};
+
+const buildActivityAttendanceMap = (studentsList, subjectName) => {
+  const activityMap = {};
+
+  (studentsList || []).forEach((item) => {
+    const existing = getExistingActivityAttendance(item, subjectName);
+    activityMap[item?.rollno] =
+      existing?.noofLec !== undefined && existing?.noofLec !== null
+        ? existing.noofLec
+        : "";
+  });
+
+  return activityMap;
 };
 
  const showStudents = async ()=>{
@@ -157,6 +191,11 @@ useEffect(() => {
   setApplyAllTotalLecture("");
   setApplyAllLectureAttended("");
 }, [selectedDate, singleSubject]);
+
+useEffect(() => {
+  if (!student || student.length === 0 || !singleSubject) return;
+  setActivityAttendance(buildActivityAttendanceMap(student, singleSubject));
+}, [student, singleSubject]);
 
 const markAllAttendance = async () => {
     if (!student || student.length === 0) {
@@ -266,6 +305,80 @@ const markAllAttendance = async () => {
         toast.error(error.response?.data?.message || "Failed to update attendance.");
     } finally {
         setSavingRoll("");
+    }
+ }
+
+ const saveActivityAttendance = async (roll) => {
+    const noofLec = activityAttendance[roll];
+
+    if (noofLec === undefined || noofLec === null || String(noofLec).trim() === "") {
+        toast.error("Please enter activity attendance for this student.");
+        return;
+    }
+
+    try {
+        setSavingActivityRoll(roll);
+        const response = await axios.post(
+            backendUrl + "/api/mark-or-update-activityattendance",
+            {
+                rollno: roll,
+                subject: singleSubject,
+                noofLec,
+                batch,
+                year,
+                section,
+                semester,
+            },
+            {
+                headers: {
+                    teachertoken: localStorage.getItem("teacherToken"),
+                },
+            }
+        );
+
+        if (response.data?.sucess) {
+            const savedActivity = response.data.activityattendance;
+
+            setstudent((previousStudents) =>
+                previousStudents.map((studentItem) => {
+                    if (studentItem?.rollno !== roll) return studentItem;
+
+                    let found = false;
+                    const existingRecords = Array.isArray(studentItem.activityattendance)
+                        ? studentItem.activityattendance
+                        : [];
+                    const nextRecords = existingRecords.map((record) => ({
+                        ...record,
+                        subject: (record.subject || []).map((entry) => {
+                            if (
+                                String(entry?.name || "").toLowerCase() ===
+                                String(singleSubject).toLowerCase()
+                            ) {
+                                found = true;
+                                return savedActivity;
+                            }
+                            return entry;
+                        }),
+                    }));
+
+                    if (!found) {
+                        nextRecords.push({ subject: [savedActivity] });
+                    }
+
+                    return {
+                        ...studentItem,
+                        activityattendance: nextRecords,
+                    };
+                })
+            );
+            toast.success(`Activity attendance saved for roll no ${roll}.`);
+        } else {
+            toast.error(response.data?.message || "Failed to save activity attendance.");
+        }
+    } catch (error) {
+        toast.error(error.response?.data?.message || "Failed to save activity attendance.");
+    } finally {
+        setSavingActivityRoll("");
     }
  }
 
@@ -382,18 +495,20 @@ return (
                         className="border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
                 </div>
-                <div className="hidden sm:grid grid-cols-5 gap-4 pb-2 border-b">
+                <div className="hidden sm:grid grid-cols-7 gap-4 pb-2 border-b">
                     <span className="text-sm font-semibold text-gray-600">Student ID</span>
                     <span className="text-sm font-semibold text-gray-600">Name</span>
                     <span className="text-sm font-semibold text-gray-600">Total Lecture</span>
                     <span className="text-sm font-semibold text-gray-600">Lecture Attended</span>
                     <span className="text-sm font-semibold text-gray-600">Action</span>
+                    <span className="text-sm font-semibold text-gray-600">Activity Attendance</span>
+                    <span className="text-sm font-semibold text-gray-600">Activity Action</span>
                 </div>
                 <div className="flex flex-col gap-2 mt-2">
                     {student && student.map((item, index) => (
                         <div
                             key={index}
-                            className="grid grid-cols-1 sm:grid-cols-5 gap-2 sm:gap-4 items-center border-b last:border-b-0 py-2"
+                            className="grid grid-cols-1 sm:grid-cols-7 gap-2 sm:gap-4 items-center border-b last:border-b-0 py-2"
                         >
                             <span className="text-sm text-gray-500">{item?.rollno}</span>
                             <span className="text-sm text-gray-500">{item?.name}</span>
@@ -429,6 +544,26 @@ return (
                                 className="bg-indigo-600 text-white text-sm font-semibold px-3 py-2 rounded-lg shadow hover:bg-indigo-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 {savingRoll === item?.rollno ? "Saving..." : "Update"}
+                            </button>
+                            <input
+                                type="number"
+                                min="0"
+                                value={activityAttendance[item?.rollno] ?? ""}
+                                onChange={(e) =>
+                                    setActivityAttendance((previous) => ({
+                                        ...previous,
+                                        [item?.rollno]: e.target.value,
+                                    }))
+                                }
+                                placeholder="Activity attendance"
+                                className="border rounded-lg px-2 py-1 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                            />
+                            <button
+                                onClick={() => saveActivityAttendance(item?.rollno)}
+                                disabled={savingActivityRoll === item?.rollno}
+                                className="bg-emerald-600 text-white text-sm font-semibold px-3 py-2 rounded-lg shadow hover:bg-emerald-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                {savingActivityRoll === item?.rollno ? "Saving..." : "Save Activity"}
                             </button>
                         </div>
                     ))}

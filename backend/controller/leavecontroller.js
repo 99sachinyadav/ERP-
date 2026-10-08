@@ -1164,13 +1164,45 @@ const requestLeaveRollback = async (req, res) => {
 // pass
 const getLeaveRecords = async (req, res) => {
   try {
-    const { status, department, leaveType, requestKind, search } = req.query;
+    const {
+      status,
+      department,
+      leaveType,
+      requestKind,
+      search,
+      fromDate,
+      toDate,
+    } = req.query;
     const filters = {};
 
     if (status && status !== "ALL") filters.status = status;
     if (department && department !== "ALL") filters.department = department;
     if (leaveType && leaveType !== "ALL") filters.leaveType = leaveType;
     if (requestKind && requestKind !== "ALL") filters.requestKind = requestKind;
+
+    const rangeStart = fromDate ? new Date(`${fromDate}T00:00:00.000Z`) : null;
+    const rangeEnd = toDate ? new Date(`${toDate}T23:59:59.999Z`) : null;
+
+    if (
+      (rangeStart && Number.isNaN(rangeStart.getTime())) ||
+      (rangeEnd && Number.isNaN(rangeEnd.getTime()))
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide valid leave dates",
+      });
+    }
+
+    if (rangeStart && rangeEnd && rangeStart > rangeEnd) {
+      return res.status(400).json({
+        success: false,
+        message: "From date cannot be after to date",
+      });
+    }
+
+    // A leave belongs in the results only when its full duration is within the selected range.
+    if (rangeStart) filters.fromDate = { $gte: rangeStart };
+    if (rangeEnd) filters.toDate = { $lte: rangeEnd };
 
     const leaveRequests = await LeaveRequest.find(filters)
       .populate("teacher", "name email")
@@ -1197,9 +1229,22 @@ const getLeaveRecords = async (req, res) => {
         })
       : leaveRequests;
 
+    const sortedRequests =
+      fromDate || toDate
+        ? [...filteredRequests].sort((first, second) => {
+            const firstName =
+              first.teacher?.name || first.staff?.name || "";
+            const secondName =
+              second.teacher?.name || second.staff?.name || "";
+            return firstName.localeCompare(secondName, undefined, {
+              sensitivity: "base",
+            });
+          })
+        : filteredRequests;
+
     return res.status(200).json({
       success: true,
-      leaveRequests: filteredRequests,
+      leaveRequests: sortedRequests,
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

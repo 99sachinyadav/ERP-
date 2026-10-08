@@ -41,6 +41,14 @@ const actions = [
     border: "border-sky-200",
     text: "text-sky-800",
   },
+  {
+    label: "Course Progress",
+    path: "/courseProgress",
+    icon: "ri-book-open-line",
+    gradient: "from-blue-100 to-cyan-100",
+    border: "border-blue-200",
+    text: "text-blue-800",
+  },
 ];
 
 const TeacherActionButtons = () => {
@@ -50,7 +58,7 @@ const TeacherActionButtons = () => {
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {actions.map((action) => {
           const isActive = current === action.path;
           return (

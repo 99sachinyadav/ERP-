@@ -466,6 +466,7 @@ function Profile() {
                     <th className="py-3 px-4 text-left text-md lg:text-xl font-semibold">Subject</th>
                     <th className="py-3 px-4 text-center text-md lg:text-xl font-semibold">Total Lectures</th>
                     <th className="py-3 px-4 text-center text-md lg:text-xl font-semibold">Lectures Attended</th>
+                    <th className="py-3 px-4 text-center text-md lg:text-xl font-semibold">Activity Attendance</th>
                     <th className="py-3 px-4 text-center text-md lg:text-xl font-semibold">Status</th>
                   </tr>
                 </thead>
@@ -473,6 +474,7 @@ function Profile() {
                   {Attendance?.map((item, idx) => {
                     let totalnooflec = 0;
                     let noofattend = 0;
+                    let subjectName = "";
                     item?.subject?.forEach((element) => {
                       // console.log(element.name, semester);
                       let subjectsemester = element.name.split('_')[0];
@@ -480,19 +482,31 @@ function Profile() {
                       // console.log();
                       // element.name.includes(semester)
                       if (subjectsemester === semester) {
-                        totalnooflec += element.totalnoLec || 0;
-                        noofattend += element.noofLecAttended || 0;
+                        subjectName = element.name;
+                        totalnooflec += Number(element.totalnoLec || 0);
+                        noofattend += Number(element.noofLecAttended || 0);
                       }
                     });
-                    const insight = getAttendanceInsight(totalnooflec, noofattend);
-                    return totalnooflec !== 0 && noofattend !== 0 ? (
+
+                    const activityAttendance = (response?.activityattendance || [])
+                      .flatMap((record) => record?.subject || [])
+                      .filter((activity) => activity?.name === subjectName)
+                      .reduce(
+                        (total, activity) => total + Number(activity?.noofLec || 0),
+                        0
+                      );
+                    const totalAttended = noofattend + activityAttendance;
+                    const insight = getAttendanceInsight(totalnooflec, totalAttended);
+
+                    return subjectName && (totalnooflec !== 0 || activityAttendance !== 0) ? (
                       <tr
                         key={idx}
                         className={`border-t ${insight.isLow ? "bg-red-100" : "bg-white"} hover:bg-blue-50`}
                       >
-                        <td className="py-2 px-4 text-md lg:text-lg font-medium">{item?.subject?.[0]?.name}</td>
+                        <td className="py-2 px-4 text-md lg:text-lg font-medium">{subjectName}</td>
                         <td className="py-2 px-4 text-md lg:text-lg text-center">{totalnooflec}</td>
                         <td className="py-2 px-4 text-md lg:text-lg text-center">{noofattend}</td>
+                        <td className="py-2 px-4 text-md lg:text-lg text-center">{activityAttendance}</td>
                         <td className="py-2 px-4 text-sm text-center">
                           <span
                             className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${

@@ -72,88 +72,590 @@ const MonitorMarks = () => {
     localStorage.getItem("deanToken") ||
     localStorage.getItem("directorToken");
 
+  const availableMarkSemesters = getAvailableMarkSemesters(students, semester);
+  const activeMarksSemester = selectedMarksSemester || semester;
+
+  const getSubjectsToShow = (student) => {
+    const all =
+      sectionSubjects && sectionSubjects.length > 0
+        ? sectionSubjects
+        : student?.subjects || [];
+    return all.filter((s) => {
+      if (!s) return false;
+      if (!activeMarksSemester) return true;
+      return (
+        String(s).startsWith(`${activeMarksSemester}_`) ||
+        String(s).startsWith(activeMarksSemester)
+      );
+    });
+  };
+
+  const findMarkFor = (student, exam, sem, subjectName) => {
+    const marks = Array.isArray(student?.marks) ? student.marks : [];
+    const exact = marks.find((m) => {
+      const sameExam =
+        String(m?.exam || "").toUpperCase() === String(exam || "").toUpperCase();
+      const sameSem = !sem || m?.semester === sem;
+      const subj = String(m?.subject || "").trim();
+      const name = String(subjectName || "").trim();
+      return sameExam && sameSem && subj === name;
+    });
+    return exact || null;
+  };
+
+  const getAllSubjectsForStudent = (student, sem) => {
+    const subjectList = [];
+    const seen = new Set();
+
+    const allBase =
+      sectionSubjects && sectionSubjects.length > 0
+        ? sectionSubjects
+        : student?.subjects || [];
+    const filteredBase = allBase.filter((s) => {
+      if (!s) return false;
+      if (!sem) return true;
+      return (
+        String(s).startsWith(`${sem}_`) || String(s).startsWith(sem)
+      );
+    });
+
+    filteredBase.forEach((s) => {
+      const trimmed = String(s || "").trim();
+      if (trimmed && !seen.has(trimmed)) {
+        seen.add(trimmed);
+        subjectList.push(trimmed);
+      }
+    });
+
+    const marks = Array.isArray(student?.marks) ? student.marks : [];
+    marks.forEach((m) => {
+      if (!sem || m?.semester === sem) {
+        const subj = String(m?.subject || "").trim();
+        if (subj && !seen.has(subj)) {
+          seen.add(subj);
+          subjectList.push(subj);
+        }
+      }
+    });
+
+    return subjectList;
+  };
+
   const openMarksPopup = (student, exam) => {
     setPopupStudent(student);
     setSelectedExam(exam);
   };
 
-  const downloadMarksPdf = (student) => {
-    if (!student) return;
-    const popupWindow = window.open("", "_blank", "width=900,height=700");
-    if (!popupWindow) return;
+  const marksReportStyles = `
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      padding: 24px;
+      color: #1e293b;
+      background: #f8fafc;
+      font-size: 12px;
+      line-height: 1.4;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .no-print {
+      margin-bottom: 20px;
+      padding: 12px 16px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .no-print-actions { display: flex; gap: 8px; }
+    .btn {
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s ease;
+    }
+    .btn-primary { background: #059669; color: #ffffff; }
+    .btn-primary:hover { background: #047857; }
+    .btn-secondary { background: #e2e8f0; color: #334155; }
+    .btn-secondary:hover { background: #cbd5e1; }
+    .helper-text { font-size: 12px; color: #64748b; }
 
-    const marks = Array.isArray(student?.marks) ? student.marks : [];
-    const currentSemesterMarks = marks.filter(
-      (mark) => !activeMarksSemester || mark?.semester === activeMarksSemester
-    );
+    .report-header {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .report-title { text-align: center; margin-bottom: 14px; }
+    .report-title h1 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .report-title p { font-size: 12px; color: #64748b; margin-top: 2px; }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px 16px;
+      padding: 12px 16px;
+      background: #f1f5f9;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      font-size: 12px;
+    }
+    .meta-item { display: flex; gap: 6px; }
+    .meta-label { font-weight: 700; color: #475569; }
+    .meta-value { color: #0f172a; font-weight: 500; }
 
-    const renderExamTable = (exam) => {
-      const rows = currentSemesterMarks
-        .filter(
-          (mark) => String(mark?.exam || "").toUpperCase() === exam
-        )
-        .map((mark) => {
-          const obtained = Number(mark?.obtainedMarks || 0);
-          const total = Number(mark?.totalMarks || 0);
-          const percent = total ? ((obtained / total) * 100).toFixed(2) : "-";
-          return `
-            <tr>
-              <td>${mark?.subject || "-"}</td>
-              <td>${obtained}</td>
-              <td>${total}</td>
-              <td>${percent}${percent !== "-" ? "%" : ""}</td>
-            </tr>
-          `;
-        })
-        .join("");
+    .stats-bar {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .stat-pill {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .stat-total { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .stat-distinction { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .stat-first { background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; }
+    .stat-pass { background: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
+    .stat-low { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
 
-      return `
-        <h2>${exam} Marks</h2>
-        <table>
+    /* Student Card */
+    .student-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .student-card.card-low { border-color: #fca5a5; }
+    .student-card-header {
+      background: #f8fafc;
+      border-bottom: 1px solid #cbd5e1;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .student-card.card-low .student-card-header {
+      background: #fff5f5;
+      border-bottom-color: #fca5a5;
+    }
+    .student-main-info {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 12px;
+    }
+    .roll-badge {
+      background: #1e293b;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+    .student-name { font-size: 14px; font-weight: 700; color: #0f172a; }
+    .father-name { color: #475569; font-size: 12px; }
+    .father-name .label { font-weight: 600; color: #64748b; }
+
+    .student-marks-summary { display: flex; align-items: center; gap: 8px; }
+    .overall-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .badge-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .badge-neutral { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+    .marks-counts { font-size: 11px; font-weight: 500; opacity: 0.85; }
+    .marks-tag {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      font-weight: 700;
+      padding-left: 2px;
+    }
+
+    /* Marks Table */
+    .marks-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .marks-table th {
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 700;
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid #cbd5e1;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .marks-table td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #1e293b;
+    }
+    .marks-table tr:nth-child(even) td { background: #fcfcfd; }
+    .marks-table tr.row-sub-low td { background: #fef2f2; }
+    .marks-table tr:last-child td { border-bottom: none; }
+
+    .col-sn { width: 4%; text-align: center; color: #64748b; }
+    .col-sub { width: 34%; font-weight: 600; color: #0f172a; }
+    .col-exam { width: 15%; text-align: center; }
+    .col-total { width: 12%; text-align: center; }
+    .col-pct { width: 8%; text-align: center; font-weight: 600; }
+
+    .mark-val { font-weight: 600; }
+    .mark-pct { font-size: 10.5px; color: #64748b; margin-top: 1px; }
+
+    .marks-table tfoot td {
+      background: #f8fafc !important;
+      border-top: 2px solid #cbd5e1;
+      font-weight: 700;
+      padding: 9px 10px;
+      color: #0f172a;
+    }
+    .marks-table tfoot .total-label {
+      text-align: right;
+      padding-right: 14px;
+      text-transform: uppercase;
+      font-size: 11px;
+      color: #475569;
+    }
+
+    .text-danger { color: #dc2626 !important; }
+    .text-success { color: #16a34a !important; }
+    .text-primary { color: #2563eb !important; }
+    .text-muted { color: #94a3b8; }
+    .font-bold { font-weight: 700 !important; }
+    .font-semibold { font-weight: 600 !important; }
+
+    .empty-data {
+      text-align: center;
+      color: #64748b;
+      padding: 16px;
+      font-style: italic;
+    }
+
+    @media print {
+      body { background: #ffffff; padding: 0; color: #000000; }
+      .no-print { display: none !important; }
+      .report-header {
+        border: 1px solid #94a3b8;
+        margin-bottom: 14px;
+        padding: 12px 14px;
+        box-shadow: none;
+      }
+      .meta-grid { background: #f8fafc !important; border: 1px solid #cbd5e1; }
+      .student-card {
+        border: 1px solid #94a3b8;
+        margin-bottom: 16px;
+        box-shadow: none;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .student-card-header {
+        background: #f1f5f9 !important;
+        border-bottom: 1px solid #94a3b8;
+      }
+      .roll-badge { background: #0f172a !important; color: #ffffff !important; }
+      .marks-table th {
+        background: #f1f5f9 !important;
+        border-bottom: 1px solid #94a3b8;
+        color: #000000;
+      }
+      .marks-table tfoot td {
+        border-top: 2px solid #94a3b8;
+        background: #f8fafc !important;
+      }
+      @page {
+        size: A4 portrait;
+        margin: 10mm 8mm;
+      }
+    }
+  `;
+
+  const getStudentMarksTableData = (student) => {
+    const subjects = getAllSubjectsForStudent(student, activeMarksSemester);
+
+    let studentGrandObtained = 0;
+    let studentGrandMax = 0;
+
+    const subjectRows =
+      subjects.length > 0
+        ? subjects
+            .map((subj, idx) => {
+              let subjObt = 0;
+              let subjMax = 0;
+              let hasAnyMark = false;
+
+              const examCells = EXAMS.map((exam) => {
+                const mark = findMarkFor(
+                  student,
+                  exam,
+                  activeMarksSemester,
+                  subj
+                );
+                if (mark && Number(mark.totalMarks) > 0) {
+                  hasAnyMark = true;
+                  const obt = Number(mark.obtainedMarks || 0);
+                  const max = Number(mark.totalMarks || 0);
+                  subjObt += obt;
+                  subjMax += max;
+                  const pct = ((obt / max) * 100).toFixed(1);
+                  return `
+                    <td class="col-exam">
+                      <div class="mark-val">${obt} / ${max}</div>
+                      <div class="mark-pct">(${pct}%)</div>
+                    </td>
+                  `;
+                } else if (mark) {
+                  hasAnyMark = true;
+                  const obt = Number(mark.obtainedMarks || 0);
+                  subjObt += obt;
+                  return `
+                    <td class="col-exam">
+                      <div class="mark-val">${obt}</div>
+                    </td>
+                  `;
+                } else {
+                  return `<td class="col-exam text-muted">-</td>`;
+                }
+              }).join("");
+
+              const subjPct =
+                subjMax > 0
+                  ? Number(((subjObt / subjMax) * 100).toFixed(2))
+                  : null;
+              const isSubjLow = subjPct !== null && subjPct < 40;
+              const isSubjHigh = subjPct !== null && subjPct >= 75;
+
+              return `
+                <tr class="${isSubjLow ? "row-sub-low" : ""}">
+                  <td class="col-sn">${idx + 1}</td>
+                  <td class="col-sub">${escapeHtml(subj)}</td>
+                  ${examCells}
+                  <td class="col-total font-semibold">${
+                    hasAnyMark && subjMax > 0
+                      ? `${subjObt} / ${subjMax}`
+                      : hasAnyMark
+                      ? `${subjObt}`
+                      : "-"
+                  }</td>
+                  <td class="col-pct ${
+                    isSubjLow
+                      ? "text-danger font-bold"
+                      : isSubjHigh
+                      ? "text-success font-bold"
+                      : "font-semibold"
+                  }">
+                    ${subjPct !== null ? `${subjPct.toFixed(2)}%` : "-"}
+                  </td>
+                </tr>
+              `;
+            })
+            .join("")
+        : `<tr><td colspan="${
+            EXAMS.length + 4
+          }" class="empty-data">No subjects or marks available for this student.</td></tr>`;
+
+    // Exam Totals for student
+    const examFooterCells = EXAMS.map((exam) => {
+      const totals = getExamTotals(student, exam, activeMarksSemester);
+      studentGrandObtained += totals.obtained;
+      studentGrandMax += totals.total;
+      if (totals.total > 0) {
+        const pct = ((totals.obtained / totals.total) * 100).toFixed(1);
+        return `
+          <td class="col-exam font-bold">
+            <div class="mark-val">${totals.obtained} / ${totals.total}</div>
+            <div class="mark-pct">(${pct}%)</div>
+          </td>
+        `;
+      }
+      return `<td class="col-exam text-muted font-bold">-</td>`;
+    }).join("");
+
+    const grandPct =
+      studentGrandMax > 0
+        ? Number(((studentGrandObtained / studentGrandMax) * 100).toFixed(2))
+        : 0;
+    const grandPctStr =
+      studentGrandMax > 0 ? `${grandPct.toFixed(2)}%` : "N/A";
+    const isPass = grandPct >= 40;
+
+    const statusText =
+      studentGrandMax === 0
+        ? "No Marks"
+        : grandPct >= 75
+        ? "Distinction (&ge;75%)"
+        : grandPct >= 60
+        ? "First Div (&ge;60%)"
+        : grandPct >= 40
+        ? "Pass (&ge;40%)"
+        : "Needs Improvement (<40%)";
+
+    const badgeClass =
+      studentGrandMax === 0
+        ? "badge-neutral"
+        : isPass
+        ? "badge-success"
+        : "badge-danger";
+
+    const cardHtml = `
+      <div class="student-card ${studentGrandMax > 0 && !isPass ? "card-low" : ""}">
+        <div class="student-card-header">
+          <div class="student-main-info">
+            <span class="roll-badge">Roll: ${escapeHtml(student?.rollno || "-")}</span>
+            <span class="student-name">${escapeHtml(student?.name || "-")}</span>
+            <span class="father-name"><span class="label">Father's Name:</span> ${escapeHtml(student?.father_name || "-")}</span>
+          </div>
+          <div class="student-marks-summary">
+            <span class="overall-pill ${badgeClass}">
+              Overall: <strong>${escapeHtml(grandPctStr)}</strong>
+              ${studentGrandMax > 0 ? `<span class="marks-counts">(${studentGrandObtained}/${studentGrandMax})</span>` : ""}
+              <span class="marks-tag">${statusText}</span>
+            </span>
+          </div>
+        </div>
+        <table class="marks-table">
           <thead>
             <tr>
-              <th>Subject</th>
-              <th>Obtained</th>
-              <th>Total</th>
-              <th>%</th>
+              <th class="col-sn">#</th>
+              <th class="col-sub">Subject Name</th>
+              ${EXAMS.map((exam) => `<th class="col-exam">${escapeHtml(exam)} (Obt / Max)</th>`).join("")}
+              <th class="col-total">Total Marks</th>
+              <th class="col-pct">Percentage</th>
             </tr>
           </thead>
           <tbody>
-            ${rows || "<tr><td colspan='4'>No marks data available.</td></tr>"}
+            ${subjectRows}
           </tbody>
+          ${
+            subjects.length > 0
+              ? `
+            <tfoot>
+              <tr class="student-total-row">
+                <td colspan="2" class="total-label">Aggregate / Total</td>
+                ${examFooterCells}
+                <td class="col-total font-bold">${studentGrandMax > 0 ? `${studentGrandObtained} / ${studentGrandMax}` : "-"}</td>
+                <td class="col-pct font-bold ${studentGrandMax > 0 && !isPass ? "text-danger" : "text-success"}">${escapeHtml(grandPctStr)}</td>
+              </tr>
+            </tfoot>
+          `
+              : ""
+          }
         </table>
-      `;
+      </div>
+    `;
+
+    return {
+      cardHtml,
+      grandObtained: studentGrandObtained,
+      grandMax: studentGrandMax,
+      grandPct,
+      grandPctStr,
+      isPass,
+      subjectCount: subjects.length,
     };
+  };
+
+  const downloadMarksPdf = (student) => {
+    if (!student) return;
+    const popupWindow = window.open("", "_blank", "width=950,height=750");
+    if (!popupWindow) return;
+
+    const studentMarksData = getStudentMarksTableData(student);
+    const printDate = new Date().toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
     const html = `
+      <!DOCTYPE html>
       <html>
         <head>
-          <title>Marks Report</title>
+          <meta charset="utf-8" />
+          <title>Marks Report - ${escapeHtml(student.name || "Student")}</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
-            h1 { font-size: 20px; margin-bottom: 8px; }
-            h2 { font-size: 16px; margin-top: 16px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-            th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; text-align: left; }
-            th { background: #f5f5f5; }
-            .meta { font-size: 12px; color: #555; }
+            ${marksReportStyles}
           </style>
         </head>
         <body>
-          <h1>Marks Report</h1>
-          <div class="meta">Name: ${student.name || "-"} | Roll No: ${student.rollno || "-"}</div>
-          <div class="meta">Father's Name: ${student.father_name || "-"}</div>
-          <div class="meta">Semester: ${activeMarksSemester || "-"}</div>
-          ${renderExamTable("ST1")}
-          ${renderExamTable("ST2")}
-          ${renderExamTable("PUT")}
+          <div class="no-print">
+            <span class="helper-text">
+              Tip: Click "Print Report" to print or save as PDF. Background graphics enabled is recommended.
+            </span>
+            <div class="no-print-actions">
+              <button class="btn btn-primary" onclick="window.print()">Print Report</button>
+              <button class="btn btn-secondary" onclick="window.close()">Close</button>
+            </div>
+          </div>
+
+          <div class="report-header">
+            <div class="report-title">
+              <h1>Student Marks Report</h1>
+              <p>Subject-wise Comprehensive Marks Card</p>
+            </div>
+            <div class="meta-grid">
+              <div class="meta-item"><span class="meta-label">Name:</span><span class="meta-value">${escapeHtml(student?.name || "-")}</span></div>
+              <div class="meta-item"><span class="meta-label">Roll No:</span><span class="meta-value">${escapeHtml(student?.rollno || "-")}</span></div>
+              <div class="meta-item"><span class="meta-label">Father's Name:</span><span class="meta-value">${escapeHtml(student?.father_name || "-")}</span></div>
+              <div class="meta-item"><span class="meta-label">Section:</span><span class="meta-value">${escapeHtml(section || "-")}</span></div>
+              <div class="meta-item"><span class="meta-label">Semester:</span><span class="meta-value">${escapeHtml(activeMarksSemester || "-")}</span></div>
+              <div class="meta-item"><span class="meta-label">Report Date:</span><span class="meta-value">${escapeHtml(printDate)}</span></div>
+            </div>
+          </div>
+
+          ${studentMarksData.cardHtml}
+
+          <script>
+            window.onload = function () {
+              window.focus();
+              window.print();
+            };
+          </script>
         </body>
       </html>
     `;
+
     popupWindow.document.write(html);
     popupWindow.document.close();
-    popupWindow.focus();
-    popupWindow.print();
   };
 
   const printAllStudentsMarks = () => {
@@ -161,64 +663,80 @@ const MonitorMarks = () => {
     const popupWindow = window.open("", "_blank", "width=1100,height=800");
     if (!popupWindow) return;
 
-    const rows = students
-      .map((student) => {
-        const totals = EXAMS.map((exam) =>
-          formatTotal(getExamTotals(student, exam, activeMarksSemester))
-        );
+    let totalStudentsCount = students.length;
+    let distinctionCount = 0;
+    let firstDivCount = 0;
+    let passCount = 0;
+    let needsImproveCount = 0;
 
-        return `
-          <tr>
-            <td>${escapeHtml(student?.name)}</td>
-            <td>${escapeHtml(student?.father_name)}</td>
-            <td>${escapeHtml(student?.rollno)}</td>
-            ${totals.map((total) => `<td class="center">${escapeHtml(total)}</td>`).join("")}
-          </tr>
-        `;
+    const studentCards = students
+      .map((student) => {
+        const studentMarksData = getStudentMarksTableData(student);
+        const { grandMax, grandPct } = studentMarksData;
+
+        if (grandMax > 0) {
+          if (grandPct >= 75) distinctionCount++;
+          else if (grandPct >= 60) firstDivCount++;
+          else if (grandPct >= 40) passCount++;
+          else needsImproveCount++;
+        }
+
+        return studentMarksData.cardHtml;
       })
       .join("");
 
+    const printDate = new Date().toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
     const html = `
+      <!DOCTYPE html>
       <html>
         <head>
-          <title>All Students Marks</title>
+          <meta charset="utf-8" />
+          <title>All Students Marks Report</title>
           <style>
-            * { box-sizing: border-box; }
-            body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
-            h1 { font-size: 22px; margin: 0 0 8px; }
-            .meta { color: #555; font-size: 13px; margin-bottom: 16px; }
-            table { width: 100%; border-collapse: collapse; }
-            th, td { border: 1px solid #cfd4dc; padding: 8px; font-size: 12px; text-align: left; }
-            th { background: #f3f4f6; font-weight: 700; }
-            tr:nth-child(even) { background: #f9fafb; }
-            .center { text-align: center; }
-            @media print {
-              body { padding: 12px; }
-              button { display: none; }
-            }
+            ${marksReportStyles}
           </style>
         </head>
         <body>
-          <h1>All Students Marks</h1>
-          <div class="meta">
-            Section: ${escapeHtml(section || "-")} |
-            Year: ${escapeHtml(year || "-")} |
-            Batch: ${escapeHtml(batch || "-")} |
-            Semester: ${escapeHtml(activeMarksSemester || "-")}
+          <div class="no-print">
+            <span class="helper-text">
+              Tip: Click "Print Report" to print or save as PDF. Background graphics enabled is recommended.
+            </span>
+            <div class="no-print-actions">
+              <button class="btn btn-primary" onclick="window.print()">Print Report</button>
+              <button class="btn btn-secondary" onclick="window.close()">Close</button>
+            </div>
           </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Father's Name</th>
-                <th class="center">Roll No</th>
-                ${EXAMS.map((exam) => `<th class="center">${escapeHtml(exam)} Total</th>`).join("")}
-              </tr>
-            </thead>
-            <tbody>
-              ${rows}
-            </tbody>
-          </table>
+
+          <div class="report-header">
+            <div class="report-title">
+              <h1>Students Marks Report</h1>
+              <p>Subject-wise Detailed Class Marks & Performance Record</p>
+            </div>
+            <div class="meta-grid">
+              <div class="meta-item"><span class="meta-label">Section:</span><span class="meta-value">${escapeHtml(section || "-")}</span></div>
+              <div class="meta-item"><span class="meta-label">Year:</span><span class="meta-value">${escapeHtml(year || "-")}</span></div>
+              <div class="meta-item"><span class="meta-label">Batch:</span><span class="meta-value">${escapeHtml(batch || "-")}</span></div>
+              <div class="meta-item"><span class="meta-label">Semester:</span><span class="meta-value">${escapeHtml(activeMarksSemester || "-")}</span></div>
+              <div class="meta-item"><span class="meta-label">Report Date:</span><span class="meta-value">${escapeHtml(printDate)}</span></div>
+            </div>
+            <div class="stats-bar">
+              <span class="stat-pill stat-total">Total Students: ${totalStudentsCount}</span>
+              <span class="stat-pill stat-distinction">Distinction (&ge;75%): ${distinctionCount}</span>
+              <span class="stat-pill stat-first">1st Div (60-74%): ${firstDivCount}</span>
+              <span class="stat-pill stat-pass">Pass (40-59%): ${passCount}</span>
+              <span class="stat-pill stat-low">Needs Attention (&lt;40%): ${needsImproveCount}</span>
+            </div>
+          </div>
+
+          ${studentCards}
+
           <script>
             window.onload = function () {
               window.focus();
@@ -300,9 +818,6 @@ const MonitorMarks = () => {
     setSearchMessage("");
     setPopupStudent(null);
   };
-  const availableMarkSemesters = getAvailableMarkSemesters(students, semester);
-  const activeMarksSemester = selectedMarksSemester || semester;
-
   const popupMarks = popupStudent
     ? selectedExam === "ALL"
       ? (popupStudent.marks || []).filter(
@@ -313,30 +828,6 @@ const MonitorMarks = () => {
   const popupTotals = popupStudent
     ? getExamTotals(popupStudent, selectedExam, activeMarksSemester)
     : { obtained: 0, total: 0 };
-
-  const getSubjectsToShow = (student) => {
-    const all = sectionSubjects && sectionSubjects.length > 0 ? sectionSubjects : student?.subjects || [];
-    // Filter by active semester prefix if needed
-    return all.filter((s) => {
-      if (!s) return false;
-      if (!activeMarksSemester) return true;
-      return String(s).startsWith(`${activeMarksSemester}_`) || String(s).startsWith(activeMarksSemester);
-    });
-  };
-
-  // || subj.includes(name) || name.includes(subj) || subj.startsWith(name) || name.startsWith(subj);
-  const findMarkFor = (student, exam, sem, subjectName) => {
-    const marks = Array.isArray(student?.marks) ? student.marks : [];
-    const exact = marks.find((m) => {
-      const sameExam = String(m?.exam || "").toUpperCase() === String(exam || "").toUpperCase();
-      const sameSem = !sem || m?.semester === sem;
-      const subj = String(m?.subject || "");
-      const name = String(subjectName || "");
-      const sameSubj = subj === name ;
-      return sameExam && sameSem && sameSubj;
-    });
-    return exact || null;
-  };
 
   const navigate = useNavigate();
   return (

@@ -18,6 +18,8 @@ const emptyFilters = {
   leaveType: "ALL",
   requestKind: "ALL",
   search: "",
+  fromDate: "",
+  toDate: "",
 };
 
 const departments = ["ALL","AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR"];
@@ -319,7 +321,7 @@ const Approveleaves = () => {
               <h2 className="text-lg font-semibold text-slate-900">
                 Leave Records
               </h2>
-              <div className="mt-3 grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 w-full">
+              <div className="mt-3 grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 w-full">
                 <select
                   value={filters.status}
                   onChange={(event) => updateFilter("status", event.target.value)}
@@ -368,6 +370,22 @@ const Approveleaves = () => {
                   value={filters.search}
                   onChange={(event) => updateFilter("search", event.target.value)}
                   placeholder="Search applicant"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+                <input
+                  type="date"
+                  value={filters.fromDate}
+                  max={filters.toDate || undefined}
+                  onChange={(event) => updateFilter("fromDate", event.target.value)}
+                  aria-label="Leave from date"
+                  className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+                <input
+                  type="date"
+                  value={filters.toDate}
+                  min={filters.fromDate || undefined}
+                  onChange={(event) => updateFilter("toDate", event.target.value)}
+                  aria-label="Leave to date"
                   className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
                 />
               </div>

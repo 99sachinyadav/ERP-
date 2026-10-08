@@ -27,6 +27,9 @@ import Approveleaves from "./pages/Approveleaves";
 import HODLeavePanel from "./Components/HODLeavePanel";
 import AssignLeaves from "./pages/AssignLeaves";
 import StaffRegister from "./pages/StaffRegister";
+import CourseProgress from "./pages/CourseProgress";
+import TrackCourseProgress from "./pages/TrackCourseProgress";
+
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -207,11 +210,20 @@ function App() {
             </RoleProtect>
           }
         />
+
         <Route
           path="/director/assign-special-leave-staff"
           element={
             <RoleProtect tokenKey="directorToken" redirectTo="/directorlogin">
              <AssignLeaves target="staff" mode="special" />
+            </RoleProtect>
+          }
+        />
+        <Route
+          path="/director/courseProgress"
+          element={
+            <RoleProtect tokenKey="directorToken" redirectTo="/directorlogin">
+             <TrackCourseProgress/>
             </RoleProtect>
           }
         />
@@ -244,6 +256,14 @@ function App() {
           element={
             <TeacherProTect>
               <MarksDashboard />
+            </TeacherProTect>
+          }
+        />
+        <Route
+          path="/courseProgress"
+          element={
+            <TeacherProTect>
+              <CourseProgress />
             </TeacherProTect>
           }
         />

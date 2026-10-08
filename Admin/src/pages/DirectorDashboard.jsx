@@ -104,6 +104,12 @@ const DirectorDashboard = () => {
               >
                 Manage Leaves
               </Link>
+              <Link
+                to="/director/courseProgress"
+                className="inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700"
+              >
+                Track Course Progress
+              </Link>
             </div>
 
             {/* Structured Leave Allocations Area */}

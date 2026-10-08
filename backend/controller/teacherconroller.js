@@ -4,6 +4,7 @@ import { Staff } from "../model/staffmodel.js";
 import { generateToken, hashpasssword } from "./studentcontroller.js";
 
 import { Student } from "../model/studentmodel.js";
+import { CourseProgress } from "../model/courseprogressmodel.js";
  import bcrypt from "bcryptjs";
 
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -772,6 +773,340 @@ const   getStaff = async (req,res)=>{
   }
 
 }
+
+
+
+
+
+const mark_or_updateactivityattendence = async (req,res)=>{
+  try {
+    const {
+      subject,
+      rollno,
+      noofLec,
+      noofLecAttended,
+      teacherId,
+      year,
+      batch,
+      semester,
+    } = req.body;
+    const section = String(req.body.section || "").toUpperCase().trim();
+    const lectureCount = Number(noofLec ?? noofLecAttended);
+
+    if (
+      !subject ||
+      !rollno ||
+      !teacherId ||
+      !section ||
+      !year ||
+      !batch ||
+      !semester ||
+      (noofLec === undefined && noofLecAttended === undefined)
+    ) {
+      return res
+        .status(400)
+        .json({ sucess: false, message: "Please fill all required details" });
+    }
+
+    if (!Number.isInteger(lectureCount) || lectureCount < 0) {
+      return res.status(400).json({
+        sucess: false,
+        message: "Number of attended lectures must be a non-negative whole number",
+      });
+    }
+
+    const normalizedSubject = String(subject).trim();
+    const normalizedYear = String(year).trim();
+    const normalizedBatch = String(batch).trim();
+    const sectionName = `${section}${normalizedYear}_${normalizedBatch}`;
+    const assignedSubjectKey = `${normalizedSubject}_${sectionName}`;
+
+    const [findStudent, findTeacherbyAuth] = await Promise.all([
+      Student.findOne({ rollno }),
+      Teacher.findById(teacherId),
+    ]);
+
+    if (!findStudent) {
+      return res
+        .status(404)
+        .json({ sucess: false, message: "Student not found" });
+    }
+
+    if (!findTeacherbyAuth) {
+      return res
+        .status(404)
+        .json({ sucess: false, message: "Teacher not found" });
+    }
+
+    if (!findTeacherbyAuth.subjects.includes(assignedSubjectKey)) {
+      return res.status(403).json({
+        sucess: false,
+        message: "Subject is not assigned to this teacher",
+      });
+    }
+
+    if (
+      findStudent.section.toUpperCase() !== section ||
+      String(findStudent.year) !== normalizedYear ||
+      String(findStudent.batch) !== normalizedBatch ||
+      String(findStudent.semester) !== String(semester)
+    ) {
+      return res.status(400).json({
+        sucess: false,
+        message: "Student does not belong to the selected section",
+      });
+    }
+
+    if (!findStudent.subjects.includes(normalizedSubject)) {
+      return res.status(400).json({
+        sucess: false,
+        message: "Subject is not assigned to this student",
+      });
+    }
+
+    let activityAttendance;
+    for (const record of findStudent.activityattendance) {
+      activityAttendance = record.subject.find(
+        (entry) =>
+          String(entry.name).toLowerCase() === normalizedSubject.toLowerCase()
+      );
+      if (activityAttendance) {
+        break;
+      }
+    }
+
+    if (activityAttendance) {
+      activityAttendance.name = normalizedSubject;
+      activityAttendance.noofLec = lectureCount;
+      activityAttendance.lastmodified = new Date();
+    } else {
+      findStudent.activityattendance.push({
+        subject: [
+          {
+            name: normalizedSubject,
+            noofLec: lectureCount,
+            lastmodified: new Date(),
+          },
+        ],
+      });
+      activityAttendance =
+        findStudent.activityattendance.at(-1).subject.at(-1);
+    }
+
+    await findStudent.save();
+
+    return res.status(200).json({
+      sucess: true,
+      message: "Activity attendance saved successfully",
+      activityattendance: activityAttendance,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ sucess: false, message: error.message });
+  }
+};
+
+const saveCourseProgress = async (req, res) => {
+  try {
+    const { year, section, batch, semester, subjects } = req.body;
+    const normalizedYear = String(year || "").trim();
+    const normalizedSection = String(section || "").trim().toUpperCase();
+    const normalizedBatch = String(batch || "").trim();
+    const normalizedSemester = String(semester || "").trim();
+
+    if (
+      !normalizedYear ||
+      !normalizedSection ||
+      !normalizedBatch ||
+      !normalizedSemester
+    ) {
+      return res.status(400).json({
+        sucess: false,
+        message: "Year, section, batch, and semester are required",
+      });
+    }
+
+    if (!Array.isArray(subjects) || subjects.length === 0) {
+      return res.status(400).json({
+        sucess: false,
+        message: "Add at least one subject before saving course progress",
+      });
+    }
+
+    const normalizedSubjects = subjects.map((subject) => ({
+      name: String(subject?.name || "").trim(),
+      code: String(subject?.code || "").trim().toUpperCase(),
+      chapters: (subject?.chapters || []).map((chapter) => ({
+        name: String(chapter?.name || "").trim(),
+        progress: Math.min(100, Math.max(0, Number(chapter?.progress) || 0)),
+      })),
+    }));
+
+    if (
+      normalizedSubjects.some(
+        (subject) =>
+          !subject.name ||
+          !subject.code ||
+          subject.chapters.some((chapter) => !chapter.name)
+      )
+    ) {
+      return res.status(400).json({
+        sucess: false,
+        message: "Every subject and chapter must have a name",
+      });
+    }
+
+    const courseProgress = await CourseProgress.findOneAndUpdate(
+      {
+        year: normalizedYear,
+        section: normalizedSection,
+        batch: normalizedBatch,
+      },
+      {
+        $set: {
+          subjects: normalizedSubjects,
+          semester: normalizedSemester,
+          teacher: req.body.teacherId,
+        },
+      },
+      { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
+    );
+
+    return res.status(200).json({
+      sucess: true,
+      message: "Course progress saved successfully",
+      courseProgress,
+    });
+  } catch (error) {
+    if (error?.code === 11000) {
+      return res.status(409).json({
+        sucess: false,
+        message: "Course progress already exists for this section, year, and batch",
+      });
+    }
+    return res.status(500).json({ sucess: false, message: error.message });
+  }
+};
+
+const saveCourseProgressSubject = async (req, res) => {
+  try {
+    const { year, section, batch, semester, subject } = req.body;
+    const normalizedYear = String(year || "").trim();
+    const normalizedSection = String(section || "").trim().toUpperCase();
+    const normalizedBatch = String(batch || "").trim();
+    const normalizedSemester = String(semester || "").trim();
+
+    if (!normalizedYear || !normalizedSection || !normalizedBatch || !normalizedSemester) {
+      return res.status(400).json({
+        sucess: false,
+        message: "Year, section, batch, and semester are required",
+      });
+    }
+
+    const normalizedSubject = {
+      name: String(subject?.name || "").trim(),
+      code: String(subject?.code || "").trim().toUpperCase(),
+      chapters: Array.isArray(subject?.chapters)
+        ? subject.chapters.map((chapter) => ({
+            name: String(chapter?.name || "").trim(),
+            progress: Math.min(100, Math.max(0, Number(chapter?.progress) || 0)),
+          }))
+        : [],
+    };
+
+    if (
+      !normalizedSubject.name ||
+      !normalizedSubject.code ||
+      normalizedSubject.chapters.some((chapter) => !chapter.name)
+    ) {
+      return res.status(400).json({
+        sucess: false,
+        message: "Subject name, code, and every chapter name are required",
+      });
+    }
+
+    let courseProgress = await CourseProgress.findOne({
+      year: normalizedYear,
+      section: normalizedSection,
+      batch: normalizedBatch,
+    });
+
+    if (courseProgress) {
+      const subjectIndex = courseProgress.subjects.findIndex(
+        (existingSubject) =>
+          existingSubject.code.toUpperCase() === normalizedSubject.code
+      );
+
+      if (subjectIndex >= 0) {
+        courseProgress.subjects[subjectIndex] = normalizedSubject;
+      } else {
+        courseProgress.subjects.push(normalizedSubject);
+      }
+
+      courseProgress.semester = normalizedSemester;
+      courseProgress.teacher = req.body.teacherId;
+      await courseProgress.save();
+    } else {
+      courseProgress = await CourseProgress.create({
+        year: normalizedYear,
+        section: normalizedSection,
+        batch: normalizedBatch,
+        semester: normalizedSemester,
+        teacher: req.body.teacherId,
+        subjects: [normalizedSubject],
+      });
+    }
+
+    return res.status(200).json({
+      sucess: true,
+      message: "Subject progress saved successfully",
+      courseProgress,
+    });
+  } catch (error) {
+    if (error?.code === 11000) {
+      return res.status(409).json({
+        sucess: false,
+        message: "Course progress already exists for this section, year, and batch",
+      });
+    }
+    return res.status(500).json({ sucess: false, message: error.message });
+  }
+};
+
+const getCourseProgress = async (req, res) => {
+  try {
+    const normalizedYear = String(req.query.year || "").trim();
+    const normalizedSection = String(req.query.section || "").trim().toUpperCase();
+    const normalizedBatch = String(req.query.batch || "").trim();
+
+    if (!normalizedYear || !normalizedSection || !normalizedBatch) {
+      return res.status(400).json({
+        sucess: false,
+        message: "Year, section, and batch are required",
+      });
+    }
+
+    const courseProgress = await CourseProgress.findOne({
+      year: normalizedYear,
+      section: normalizedSection,
+      batch: normalizedBatch,
+    }).populate("teacher", "name email");
+
+    if (!courseProgress) {
+      return res.status(404).json({
+        sucess: false,
+        message: "No course progress found for this section, year, and batch",
+      });
+    }
+
+    return res.status(200).json({ sucess: true, courseProgress });
+  } catch (error) {
+    return res.status(500).json({ sucess: false, message: error.message });
+  }
+};
+
+
+
 export {
   registerTeacher,
   registerStaff,
@@ -786,5 +1121,9 @@ export {
   getTeacherAssignments,
   getAttendanceofAllStudent,
   uploadMarks,
-  getStaff
+  getStaff,
+  mark_or_updateactivityattendence,
+  saveCourseProgress,
+  saveCourseProgressSubject,
+  getCourseProgress
 };

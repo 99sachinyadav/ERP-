@@ -350,6 +350,12 @@ const TeacherDashboard = () => {
           onClick: () => navigate("/applyLeave"),
           className: "from-pink-100 to-pink-200 border-pink-300",
         },
+        {
+          title:"Course Progress",
+          icon:"ri-bar-chart-line",
+          onClick:()=>navigate("/courseProgress"),
+          className:"from-purple-100 to-purple-200 border-purple-300"
+        }
       ];
 
   if (!isStaff && isHOD) {
