@@ -45,6 +45,12 @@ const DeanDashboard = () => {
               >
                 Subject-wise Faculty
               </Link>
+              <Link
+                to="/dean/courseProgress"
+                className="rounded-full bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur hover:bg-white/25"
+              >
+                Course Progress
+              </Link>
               <button
                 type="button"
                 onClick={handleLogout}
@@ -86,6 +92,12 @@ const DeanDashboard = () => {
                 className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
               >
                 Open Subject-wise Faculty
+              </Link>
+              <Link
+                to="/dean/courseProgress"
+                className="inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700"
+              >
+                Track Course Progress
               </Link>
             </div>
           </div>
@@ -147,6 +159,19 @@ const DeanDashboard = () => {
               className="mt-4 inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
             >
               Open Faculty Monitor
+            </Link>
+          </div>
+          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+            <p className="text-xs uppercase tracking-widest text-cyan-500">Syllabus</p>
+            <h3 className="mt-2 text-2xl font-semibold text-slate-900">Course Progress</h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Review syllabus completion, expected coverage dates, and lectures required.
+            </p>
+            <Link
+              to="/dean/courseProgress"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700"
+            >
+              Track Course Progress
             </Link>
           </div>
         </div>

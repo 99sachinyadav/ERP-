@@ -16,7 +16,7 @@ import {
 } from "@/lib/leaveApi";
 // import { set } from "node_modules/react-datepicker/dist/date_utils";
 
-const departments = ["AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR"];
+const departments = ["AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR","LIBRARY","REGISTRAR"];
 
 const leaveTypes = [
   "EL",

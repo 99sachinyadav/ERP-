@@ -22,7 +22,7 @@ const emptyFilters = {
   toDate: "",
 };
 
-const departments = ["ALL","AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR"];
+const departments = ["ALL","AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR","LIBRARY","REGISTRAR"];
 const leaveTypes = [
   "ALL",
   "EL",

@@ -3,16 +3,17 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import {
   BookOpen,
+  Calendar,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
   ClipboardList,
+  Clock,
   Info,
   Plus,
   RefreshCw,
   Save,
   Search,
-  Send,
   Trash2,
 } from "lucide-react";
 import TeacherActionButtons from "@/Components/TeacherActionButtons";
@@ -45,7 +46,6 @@ function CourseProgress() {
   const [newSubject, setNewSubject] = useState(emptySubject);
   const [subjects, setSubjects] = useState([]);
   const [expandedSubjectId, setExpandedSubjectId] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [savingSubjectId, setSavingSubjectId] = useState("");
   const [isLoadingSaved, setIsLoadingSaved] = useState(false);
   const [loadedRecordInfo, setLoadedRecordInfo] = useState(null);
@@ -129,10 +129,18 @@ function CourseProgress() {
           id: createId(),
           name: subj.name || "",
           code: subj.code || "",
+          teacher: subj.teacher || null,
+          teacherName: subj.teacher?.name || subj.teacherName || "",
           chapters: (subj.chapters || []).map((ch) => ({
             id: createId(),
             name: ch.name || "",
             progress: clampPercentage(ch.progress),
+            expectedDate: ch.expectedDate || "",
+            lecturesRequired:
+              ch.lecturesRequired !== undefined && ch.lecturesRequired !== null && ch.lecturesRequired !== 0
+                ? ch.lecturesRequired
+                : "",
+            lastUpdated: ch.lastUpdated || "",
           })),
         }));
 
@@ -228,82 +236,33 @@ function CourseProgress() {
   const addChapter = (subjectId) =>
     updateSubjectChapters(subjectId, (chapters) => [
       ...chapters,
-      { id: createId(), name: "", progress: 0 },
+      {
+        id: createId(),
+        name: "",
+        progress: 0,
+        expectedDate: "",
+        lecturesRequired: "",
+        lastUpdated: new Date().toISOString(),
+      },
     ]);
 
   const updateChapter = (subjectId, chapterId, field, value) =>
     updateSubjectChapters(subjectId, (chapters) =>
-      chapters.map((chapter) =>
-        chapter.id === chapterId
-          ? {
-              ...chapter,
-              [field]: field === "progress" ? clampPercentage(value) : value,
-            }
-          : chapter
-      )
-    );
-
-  const saveDraft = (message) => {
-    localStorage.setItem(
-      storageKey,
-      JSON.stringify({ academicDetails, subjects, expandedSubjectId })
-    );
-    toast.success(message);
-  };
-
-  const submitProgress = async () => {
-    if (!subjects.length) {
-      toast.error("Add at least one subject before submitting.");
-      return;
-    }
-    if (!academicDetails.batch.trim()) {
-      toast.error("Enter the batch year before submitting.");
-      return;
-    }
-    if (!academicDetails.section.trim()) {
-      toast.error("Enter the section before submitting.");
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      const response = await axios.post(
-        backendUrl + "/api/course-progress",
-        {
-          ...academicDetails,
-          section: academicDetails.section.trim().toUpperCase(),
-          subjects,
-        },
-        {
-          headers: getAuthHeaders(),
+      chapters.map((chapter) => {
+        if (chapter.id !== chapterId) return chapter;
+        let formattedValue = value;
+        if (field === "progress") {
+          formattedValue = clampPercentage(value);
+        } else if (field === "lecturesRequired") {
+          formattedValue = value === "" ? "" : Math.max(0, Number(value) || 0);
         }
-      );
-      localStorage.setItem(
-        storageKey,
-        JSON.stringify({ academicDetails, subjects, expandedSubjectId })
-      );
-
-      setLoadedRecordInfo({
-        teacherName: "You",
-        updatedAt: new Date().toISOString(),
-        subjectCount: subjects.length,
-        semester: academicDetails.semester,
-      });
-
-      toast.success(
-        response.data?.message ||
-          (loadedRecordInfo
-            ? "Course progress updated successfully."
-            : "Course progress submitted successfully.")
-      );
-    } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Unable to submit course progress."
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+        return {
+          ...chapter,
+          [field]: formattedValue,
+          lastUpdated: new Date().toISOString(),
+        };
+      })
+    );
 
   const saveSubjectProgress = async (subject) => {
     if (
@@ -335,20 +294,39 @@ function CourseProgress() {
         },
         { headers: getAuthHeaders() }
       );
+
+      const savedProgress = response.data?.courseProgress;
+      const updatedSubj = savedProgress?.subjects?.find(
+        (s) => s.code.toUpperCase() === subject.code.toUpperCase()
+      );
+
+      const updatedSubjects = subjects.map((s) =>
+        s.id === subject.id
+          ? {
+              ...s,
+              teacher: updatedSubj?.teacher || s.teacher,
+              teacherName: updatedSubj?.teacherName || s.teacherName || "You",
+            }
+          : s
+      );
+
+      setSubjects(updatedSubjects);
+
       localStorage.setItem(
         storageKey,
-        JSON.stringify({ academicDetails, subjects, expandedSubjectId })
+        JSON.stringify({ academicDetails, subjects: updatedSubjects, expandedSubjectId })
       );
 
       setLoadedRecordInfo((prev) => ({
         ...(prev || {}),
-        teacherName: "You",
         updatedAt: new Date().toISOString(),
         subjectCount: subjects.length,
         semester: academicDetails.semester,
       }));
 
-      toast.success(response.data?.message || "Subject progress saved.");
+      toast.success(
+        response.data?.message || `Progress for ${subject.name} saved successfully.`
+      );
     } catch (error) {
       toast.error(
         error.response?.data?.message || "Unable to save subject progress."
@@ -615,7 +593,14 @@ function CourseProgress() {
                         <BookOpen className="h-5 w-5 shrink-0 text-blue-700" />
                         <div>
                           <h3 className="text-sm font-semibold text-slate-900">{subject.name}</h3>
-                          <p className="text-xs text-slate-500">{subject.code}</p>
+                          <p className="text-xs text-slate-500">
+                            {subject.code}
+                            {subject.teacherName ? (
+                              <span className="ml-2 font-medium text-emerald-700">
+                                &bull; Faculty: {subject.teacherName}
+                              </span>
+                            ) : null}
+                          </p>
                         </div>
                       </div>
                       <div>
@@ -660,63 +645,142 @@ function CourseProgress() {
                     </div>
                     {isExpanded ? (
                       <div className="p-4">
-                        <div className="hidden grid-cols-[48px_minmax(220px,1fr)_180px_minmax(120px,0.75fr)_44px] gap-3 border-b border-slate-200 pb-2 text-xs font-semibold text-slate-600 md:grid">
-                          <span>#</span><span>Chapter Name</span><span>Percentage Completed</span><span>Progress</span><span />
+                        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-md bg-blue-50/70 border border-blue-100 px-3 py-2 text-xs text-blue-900">
+                          <div className="flex items-center gap-2">
+                            <Info className="h-4 w-4 text-blue-600 shrink-0" />
+                            <span>
+                              For incomplete chapters (&lt;100%), specify the <strong>expected completion date</strong> and <strong>no. of lectures required</strong>.
+                            </span>
+                          </div>
+                          <span className="text-[11px] font-medium text-blue-700 bg-white border border-blue-200 px-2 py-0.5 rounded">
+                            {subject.chapters.filter((c) => clampPercentage(c.progress) < 100).length} chapter(s) pending
+                          </span>
                         </div>
-                        <div className="divide-y divide-slate-200">
-                          {subject.chapters.map((chapter, index) => (
-                            <div
-                              key={chapter.id}
-                              className="grid gap-3 py-3 md:grid-cols-[48px_minmax(220px,1fr)_180px_minmax(120px,0.75fr)_44px] md:items-center"
-                            >
-                              <span className="text-sm text-slate-500">{index + 1}</span>
-                              <input
-                                value={chapter.name}
-                                onChange={(event) => updateChapter(subject.id, chapter.id, "name", event.target.value)}
-                                placeholder="Enter chapter name"
-                                className="border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500"
-                              />
-                              <div className="relative">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max="100"
-                                  value={chapter.progress}
-                                  onChange={(event) => updateChapter(subject.id, chapter.id, "progress", event.target.value)}
-                                  className="w-full border border-slate-300 px-3 py-2 pr-8 text-sm outline-none focus:border-blue-500"
-                                />
-                                <span className="pointer-events-none absolute right-3 top-2 text-sm text-slate-500">%</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="h-2 flex-1 overflow-hidden bg-slate-200">
-                                  <div
-                                    className="h-full bg-emerald-600 transition-all"
-                                    style={{ width: String(clampPercentage(chapter.progress)) + "%" }}
-                                  />
-                                </div>
-                                <span className="w-9 text-right text-xs font-medium text-slate-600">
-                                  {clampPercentage(chapter.progress)}%
-                                </span>
-                              </div>
-                              <button
-                                type="button"
-                                title="Remove chapter"
-                                onClick={() =>
-                                  updateSubjectChapters(subject.id, (chapters) =>
-                                    chapters.filter((item) => item.id !== chapter.id)
-                                  )
-                                }
-                                className="inline-flex h-9 w-9 items-center justify-center text-red-600 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
+
+                        <div className="overflow-x-auto">
+                          <div className="min-w-[860px]">
+                            <div className="grid grid-cols-[36px_minmax(200px,1.4fr)_130px_minmax(110px,0.8fr)_170px_130px_40px] gap-3 border-b border-slate-200 pb-2 text-xs font-semibold text-slate-600 items-center">
+                              <span>#</span>
+                              <span>Chapter Name</span>
+                              <span>Completion (%)</span>
+                              <span>Progress Bar</span>
+                              <span>Expected Date</span>
+                              <span>Lectures Req.</span>
+                              <span className="text-center">Action</span>
                             </div>
-                          ))}
+
+                            <div className="divide-y divide-slate-200">
+                              {subject.chapters.map((chapter, index) => {
+                                const isCompleted = clampPercentage(chapter.progress) >= 100;
+                                return (
+                                  <div
+                                    key={chapter.id}
+                                    className="grid grid-cols-[36px_minmax(200px,1.4fr)_130px_minmax(110px,0.8fr)_170px_130px_40px] gap-3 py-3 items-center"
+                                  >
+                                    <span className="text-sm font-medium text-slate-500">{index + 1}</span>
+                                    <input
+                                      value={chapter.name}
+                                      onChange={(event) =>
+                                        updateChapter(subject.id, chapter.id, "name", event.target.value)
+                                      }
+                                      placeholder="Enter chapter name"
+                                      className="border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 rounded bg-white"
+                                    />
+                                    <div className="relative">
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        value={chapter.progress}
+                                        onChange={(event) =>
+                                          updateChapter(subject.id, chapter.id, "progress", event.target.value)
+                                        }
+                                        className="w-full border border-slate-300 px-3 py-2 pr-8 text-sm outline-none focus:border-blue-500 rounded bg-white"
+                                      />
+                                      <span className="pointer-events-none absolute right-3 top-2 text-sm text-slate-500 font-medium">
+                                        %
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <div className="h-2 flex-1 overflow-hidden bg-slate-200 rounded-full">
+                                        <div
+                                          className={`h-full transition-all ${
+                                            isCompleted ? "bg-emerald-600" : "bg-blue-600"
+                                          }`}
+                                          style={{
+                                            width: String(clampPercentage(chapter.progress)) + "%",
+                                          }}
+                                        />
+                                      </div>
+                                      <span className="w-9 text-right text-xs font-medium text-slate-600">
+                                        {clampPercentage(chapter.progress)}%
+                                      </span>
+                                    </div>
+
+                                    {/* Expected Date to cover chapter if not full completed */}
+                                    {!isCompleted ? (
+                                      <div className="relative">
+                                        <input
+                                          type="date"
+                                          value={chapter.expectedDate || ""}
+                                          onChange={(event) =>
+                                            updateChapter(subject.id, chapter.id, "expectedDate", event.target.value)
+                                          }
+                                          className="w-full border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-blue-500 rounded"
+                                          title="Expected date to cover this chapter"
+                                        />
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded">
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                                        <span className="font-medium truncate">Completed</span>
+                                      </div>
+                                    )}
+
+                                    {/* Number of lectures required if not full completed */}
+                                    {!isCompleted ? (
+                                      <div className="relative">
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          placeholder="e.g. 4"
+                                          value={chapter.lecturesRequired ?? ""}
+                                          onChange={(event) =>
+                                            updateChapter(subject.id, chapter.id, "lecturesRequired", event.target.value)
+                                          }
+                                          className="w-full border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-blue-500 rounded"
+                                          title="No. of lectures required to cover this chapter"
+                                        />
+                                      </div>
+                                    ) : (
+                                      <div className="px-2.5 py-1.5 text-xs text-slate-400 bg-slate-50 border border-slate-200 rounded text-center font-medium">
+                                        N/A (Done)
+                                      </div>
+                                    )}
+
+                                    <button
+                                      type="button"
+                                      title="Remove chapter"
+                                      onClick={() =>
+                                        updateSubjectChapters(subject.id, (chapters) =>
+                                          chapters.filter((item) => item.id !== chapter.id)
+                                        )
+                                      }
+                                      className="inline-flex h-9 w-9 items-center justify-center text-red-600 hover:bg-red-50 rounded transition"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
                         </div>
+
                         <button
                           type="button"
                           onClick={() => addChapter(subject.id)}
-                          className="mt-4 inline-flex items-center gap-2 border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                          className="mt-4 inline-flex items-center gap-2 border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 rounded transition"
                         >
                           <Plus className="h-4 w-4" /> Add Chapter
                         </button>
@@ -728,28 +792,6 @@ function CourseProgress() {
             </div>
           )}
         </section>
-        <footer className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-          <button
-            type="button"
-            onClick={() => saveDraft("Draft saved on this device.")}
-            className="inline-flex items-center justify-center gap-2 border border-blue-300 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"
-          >
-            <Save className="h-4 w-4" /> Save as Draft
-          </button>
-          <button
-            type="button"
-            onClick={submitProgress}
-            disabled={isSubmitting}
-            className="inline-flex items-center justify-center gap-2 bg-blue-700 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-60 transition shadow-sm"
-          >
-            <Send className="h-4 w-4" />
-            {isSubmitting
-              ? "Saving..."
-              : loadedRecordInfo
-              ? "Update Course Progress"
-              : "Submit Progress"}
-          </button>
-        </footer>
       </div>
     </main>
   );

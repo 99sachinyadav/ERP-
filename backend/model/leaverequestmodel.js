@@ -62,7 +62,7 @@ const leaveRequestSchema = new mongoose.Schema(
     department: {
       type: String,
       required: true,
-      enum: ["AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR"],
+      enum: ["AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR","LIBRARY","REGISTRAR"],
     },
     semester: {
       type: String,

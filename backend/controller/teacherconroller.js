@@ -933,14 +933,105 @@ const saveCourseProgress = async (req, res) => {
       });
     }
 
-    const normalizedSubjects = subjects.map((subject) => ({
-      name: String(subject?.name || "").trim(),
-      code: String(subject?.code || "").trim().toUpperCase(),
-      chapters: (subject?.chapters || []).map((chapter) => ({
-        name: String(chapter?.name || "").trim(),
-        progress: Math.min(100, Math.max(0, Number(chapter?.progress) || 0)),
-      })),
-    }));
+    const existingRecord = await CourseProgress.findOne({
+      year: normalizedYear,
+      section: normalizedSection,
+      batch: normalizedBatch,
+    });
+
+    const existingChaptersMap = new Map();
+    const existingSubjectMap = new Map();
+    (existingRecord?.subjects || []).forEach((s) => {
+      existingSubjectMap.set(s.code.toUpperCase(), s);
+      (s.chapters || []).forEach((c) => {
+        existingChaptersMap.set(
+          `${s.code.toUpperCase()}:::${c.name.trim().toLowerCase()}`,
+          c
+        );
+      });
+    });
+
+    let currentTeacher = null;
+    if (req.body.teacherId) {
+      currentTeacher = await Teacher.findById(req.body.teacherId).select("name email");
+      if (!currentTeacher) {
+        currentTeacher = await Staff.findById(req.body.teacherId).select("name email");
+      }
+    } else if (req.body.adminID) {
+      if (req.body.adminID === (process.env.DEAN_EMAIL || "") + (process.env.DEAN_PASSWORD || "")) {
+        currentTeacher = { name: "Dean" };
+      } else if (req.body.adminID === (process.env.DIRECTOR_EMAIL || "") + (process.env.DIRECTOR_PASSWORD || "")) {
+        currentTeacher = { name: "Director" };
+      } else {
+        currentTeacher = { name: "Admin" };
+      }
+    }
+
+    const normalizedSubjects = subjects.map((subject) => {
+      const subCode = String(subject?.code || "").trim().toUpperCase();
+      const existingSubj = existingSubjectMap.get(subCode);
+      const teacherIdForSubject =
+        subject?.teacher?._id ||
+        subject?.teacher ||
+        existingSubj?.teacher ||
+        req.body.teacherId ||
+        undefined;
+      const teacherNameForSubject =
+        subject?.teacherName ||
+        subject?.teacher?.name ||
+        existingSubj?.teacherName ||
+        currentTeacher?.name ||
+        "";
+
+      return {
+        name: String(subject?.name || "").trim(),
+        code: subCode,
+        semester: String(subject?.semester || normalizedSemester || "").trim(),
+        teacher: teacherIdForSubject,
+        teacherName: teacherNameForSubject,
+        chapters: (subject?.chapters || []).map((chapter) => {
+          const progress = Math.min(100, Math.max(0, Number(chapter?.progress) || 0));
+          const chName = String(chapter?.name || "").trim();
+          const expectedDate =
+            progress < 100 ? String(chapter?.expectedDate || "").trim() : "";
+          const lecturesRequired =
+            progress < 100
+              ? chapter?.lecturesRequired === "" ||
+                chapter?.lecturesRequired === null ||
+                chapter?.lecturesRequired === undefined
+                ? 0
+                : Math.max(0, Number(chapter?.lecturesRequired) || 0)
+              : 0;
+
+          const existingCh = existingChaptersMap.get(
+            `${subCode}:::${chName.toLowerCase()}`
+          );
+          let lastUpdated = new Date();
+          if (existingCh) {
+            const isSame =
+              existingCh.progress === progress &&
+              (existingCh.expectedDate || "") === expectedDate &&
+              (Number(existingCh.lecturesRequired) || 0) === lecturesRequired;
+            if (isSame && existingCh.lastUpdated) {
+              lastUpdated = existingCh.lastUpdated;
+            }
+          } else if (chapter?.lastUpdated) {
+            const parsed = new Date(chapter.lastUpdated);
+            if (!isNaN(parsed.getTime())) {
+              lastUpdated = parsed;
+            }
+          }
+
+          return {
+            name: chName,
+            progress,
+            expectedDate,
+            lecturesRequired,
+            lastUpdated,
+          };
+        }),
+      };
+    });
 
     if (
       normalizedSubjects.some(
@@ -1003,14 +1094,96 @@ const saveCourseProgressSubject = async (req, res) => {
       });
     }
 
+    let courseProgress = await CourseProgress.findOne({
+      year: normalizedYear,
+      section: normalizedSection,
+      batch: normalizedBatch,
+    });
+
+    const subCode = String(subject?.code || "").trim().toUpperCase();
+    const existingSubject = courseProgress?.subjects?.find(
+      (s) => s.code.toUpperCase() === subCode
+    );
+    const existingChaptersMap = new Map();
+    (existingSubject?.chapters || []).forEach((c) => {
+      existingChaptersMap.set(c.name.trim().toLowerCase(), c);
+    });
+
+    let currentTeacher = null;
+    if (req.body.teacherId) {
+      currentTeacher = await Teacher.findById(req.body.teacherId).select("name email");
+      if (!currentTeacher) {
+        currentTeacher = await Staff.findById(req.body.teacherId).select("name email");
+      }
+    } else if (req.body.adminID) {
+      if (req.body.adminID === (process.env.DEAN_EMAIL || "") + (process.env.DEAN_PASSWORD || "")) {
+        currentTeacher = { name: "Dean" };
+      } else if (req.body.adminID === (process.env.DIRECTOR_EMAIL || "") + (process.env.DIRECTOR_PASSWORD || "")) {
+        currentTeacher = { name: "Director" };
+      } else {
+        currentTeacher = { name: "Admin" };
+      }
+    }
+
+    const teacherIdForSubject =
+      req.body.teacherId ||
+      subject?.teacher?._id ||
+      subject?.teacher ||
+      existingSubject?.teacher ||
+      undefined;
+    const teacherNameForSubject =
+      currentTeacher?.name ||
+      subject?.teacherName ||
+      subject?.teacher?.name ||
+      existingSubject?.teacherName ||
+      "";
+
     const normalizedSubject = {
       name: String(subject?.name || "").trim(),
-      code: String(subject?.code || "").trim().toUpperCase(),
+      code: subCode,
+      semester: String(subject?.semester || normalizedSemester || "").trim(),
+      teacher: teacherIdForSubject,
+      teacherName: teacherNameForSubject,
       chapters: Array.isArray(subject?.chapters)
-        ? subject.chapters.map((chapter) => ({
-            name: String(chapter?.name || "").trim(),
-            progress: Math.min(100, Math.max(0, Number(chapter?.progress) || 0)),
-          }))
+        ? subject.chapters.map((chapter) => {
+            const progress = Math.min(100, Math.max(0, Number(chapter?.progress) || 0));
+            const chName = String(chapter?.name || "").trim();
+            const expectedDate =
+              progress < 100 ? String(chapter?.expectedDate || "").trim() : "";
+            const lecturesRequired =
+              progress < 100
+                ? chapter?.lecturesRequired === "" ||
+                  chapter?.lecturesRequired === null ||
+                  chapter?.lecturesRequired === undefined
+                  ? 0
+                  : Math.max(0, Number(chapter?.lecturesRequired) || 0)
+                : 0;
+
+            const existingCh = existingChaptersMap.get(chName.toLowerCase());
+            let lastUpdated = new Date();
+            if (existingCh) {
+              const isSame =
+                existingCh.progress === progress &&
+                (existingCh.expectedDate || "") === expectedDate &&
+                (Number(existingCh.lecturesRequired) || 0) === lecturesRequired;
+              if (isSame && existingCh.lastUpdated) {
+                lastUpdated = existingCh.lastUpdated;
+              }
+            } else if (chapter?.lastUpdated) {
+              const parsed = new Date(chapter.lastUpdated);
+              if (!isNaN(parsed.getTime())) {
+                lastUpdated = parsed;
+              }
+            }
+
+            return {
+              name: chName,
+              progress,
+              expectedDate,
+              lecturesRequired,
+              lastUpdated,
+            };
+          })
         : [],
     };
 
@@ -1025,12 +1198,6 @@ const saveCourseProgressSubject = async (req, res) => {
       });
     }
 
-    let courseProgress = await CourseProgress.findOne({
-      year: normalizedYear,
-      section: normalizedSection,
-      batch: normalizedBatch,
-    });
-
     if (courseProgress) {
       const subjectIndex = courseProgress.subjects.findIndex(
         (existingSubject) =>
@@ -1044,7 +1211,9 @@ const saveCourseProgressSubject = async (req, res) => {
       }
 
       courseProgress.semester = normalizedSemester;
-      courseProgress.teacher = req.body.teacherId;
+      if (!courseProgress.teacher && req.body.teacherId) {
+        courseProgress.teacher = req.body.teacherId;
+      }
       await courseProgress.save();
     } else {
       courseProgress = await CourseProgress.create({
@@ -1078,6 +1247,7 @@ const getCourseProgress = async (req, res) => {
     const normalizedYear = String(req.query.year || "").trim();
     const normalizedSection = String(req.query.section || "").trim().toUpperCase();
     const normalizedBatch = String(req.query.batch || "").trim();
+    const normalizedSemester = String(req.query.semester || "").trim();
 
     if (!normalizedYear || !normalizedSection || !normalizedBatch) {
       return res.status(400).json({
@@ -1086,11 +1256,35 @@ const getCourseProgress = async (req, res) => {
       });
     }
 
-    const courseProgress = await CourseProgress.findOne({
+    const query = {
       year: normalizedYear,
       section: normalizedSection,
       batch: normalizedBatch,
-    }).populate("teacher", "name email");
+    };
+
+    if (
+      normalizedSemester &&
+      normalizedSemester.toLowerCase() !== "all" &&
+      normalizedSemester.toLowerCase() !== "all semesters"
+    ) {
+      const semPrefix = normalizedSemester.replace(/\s*semester$/i, "").trim();
+      query.semester = new RegExp(`^${escapeRegex(semPrefix)}`, "i");
+    }
+
+    let courseProgress = await CourseProgress.findOne(query)
+      .populate("teacher", "name email")
+      .populate("subjects.teacher", "name email");
+
+    // Fallback: If not found with exact semester, check if a record exists for this year, section, batch
+    if (!courseProgress && query.semester) {
+      courseProgress = await CourseProgress.findOne({
+        year: normalizedYear,
+        section: normalizedSection,
+        batch: normalizedBatch,
+      })
+        .populate("teacher", "name email")
+        .populate("subjects.teacher", "name email");
+    }
 
     if (!courseProgress) {
       return res.status(404).json({
@@ -1099,7 +1293,20 @@ const getCourseProgress = async (req, res) => {
       });
     }
 
-    return res.status(200).json({ sucess: true, courseProgress });
+    const courseProgressObj = courseProgress.toObject();
+
+    courseProgressObj.subjects = (courseProgressObj.subjects || []).map((sub) => {
+      const resolvedName =
+        sub.teacherName ||
+        sub.teacher?.name ||
+        "";
+      return {
+        ...sub,
+        teacherName: resolvedName,
+      };
+    });
+
+    return res.status(200).json({ sucess: true, courseProgress: courseProgressObj });
   } catch (error) {
     return res.status(500).json({ sucess: false, message: error.message });
   }

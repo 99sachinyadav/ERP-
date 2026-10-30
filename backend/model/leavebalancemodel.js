@@ -13,7 +13,7 @@ const leaveBalanceSchema = new mongoose.Schema(
     department: {
       type: String,
        
-      enum: ["AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR"],
+      enum: ["AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR","LIBRARY","REGISTRAR"],
     },
     semester: {
       type: String,

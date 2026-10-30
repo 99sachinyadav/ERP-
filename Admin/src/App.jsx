@@ -131,6 +131,14 @@ function App() {
           }
         />
         <Route
+          path="/dean/courseProgress"
+          element={
+            <RoleProtect tokenKey="deanToken" redirectTo="/deanlogin">
+              <TrackCourseProgress />
+            </RoleProtect>
+          }
+        />
+        <Route
           path="/director"
           element={
             <RoleProtect tokenKey="directorToken" redirectTo="/directorlogin">

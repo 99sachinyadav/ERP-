@@ -4,7 +4,7 @@ import { Semester } from "../model/semestermodel.js";
 import { Teacher } from "../model/teachermodel.js";
 import { Staff } from "../model/staffmodel.js";
 
-const DEPARTMENTS = ["AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR"];
+const DEPARTMENTS = ["AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR","LIBRARY","REGISTRAR"];
 const LEAVE_TYPES = [
   "EL",
   "CL",

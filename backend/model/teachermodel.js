@@ -28,7 +28,7 @@ const teacherSchema  = new mongoose.Schema({
     subjects: [{ type: String }],
     department: {
         type: String,
-        enum: ["AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR"],
+        enum: ["AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR","LIBRARY","REGISTRAR"],
         // required: true,
         // default: "STAFF"
     },

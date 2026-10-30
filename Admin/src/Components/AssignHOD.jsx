@@ -6,7 +6,7 @@ import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from "@/Components/ui/card";
 
-const departments = ["AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR"];
+const departments = ["AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR","LIBRARY","REGISTRAR"];
 
 const AssignHOD = () => {
     const [email, setEmail] = useState("");
