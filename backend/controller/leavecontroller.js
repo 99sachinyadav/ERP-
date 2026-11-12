@@ -16,6 +16,7 @@ const LEAVE_TYPES = [
   "MATERNITY_LEAVE",
   "STUDY_LEAVE",
   "SPECIAL_DISABILITY_LEAVE",
+  "LWP",
 ];
 
 // one doubt
@@ -176,6 +177,7 @@ const availableLeave = (balance, leaveType) => {
     SPECIAL_DISABILITY_LEAVE:
       (balance.specialDisabilityLeaveTotal || 0) -
       (balance.specialDisabilityLeaveUsed || 0),
+    LWP: Infinity,
   };
 
   return leaveMap[leaveType];
@@ -194,6 +196,9 @@ const useLeaveBalance = (balance, leaveType, days) => {
   if (leaveType === "STUDY_LEAVE") balance.studyLeaveUsed += days;
   if (leaveType === "SPECIAL_DISABILITY_LEAVE") {
     balance.specialDisabilityLeaveUsed += days;
+  }
+  if (leaveType === "LWP") {
+    balance.lwpUsed = (balance.lwpUsed || 0) + days;
   }
 };
 
@@ -237,6 +242,12 @@ const creditLeaveBalance = (balance, leaveType, days) => {
       0,
     );
   }
+  if (leaveType === "LWP") {
+    balance.lwpUsed = Math.max(
+      (balance.lwpUsed || 0) - days,
+      0,
+    );
+  }
 };
 
 // pass This function is used to increment the leave balance when a comp off credit request is approved. It checks the type of leave request and returns an object with the appropriate field to increment. For example, if the request is for a comp off credit, it will return an object with the `compoffTotal` field set to the number of days in the request. For other types of leave, it will return an object with the corresponding used leave field incremented by the number of days in the request. If the leave type is not recognized, it returns an empty object.
@@ -256,6 +267,7 @@ const balanceIncrement = (leaveRequest) => {
     MATERNITY_LEAVE: { maternityLeaveUsed: leaveRequest.days },
     STUDY_LEAVE: { studyLeaveUsed: leaveRequest.days },
     SPECIAL_DISABILITY_LEAVE: { specialDisabilityLeaveUsed: leaveRequest.days },
+    LWP: { lwpUsed: leaveRequest.days },
   };
 
   return incrementMap[leaveRequest.leaveType] || {};
@@ -354,7 +366,7 @@ const applyLeave = async (req, res) => {
     const semester = await getCurrentSemester();
     const balance = await getBalance(teacher, department, semester, isStaff);
 
-    if (availableLeave(balance, leaveType) < days) {
+    if (leaveType !== "LWP" && availableLeave(balance, leaveType) < days) {
       return res
         .status(400)
         .json({
@@ -364,11 +376,18 @@ const applyLeave = async (req, res) => {
     }
 
     if (department !== "ADMINISTRATOR") {
-      // Check if the teacher's department has an HOD
-      const departmentHOD = await Teacher.findOne({
+      // Check if the department has an HOD (Teacher or Staff)
+      let departmentHOD = await Teacher.findOne({
         department: department,
         role: "HOD",
       }).select("_id");
+
+      if (!departmentHOD) {
+        departmentHOD = await Staff.findOne({
+          department: department,
+          role: "HOD",
+        }).select("_id");
+      }
 
       if (!departmentHOD) {
         return res.status(400).json({
@@ -449,11 +468,18 @@ const applyCompoffCredit = async (req, res) => {
     const semester = await getCurrentSemester();
 
     if (department !== "ADMINISTRATOR") {
-      // Check if the teacher's department has an HOD
-      const departmentHOD = await Teacher.findOne({
+      // Check if the department has an HOD (Teacher or Staff)
+      let departmentHOD = await Teacher.findOne({
         department: department,
         role: "HOD",
       }).select("_id");
+
+      if (!departmentHOD) {
+        departmentHOD = await Staff.findOne({
+          department: department,
+          role: "HOD",
+        }).select("_id");
+      }
 
       if (!departmentHOD) {
         return res.status(400).json({
@@ -529,7 +555,7 @@ const applyStaffLeave = async (req, res) => {
     const semester = await getCurrentSemester();
     const balance = await getBalance(staffId, "STAFF", semester, true);
 
-    if (availableLeave(balance, leaveType) < days) {
+    if (leaveType !== "LWP" && availableLeave(balance, leaveType) < days) {
       return res
         .status(400)
         .json({
@@ -539,11 +565,18 @@ const applyStaffLeave = async (req, res) => {
     }
 
     if (department !== "ADMINISTRATOR") {
-      // Check if the teacher's department has an HOD
-      const departmentHOD = await Teacher.findOne({
+      // Check if the department has an HOD (Teacher or Staff)
+      let departmentHOD = await Teacher.findOne({
         department: department,
         role: "HOD",
       }).select("_id");
+
+      if (!departmentHOD) {
+        departmentHOD = await Staff.findOne({
+          department: department,
+          role: "HOD",
+        }).select("_id");
+      }
 
       if (!departmentHOD) {
         return res.status(400).json({
@@ -1291,6 +1324,7 @@ const approveLeaveByDirector = async (req, res) => {
     if (
       leaveRequest.status === "FORWARDED_TO_DIRECTOR" &&
       leaveRequest.requestKind === "LEAVE_USAGE" &&
+      leaveRequest.leaveType !== "LWP" &&
       availableLeave(balance, leaveRequest.leaveType) < leaveRequest.days
     ) {
       return res.status(400).json({
@@ -1505,6 +1539,8 @@ const closeSemesterAndCarryForwardEl = async (req, res) => {
         nextBalance.specialDisabilityLeaveUsed = isSameYear
           ? oldBalance.specialDisabilityLeaveUsed
           : 0;
+        nextBalance.lwpTotal = 0;
+        nextBalance.lwpUsed = 0;
         await nextBalance.save();
       } else {
         await LeaveBalance.create({
@@ -1536,6 +1572,8 @@ const closeSemesterAndCarryForwardEl = async (req, res) => {
           specialDisabilityLeaveUsed: isSameYear
             ? oldBalance.specialDisabilityLeaveUsed
             : 0,
+          lwpTotal: 0,
+          lwpUsed: 0,
         });
       }
 

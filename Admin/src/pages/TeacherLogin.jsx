@@ -31,6 +31,8 @@ const TeacherLogin = () => {
         localStorage.setItem("teachersection", section);
         localStorage.setItem("teacherrole", responce.data.findTeacher.role);
         localStorage.setItem("teacherdepartment", responce.data.findTeacher.department);
+        localStorage.setItem("isStaff", "false");
+        localStorage.setItem("userType", "TEACHER");
         navigate("/teacherdashboard");
         toast.success(responce.data.message);
       }
@@ -48,6 +50,8 @@ const TeacherLogin = () => {
           localStorage.setItem("teachersection", "");
           localStorage.setItem("teacherrole", responce.data.findStaff.role);
           localStorage.setItem("teacherdepartment", responce.data.findStaff.department);
+          localStorage.setItem("isStaff", "true");
+          localStorage.setItem("userType", "STAFF");
           navigate("/teacherdashboard");
           toast.success(responce.data.message);
         }

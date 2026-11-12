@@ -35,8 +35,18 @@ const getSubjectProgress = (chapters) =>
     : 0;
 
 function CourseProgress() {
-  const storageKey =
-    "course-progress-" + (localStorage.getItem("teacherToken") || "draft");
+  const getDraftKey = (year, batch, section, semester) => {
+    const token = localStorage.getItem("teacherToken") || "draft";
+    const y = String(year || "").trim();
+    const b = String(batch || "").trim();
+    const s = String(section || "").trim().toUpperCase();
+    const sem = String(semester || "").trim();
+    return `course-progress-${token}-${y}-${b}-${s}-${sem}`;
+  };
+
+  const lastActiveKey =
+    "course-progress-last-active-" + (localStorage.getItem("teacherToken") || "draft");
+
   const [academicDetails, setAcademicDetails] = useState({
     year: "IIIrd",
     batch: "",
@@ -51,6 +61,21 @@ function CourseProgress() {
   const [loadedRecordInfo, setLoadedRecordInfo] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
 
+  const saveClassDraft = (details, currentSubjects, expandedId, recordInfo) => {
+    const key = getDraftKey(details.year, details.batch, details.section, details.semester);
+    try {
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          academicDetails: details,
+          subjects: currentSubjects,
+          expandedSubjectId: expandedId,
+          loadedRecordInfo: recordInfo,
+        })
+      );
+    } catch {}
+  };
+
   const getAuthHeaders = () => {
     const teacherToken = localStorage.getItem("teacherToken");
     const adminLikeToken =
@@ -64,22 +89,49 @@ function CourseProgress() {
   };
 
   useEffect(() => {
-    const savedDraft = localStorage.getItem(storageKey);
-    if (!savedDraft) return;
-    try {
-      const draft = JSON.parse(savedDraft);
-      setAcademicDetails((current) => ({
-        ...current,
-        ...(draft.academicDetails || {}),
-        batch: draft.academicDetails?.batch || "",
-        semester: draft.academicDetails?.semester || "Vth Semester",
-      }));
-      setSubjects(Array.isArray(draft.subjects) ? draft.subjects : []);
-      setExpandedSubjectId(draft.expandedSubjectId || null);
-    } catch {
-      localStorage.removeItem(storageKey);
+    let initialDetails = {
+      year: "IIIrd",
+      batch: "",
+      semester: "Vth Semester",
+      section: "A",
+    };
+
+    const savedLast = localStorage.getItem(lastActiveKey);
+    if (savedLast) {
+      try {
+        const parsed = JSON.parse(savedLast);
+        if (parsed.academicDetails) {
+          initialDetails = {
+            ...initialDetails,
+            ...(parsed.academicDetails || {}),
+            batch: parsed.academicDetails?.batch || "",
+            semester: parsed.academicDetails?.semester || "Vth Semester",
+          };
+          setAcademicDetails(initialDetails);
+        }
+      } catch {
+        localStorage.removeItem(lastActiveKey);
+      }
     }
-  }, [storageKey]);
+
+    const draftKey = getDraftKey(
+      initialDetails.year,
+      initialDetails.batch,
+      initialDetails.section,
+      initialDetails.semester
+    );
+    const savedDraft = localStorage.getItem(draftKey);
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        setSubjects(Array.isArray(draft.subjects) ? draft.subjects : []);
+        setExpandedSubjectId(draft.expandedSubjectId || null);
+        setLoadedRecordInfo(draft.loadedRecordInfo || null);
+      } catch {
+        localStorage.removeItem(draftKey);
+      }
+    }
+  }, [lastActiveKey]);
 
   const overallProgress = useMemo(
     () =>
@@ -95,14 +147,51 @@ function CourseProgress() {
   );
 
   const updateAcademicDetail = (field, value) => {
-    setAcademicDetails((current) => ({ ...current, [field]: value }));
+    const nextDetails = { ...academicDetails, [field]: value };
+    setAcademicDetails(nextDetails);
     setHasSearched(false);
+
+    try {
+      localStorage.setItem(
+        lastActiveKey,
+        JSON.stringify({ academicDetails: nextDetails })
+      );
+    } catch {}
+
+    // When changing year, batch, section, or semester, load the draft specific to that class & semester
+    if (field === "year" || field === "batch" || field === "section" || field === "semester") {
+      const draftKey = getDraftKey(
+        nextDetails.year,
+        nextDetails.batch,
+        nextDetails.section,
+        nextDetails.semester
+      );
+      const savedDraft = localStorage.getItem(draftKey);
+      if (savedDraft) {
+        try {
+          const draft = JSON.parse(savedDraft);
+          setSubjects(Array.isArray(draft.subjects) ? draft.subjects : []);
+          setExpandedSubjectId(draft.expandedSubjectId || null);
+          setLoadedRecordInfo(draft.loadedRecordInfo || null);
+        } catch {
+          setSubjects([]);
+          setLoadedRecordInfo(null);
+          setExpandedSubjectId(null);
+        }
+      } else {
+        // Clear previous section's subjects so they do not bleed into the new section!
+        setSubjects([]);
+        setLoadedRecordInfo(null);
+        setExpandedSubjectId(null);
+      }
+    }
   };
 
   const fetchCourseProgress = async (showToast = true) => {
     const year = String(academicDetails.year || "").trim();
     const batch = String(academicDetails.batch || "").trim();
     const section = String(academicDetails.section || "").trim().toUpperCase();
+    const semester = String(academicDetails.semester || "").trim();
 
     if (!batch || !section) {
       if (showToast) {
@@ -119,6 +208,7 @@ function CourseProgress() {
           year,
           batch,
           section,
+          semester: semester || undefined,
         },
         headers: getAuthHeaders(),
       });
@@ -145,6 +235,7 @@ function CourseProgress() {
         }));
 
         setSubjects(normalizedSubjects);
+        const finalSemester = saved.semester || academicDetails.semester;
         if (saved.semester) {
           setAcademicDetails((current) => ({
             ...current,
@@ -155,34 +246,35 @@ function CourseProgress() {
           setExpandedSubjectId(normalizedSubjects[0].id);
         }
 
-        setLoadedRecordInfo({
+        const recordInfo = {
           teacherName: saved.teacher?.name || "Faculty",
           teacherEmail: saved.teacher?.email || "",
           updatedAt:
             saved.updatedAt || saved.createdAt || new Date().toISOString(),
           subjectCount: normalizedSubjects.length,
-          semester: saved.semester,
-        });
+          semester: finalSemester,
+        };
+        setLoadedRecordInfo(recordInfo);
 
         if (showToast) {
           toast.success("Previously saved course progress loaded successfully!");
         }
 
-        localStorage.setItem(
-          storageKey,
-          JSON.stringify({
-            academicDetails: {
-              ...academicDetails,
-              semester: saved.semester || academicDetails.semester,
-            },
-            subjects: normalizedSubjects,
-            expandedSubjectId: normalizedSubjects[0]?.id || null,
-          })
+        saveClassDraft(
+          { ...academicDetails, semester: finalSemester },
+          normalizedSubjects,
+          normalizedSubjects[0]?.id || null,
+          recordInfo
         );
       }
     } catch (error) {
       setLoadedRecordInfo(null);
       if (error.response?.status === 404) {
+        setSubjects([]);
+        setExpandedSubjectId(null);
+        try {
+          localStorage.removeItem(getDraftKey(year, batch, section, semester));
+        } catch {}
         if (showToast) {
           toast(
             "No saved course progress found for this class. You can add subjects and chapters below.",
@@ -214,24 +306,28 @@ function CourseProgress() {
         subject.code.toLowerCase() === code.toLowerCase()
     );
     if (exists) {
-      toast.error("This subject is already in the course progress list.");
+      toast.error("This subject is already in the course progress list for this section.");
       return;
     }
     const id = createId();
-    setSubjects((current) => [...current, { id, name, code, chapters: [] }]);
+    const updated = [...subjects, { id, name, code, chapters: [] }];
+    setSubjects(updated);
     setExpandedSubjectId(id);
     setNewSubject(emptySubject);
+    saveClassDraft(academicDetails, updated, id, loadedRecordInfo);
     toast.success("Subject added.");
   };
 
   const updateSubjectChapters = (subjectId, updater) =>
-    setSubjects((current) =>
-      current.map((subject) =>
+    setSubjects((current) => {
+      const updated = current.map((subject) =>
         subject.id === subjectId
           ? { ...subject, chapters: updater(subject.chapters) }
           : subject
-      )
-    );
+      );
+      saveClassDraft(academicDetails, updated, expandedSubjectId, loadedRecordInfo);
+      return updated;
+    });
 
   const addChapter = (subjectId) =>
     updateSubjectChapters(subjectId, (chapters) => [
@@ -312,17 +408,21 @@ function CourseProgress() {
 
       setSubjects(updatedSubjects);
 
-      localStorage.setItem(
-        storageKey,
-        JSON.stringify({ academicDetails, subjects: updatedSubjects, expandedSubjectId })
-      );
-
-      setLoadedRecordInfo((prev) => ({
-        ...(prev || {}),
+      const recordInfo = {
+        teacherName: savedProgress?.teacher?.name || loadedRecordInfo?.teacherName || "You",
+        teacherEmail: savedProgress?.teacher?.email || loadedRecordInfo?.teacherEmail || "",
         updatedAt: new Date().toISOString(),
-        subjectCount: subjects.length,
+        subjectCount: updatedSubjects.length,
         semester: academicDetails.semester,
-      }));
+      };
+      setLoadedRecordInfo(recordInfo);
+
+      saveClassDraft(
+        academicDetails,
+        updatedSubjects,
+        expandedSubjectId,
+        recordInfo
+      );
 
       toast.success(
         response.data?.message || `Progress for ${subject.name} saved successfully.`
@@ -508,7 +608,18 @@ function CourseProgress() {
                     setSubjects([]);
                     setLoadedRecordInfo(null);
                     setHasSearched(false);
-                    toast("Cleared subjects. You can start fresh.", { icon: "🧹" });
+                    setExpandedSubjectId(null);
+                    try {
+                      localStorage.removeItem(
+                        getDraftKey(
+                          academicDetails.year,
+                          academicDetails.batch,
+                          academicDetails.section,
+                          academicDetails.semester
+                        )
+                      );
+                    } catch {}
+                    toast("Cleared subjects for this section. You can start fresh.", { icon: "🧹" });
                   }}
                   className="inline-flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition shadow-sm"
                 >
@@ -635,8 +746,16 @@ function CourseProgress() {
                         type="button"
                         title="Remove subject"
                         onClick={() => {
-                          setSubjects((current) => current.filter((item) => item.id !== subject.id));
+                          const updated = subjects.filter((item) => item.id !== subject.id);
+                          setSubjects(updated);
+                          const nextExpanded = isExpanded ? null : expandedSubjectId;
                           if (isExpanded) setExpandedSubjectId(null);
+                          saveClassDraft(
+                            academicDetails,
+                            updated,
+                            nextExpanded,
+                            loadedRecordInfo
+                          );
                         }}
                         className="inline-flex h-9 w-9 items-center justify-center border border-red-200 bg-white text-red-600 hover:bg-red-50"
                       >

@@ -8,7 +8,7 @@ import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
 
 
-const leaveTypes = ["ALL", "EL", "CL", "ML", "OD", "WINTER_LEAVE", "SUMMER_LEAVE", "COMPOFF"];
+const leaveTypes = ["ALL", "EL", "CL", "ML", "OD", "WINTER_LEAVE", "SUMMER_LEAVE", "COMPOFF", "LWP"];
 const requestKinds = ["ALL", "LEAVE_USAGE", "COMPOFF_CREDIT"];
 const statusOptions = [
   "ALL",
@@ -62,6 +62,7 @@ const leaveBalanceRows = (balance) => [
     (balance.summerLeaveTotal || 0) - (balance.summerLeaveUsed || 0),
   ],
   ["COMPOFF", balance.compoffTotal, balance.compoffUsed, balance.compoffTotal - balance.compoffUsed],
+  ["LWP", "-", balance.lwpUsed || 0, "-"],
 ];
 
 const HODLeavePanel = ({ onBack }) => {

@@ -933,6 +933,30 @@ const saveCourseProgress = async (req, res) => {
       });
     }
 
+    // Ensure no duplicate subject name or code within the same class section
+    const seenCodes = new Set();
+    const seenNames = new Set();
+    for (const sub of subjects) {
+      const codeUpper = String(sub?.code || "").trim().toUpperCase();
+      const nameLower = String(sub?.name || "").trim().toLowerCase();
+      if (!codeUpper || !nameLower) continue;
+
+      if (seenCodes.has(codeUpper)) {
+        return res.status(400).json({
+          sucess: false,
+          message: `Duplicate subject code '${codeUpper}' found in the subject list for Section ${normalizedSection}`,
+        });
+      }
+      if (seenNames.has(nameLower)) {
+        return res.status(400).json({
+          sucess: false,
+          message: `Duplicate subject name '${sub?.name || codeUpper}' found in the subject list for Section ${normalizedSection}`,
+        });
+      }
+      seenCodes.add(codeUpper);
+      seenNames.add(nameLower);
+    }
+
     const existingRecord = await CourseProgress.findOne({
       year: normalizedYear,
       section: normalizedSection,
@@ -1047,6 +1071,17 @@ const saveCourseProgress = async (req, res) => {
       });
     }
 
+    let finalSubjectsToSave = normalizedSubjects;
+    if (req.body.teacherId && existingRecord && Array.isArray(existingRecord.subjects)) {
+      const otherTeachersSubjects = existingRecord.subjects.filter((s) => {
+        const sTeacherId = s.teacher?._id ? s.teacher._id.toString() : s.teacher ? s.teacher.toString() : null;
+        if (sTeacherId && sTeacherId === req.body.teacherId.toString()) return false;
+        if (currentTeacher?.name && s.teacherName && s.teacherName.trim().toLowerCase() === currentTeacher.name.trim().toLowerCase()) return false;
+        return true;
+      });
+      finalSubjectsToSave = [...otherTeachersSubjects, ...normalizedSubjects];
+    }
+
     const courseProgress = await CourseProgress.findOneAndUpdate(
       {
         year: normalizedYear,
@@ -1055,7 +1090,7 @@ const saveCourseProgress = async (req, res) => {
       },
       {
         $set: {
-          subjects: normalizedSubjects,
+          subjects: finalSubjectsToSave,
           semester: normalizedSemester,
           teacher: req.body.teacherId,
         },
@@ -1063,10 +1098,28 @@ const saveCourseProgress = async (req, res) => {
       { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
     );
 
+    const courseProgressObj = courseProgress.toObject();
+    if (req.body.teacherId) {
+      const teacherNameLower = String(currentTeacher?.name || "").trim().toLowerCase();
+      const teacherIdStr = String(req.body.teacherId).trim();
+      courseProgressObj.subjects = (courseProgressObj.subjects || []).filter((sub) => {
+        const subTeacherId = sub.teacher?._id
+          ? sub.teacher._id.toString()
+          : sub.teacher
+          ? sub.teacher.toString()
+          : null;
+        const subTeacherNameLower = String(sub.teacherName || "").trim().toLowerCase();
+        return (
+          (subTeacherId && subTeacherId === teacherIdStr) ||
+          (teacherNameLower && subTeacherNameLower && subTeacherNameLower === teacherNameLower)
+        );
+      });
+    }
+
     return res.status(200).json({
       sucess: true,
       message: "Course progress saved successfully",
-      courseProgress,
+      courseProgress: courseProgressObj,
     });
   } catch (error) {
     if (error?.code === 11000) {
@@ -1101,6 +1154,30 @@ const saveCourseProgressSubject = async (req, res) => {
     });
 
     const subCode = String(subject?.code || "").trim().toUpperCase();
+    const subName = String(subject?.name || "").trim().toLowerCase();
+
+    // Check if another subject in this same section already uses this name or code
+    if (courseProgress && Array.isArray(courseProgress.subjects)) {
+      const duplicateSubject = courseProgress.subjects.find((s) => {
+        const existingCode = String(s.code || "").trim().toUpperCase();
+        const existingName = String(s.name || "").trim().toLowerCase();
+        // If it's the exact same subject (same code), it's an update, so not a duplicate
+        if (existingCode === subCode) {
+          return false;
+        }
+        return existingCode === subCode || (subName && existingName === subName);
+      });
+
+      if (duplicateSubject) {
+        return res.status(400).json({
+          sucess: false,
+          message: `A subject with this ${
+            duplicateSubject.code.toUpperCase() === subCode ? "code" : "name"
+          } already exists in Section ${normalizedSection} (${duplicateSubject.name} - ${duplicateSubject.code})`,
+        });
+      }
+    }
+
     const existingSubject = courseProgress?.subjects?.find(
       (s) => s.code.toUpperCase() === subCode
     );
@@ -1122,6 +1199,27 @@ const saveCourseProgressSubject = async (req, res) => {
         currentTeacher = { name: "Director" };
       } else {
         currentTeacher = { name: "Admin" };
+      }
+    }
+
+    if (existingSubject && req.body.teacherId) {
+      const existingTeacherId = existingSubject.teacher?._id
+        ? existingSubject.teacher._id.toString()
+        : existingSubject.teacher
+        ? existingSubject.teacher.toString()
+        : null;
+      const existingTeacherNameLower = String(existingSubject.teacherName || "").trim().toLowerCase();
+      const currentTeacherNameLower = String(currentTeacher?.name || "").trim().toLowerCase();
+
+      const isOwner =
+        (existingTeacherId && existingTeacherId === req.body.teacherId.toString()) ||
+        (!existingTeacherId && currentTeacherNameLower && existingTeacherNameLower === currentTeacherNameLower);
+
+      if (existingTeacherId && !isOwner) {
+        return res.status(403).json({
+          sucess: false,
+          message: `This subject is assigned to ${existingSubject.teacherName || "another faculty"}. You cannot modify it.`,
+        });
       }
     }
 
@@ -1226,10 +1324,29 @@ const saveCourseProgressSubject = async (req, res) => {
       });
     }
 
+    const courseProgressObj = courseProgress.toObject();
+    if (req.body.teacherId) {
+      const teacherNameLower = String(currentTeacher?.name || "").trim().toLowerCase();
+      const teacherIdStr = String(req.body.teacherId).trim();
+
+      courseProgressObj.subjects = (courseProgressObj.subjects || []).filter((sub) => {
+        const subTeacherId = sub.teacher?._id
+          ? sub.teacher._id.toString()
+          : sub.teacher
+          ? sub.teacher.toString()
+          : null;
+        const subTeacherNameLower = String(sub.teacherName || "").trim().toLowerCase();
+        return (
+          (subTeacherId && subTeacherId === teacherIdStr) ||
+          (teacherNameLower && subTeacherNameLower && subTeacherNameLower === teacherNameLower)
+        );
+      });
+    }
+
     return res.status(200).json({
       sucess: true,
       message: "Subject progress saved successfully",
-      courseProgress,
+      courseProgress: courseProgressObj,
     });
   } catch (error) {
     if (error?.code === 11000) {
@@ -1305,6 +1422,83 @@ const getCourseProgress = async (req, res) => {
         teacherName: resolvedName,
       };
     });
+
+    const currentTeacherId = req.teacherId || req.body?.teacherId;
+    const isTrackMode = String(req.query.mode || "").toLowerCase() === "track";
+
+    // IF REQUEST IS FROM TEACHER / STAFF:
+    if (currentTeacherId) {
+      let currentTeacher = await Teacher.findById(currentTeacherId).select("name email role department");
+      const isStaffUser = !currentTeacher;
+      if (isStaffUser) {
+        currentTeacher = await Staff.findById(currentTeacherId).select("name email role department");
+      }
+
+      const isTeacherHOD = !isStaffUser && currentTeacher?.role === "HOD";
+
+      // If Teacher HOD requested in track mode:
+      // Allow them to see ALL subjects and full progress of that class/section (like Director)!
+      if (isTrackMode && isTeacherHOD) {
+        return res.status(200).json({ sucess: true, courseProgress: courseProgressObj });
+      }
+
+      // If a non-HOD teacher or staff tries track mode, reject with 403
+      if (isTrackMode && !isTeacherHOD) {
+        return res.status(403).json({
+          sucess: false,
+          message: "Only Teacher HODs, Deans, and Directors are authorized to track course progress across all faculty",
+        });
+      }
+
+      // Normal single-teacher syllabus editing view (CourseProgress.jsx):
+      // Only return subjects added by this teacher himself/herself
+      const teacherIdStr = String(currentTeacherId).trim();
+      const teacherNameLower = String(currentTeacher?.name || "").trim().toLowerCase();
+      const topTeacherId = courseProgress.teacher?._id
+        ? courseProgress.teacher._id.toString()
+        : courseProgress.teacher
+        ? courseProgress.teacher.toString()
+        : null;
+
+      const semPrefix = normalizedSemester
+        ? normalizedSemester.replace(/\s*semester$/i, "").trim().toLowerCase()
+        : "";
+
+      courseProgressObj.subjects = (courseProgressObj.subjects || []).filter((sub) => {
+        const subTeacherId = sub.teacher?._id
+          ? sub.teacher._id.toString()
+          : sub.teacher
+          ? sub.teacher.toString()
+          : null;
+        const subTeacherNameLower = String(sub.teacherName || "").trim().toLowerCase();
+
+        const isOwner =
+          (subTeacherId && subTeacherId === teacherIdStr) ||
+          (teacherNameLower && subTeacherNameLower && subTeacherNameLower === teacherNameLower) ||
+          (!subTeacherId && !subTeacherNameLower && topTeacherId && topTeacherId === teacherIdStr);
+
+        if (!isOwner) {
+          return false;
+        }
+
+        if (semPrefix && semPrefix !== "all" && semPrefix !== "all semesters") {
+          const subSem = String(sub.semester || courseProgressObj.semester || "").trim().toLowerCase();
+          const subSemPrefix = subSem.replace(/\s*semester$/i, "").trim();
+          if (subSem && !subSemPrefix.startsWith(semPrefix) && !semPrefix.startsWith(subSemPrefix)) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+
+      if (courseProgressObj.subjects.length === 0) {
+        return res.status(404).json({
+          sucess: false,
+          message: "No course progress found for your subjects in this section, year, and batch",
+        });
+      }
+    }
 
     return res.status(200).json({ sucess: true, courseProgress: courseProgressObj });
   } catch (error) {

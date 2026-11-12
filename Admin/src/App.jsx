@@ -276,6 +276,14 @@ function App() {
           }
         />
         <Route
+          path="/trackCourseProgress"
+          element={
+            <TeacherProTect>
+              <TrackCourseProgress />
+            </TeacherProTect>
+          }
+        />
+        <Route
           path="/applyLeave"
           element={
             <TeacherProTect>

@@ -132,53 +132,80 @@ const updateStaffPassword = async (req,res)=>{
 
 const assignHOD = async (req, res) => {
   try {
-    const { teacheremail, department } = req.body;
-    if (!teacheremail || !department) {
+    const email = req.body.teacheremail || req.body.email || req.body.staffemail;
+    const { department } = req.body;
+    if (!email || !department) {
       return res
         .status(400)
         .json({
           sucess: false,
-          message: "Teacher email and department are required.",
+          message: "Email and department are required.",
         });
     }
 
-    const teacher = await Teacher.findOne({ email: teacheremail });
-    if (!teacher) {
-      return res
-        .status(404)
-        .json({ sucess: false, message: "Teacher not found." });
+    const trimmedEmail = String(email).trim();
+    const emailRegex = new RegExp(
+      `^${trimmedEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+      "i"
+    );
+
+    let user = await Teacher.findOne({ email: emailRegex });
+    let userType = "Teacher";
+
+    if (!user) {
+      user = await Staff.findOne({ email: emailRegex });
+      userType = "Staff";
     }
 
-    const existingHOD = await Teacher.findOne({ department, role: "HOD" });
-    if (existingHOD) {
-      // Downgrade the existing HOD to Faculty
+    if (!user) {
+      return res
+        .status(404)
+        .json({ sucess: false, message: "Teacher or Staff member not found." });
+    }
+
+    // Downgrade any existing Teacher HOD in this department
+    const existingTeacherHOD = await Teacher.findOne({ department, role: "HOD" });
+    if (
+      existingTeacherHOD &&
+      (userType !== "Teacher" || String(existingTeacherHOD._id) !== String(user._id))
+    ) {
       await Teacher.updateOne(
-        { _id: existingHOD._id },
+        { _id: existingTeacherHOD._id },
         {
           $unset: {
             department: "",
             role: "",
-        
           },
-        },
+        }
       );
-      await existingHOD.save();
     }
 
-    // Set this teacher as HOD
-    teacher.role = "HOD";
-    teacher.department = department;
-    await teacher.save();
+    // Downgrade any existing Staff HOD in this department
+    const existingStaffHOD = await Staff.findOne({ department, role: "HOD" });
+    if (
+      existingStaffHOD &&
+      (userType !== "Staff" || String(existingStaffHOD._id) !== String(user._id))
+    ) {
+      await Staff.updateOne(
+        { _id: existingStaffHOD._id },
+        {
+          $set: {
+            role: "STAFF",
+          },
+        }
+      );
+    }
 
-    // Optionally: downgrade others in the same department?
-    // For simplicity, we just assign. If admin assigns multiple, they all get HOD role.
-    // But the logic will pick one.
+    // Set this teacher or staff as HOD
+    user.role = "HOD";
+    user.department = department;
+    await user.save();
 
     return res
       .status(200)
       .json({
         sucess: true,
-        message: `Teacher ${teacher.name} assigned as HOD of ${department}.`,
+        message: `${userType} ${user.name} assigned as HOD of ${department}.`,
       });
   } catch (error) {
     console.error("Error assigned HOD:", error);

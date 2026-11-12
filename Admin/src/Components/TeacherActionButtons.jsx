@@ -56,10 +56,29 @@ const TeacherActionButtons = () => {
   const location = useLocation();
   const current = location?.pathname || "";
 
+  const isTeacherHOD =
+    localStorage.getItem("teacherrole") === "HOD" &&
+    localStorage.getItem("isStaff") !== "true" &&
+    Boolean(localStorage.getItem("teacherToken"));
+
+  const allActions = isTeacherHOD
+    ? [
+        ...actions,
+        {
+          label: "Track course_progress",
+          path: "/trackCourseProgress",
+          icon: "ri-line-chart-line",
+          gradient: "from-cyan-100 to-sky-200",
+          border: "border-cyan-200",
+          text: "text-cyan-800",
+        },
+      ]
+    : actions;
+
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {actions.map((action) => {
+      <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 ${isTeacherHOD ? "xl:grid-cols-7" : "xl:grid-cols-6"}`}>
+        {allActions.map((action) => {
           const isActive = current === action.path;
           return (
             <button

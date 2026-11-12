@@ -28,7 +28,7 @@ const emptyFilters = {
 };
 
 const departments = ["AIML/CSE/IT", "ECE/EN", "APPLIED/STAFF", "ADMINISTRATOR","LIBRARY","REGISTRAR"];
-const leaveTypes = ["ALL", "EL", "CL", "ML", "OD", "WINTER_LEAVE", "SUMMER_LEAVE", "COMPOFF"];
+const leaveTypes = ["ALL", "EL", "CL", "ML", "OD", "WINTER_LEAVE", "SUMMER_LEAVE", "COMPOFF", "LWP"];
 const requestKinds = ["ALL", "LEAVE_USAGE", "COMPOFF_CREDIT"];
 const statusOptions = [
   "ALL",
@@ -84,6 +84,7 @@ const leaveBalanceRows = (balance) => [
     balance.compoffUsed,
     balance.compoffTotal - balance.compoffUsed,
   ],
+  ["LWP", "-", balance.lwpUsed || 0, "-"],
 ];
 
 const attachmentHref = (attachment) => {

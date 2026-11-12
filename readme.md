@@ -23,6 +23,7 @@ The project contains three main applications:
 9. Leave Management
 10. Data Models
 11. Operational Notes
+12. Architecture Updates & Recent Implementations
 
 ---
 
@@ -68,6 +69,7 @@ The Admin app is used by Admin, Dean, Director, Teachers, HODs, and Staff depend
 
 - Teacher login.
 - View assigned sections and subjects.
+- Maintain syllabus completion progress (`CourseProgress.jsx`) with chapters, required lectures, and target dates. Progress and subjects are isolated per class `(year, batch, section)` container.
 - Mark attendance.
 - Monitor students and attendance.
 - Upload and update marks for `ST1`, `ST2`, and `PUT`.
@@ -78,17 +80,20 @@ The Admin app is used by Admin, Dean, Director, Teachers, HODs, and Staff depend
 
 ### HOD
 
-- HOD is a teacher role with department-level leave review access.
+- HOD can be assigned from either Teacher or Staff.
+- Department-level leave review access (`/hodPanel`).
 - View department leave requests.
-- Inspect teacher leave balances and request history.
+- Inspect teacher and staff leave balances and request history.
 - Forward valid requests to Director.
 - Reject requests with remarks.
+- **Teacher HOD Track Course Progress:** Teacher HODs have access to "Track course_progress" (`/trackCourseProgress`) to monitor full syllabus progress and generate reports across all subjects and faculty for any class/batch (Staff HODs do not have this academic course tracking option).
 
 ### Staff
 
 - Staff login uses the teacher/staff login flow.
-- Apply for leave and comp-off credit.
-- View personal leave balances and request history.
+- Apply for leave (including LWP - Leave Without Pay) and comp-off credit.
+- View personal leave balances, request history, and Monthly Approved LWP Tracker.
+- If assigned as HOD, retains the Staff Portal UI (Leave Balances & Staff Actions) with an added "Manage Dept Leaves" quick action, without exposing Teacher-specific modules.
 
 ### Student
 
@@ -377,6 +382,7 @@ The leave system manages balances and requests for teachers and staff. Requests 
 | `MATERNITY_LEAVE` | Maternity Leave | Individual special allocation |
 | `STUDY_LEAVE` | Study Leave | Individual special allocation |
 | `SPECIAL_DISABILITY_LEAVE` | Special Disability Leave | Individual special allocation |
+| `LWP` | Leave Without Pay | Count-based / Unrestricted (starts at 0, increments on Director approval, resets per semester) |
 
 ### Request Types
 
@@ -426,10 +432,10 @@ Quota groups:
 
 ### Leave UI Coverage
 
-- Teacher/Staff Leave Desk shows balances, pending count, approved count, request form, current requests, history, attachments, and rollback action.
-- HOD panel shows department requests and teacher leave details.
-- Admin Manage Leaves screen supports semester creation, semester close, filtering, summaries, and request forwarding/rejection.
-- Director dashboard supports final approval and leave quota assignment.
+- Teacher/Staff Leave Desk (`/applyLeave`) shows balances, LWP (Current Sem) card, pending count, approved count, request form, current requests, history, attachments, rollback action, and a dedicated **Monthly Approved LWP Tracker** with month and year filters.
+- HOD panel (`/hodPanel`) shows department requests, teacher leave details, and supports LWP review.
+- Admin Manage Leaves screen supports semester creation, semester close, filtering by leave types including LWP, summaries, and request forwarding/rejection.
+- Director dashboard (`/director/approveLeaves`) supports final approval and date-wise filtering for all leaves including LWP, as well as quota assignment.
 
 ---
 
@@ -445,13 +451,14 @@ Quota groups:
 ### Teacher
 
 - Stores name, email, password hash, department, role, assigned sections, and subjects.
-- `role` may be teacher/HOD style depending on assignment.
-- Department enum values are `AIML/CSE/IT`, `ECE/EN`, `APPLIED/STAFF`, and `ADMINISTRATOR`.
+- `role` may be Faculty or HOD.
+- Department enum values are `AIML/CSE/IT`, `ECE/EN`, `APPLIED/STAFF`, `ADMINISTRATOR`, `LIBRARY`, and `REGISTRAR`.
 
 ### Staff
 
 - Stores staff profile, login details, department, and role.
-- Staff role defaults to staff behavior in the teacher/staff login flow.
+- Supports both standard `"STAFF"` role and `"HOD"` role when assigned by Admin.
+- When assigned as HOD, access to department leave reviews is enabled while preserving the Staff Portal layout.
 
 ### Section
 
@@ -461,14 +468,14 @@ Quota groups:
 ### LeaveRequest
 
 - References either `teacher` or `staff`.
-- Stores department, semester, academic year, leave type, request kind, date range, days, reason, optional attachment, status, approval remarks, and rollback details.
+- Stores department, semester, academic year, leave type (including `LWP`), request kind, date range, days, reason, optional attachment, status, approval remarks, and rollback details.
 
 ### LeaveBalance
 
 - References either `teacher` or `staff`.
 - Unique per user, semester, and academic year.
-- Tracks total and used values for all leave types.
-- Includes semester, yearly, comp-off, and special leave balances.
+- Tracks total and used values for all leave types, including `lwpTotal` and `lwpUsed`.
+- `lwpUsed` tracks approved Leave Without Pay count for the current semester and resets to 0 upon semester close. Historical approved LWPs remain queryable from `LeaveRequest`.
 
 ---
 
@@ -510,59 +517,132 @@ cd frontend
 npm run build
 ```
 
-``` bash
-Teacher/Staff profile me department store karna
-backend/model/teachermodel.js
-backend/model/staffmodel.js
-Allowed values: AIML/CSE/IT, ECE/EN, APPLIED/STAFF, ADMINISTRATOR
+---
 
-HOD assign karna
-Admin/src/Components/AssignHOD.jsx
-backend/controller/admincontroller.js
-Admin teacher email + department select karta hai. Backend us teacher ko us department ka HOD bana deta hai.
-Agar same department ka pehle se HOD hai, uska role/department unset ho raha hai.
+## 12. Architecture Updates & Recent Implementations
 
-Leave apply karte time routing decide karna
-Admin/src/pages/Leave.jsx
-backend/controller/leavecontroller.js
-Teacher/staff leave form me department select hota hai.
-Agar department ADMINISTRATOR hai, request direct Director ko jaati hai.
-Agar normal department hai, backend us department ka HOD dhundhta hai aur request PENDING_HOD me bhejta hai.
+This section documents the latest major feature implementations and architectural updates added to the ERP system:
 
-HOD dashboard me sirf apne department ki leave requests dikhana
-Admin/src/pages/TeacherLogin.jsx login ke baad teacherdepartment localStorage me save karta hai.
-Admin/src/Components/HODLeavePanel.jsx
-Admin/src/Components/DeptLeaveRequests.jsx
-HOD panel localStorage se department leta hai aur backend ko filter bhejta hai, taaki HOD ko sirf apne department ki leaves milen.
+### 12.1. Leave Without Pay (LWP) Module
+* **Business Need:** Enable faculty and staff to take unpaid leaves when their standard quota is exhausted or for personal reasons, without being blocked by quota limitations.
+* **Database Models:**
+  - `backend/model/leavebalancemodel.js`: Added `lwpTotal: { type: Number, default: 0 }` and `lwpUsed: { type: Number, default: 0 }`.
+  - `backend/model/leaverequestmodel.js`: Extended `leaveType` enum with `"LWP"` (`["Casual", "Medical", "Duty", "Special", "CompOff", "LWP"]`).
+* **Backend Processing (`backend/controller/leavecontroller.js`):**
+  - **Quota Bypass:** When `leaveType === "LWP"`, balance verification is bypassed so teachers/staff can apply for LWP even with zero remaining leave balance.
+  - **Usage Tracking:** Upon Director approval, `lwpUsed` is incremented by the approved duration.
+  - **Semester Rollover:** During semester reset / rollover (`closeSemester`), `lwpUsed` resets to 0 alongside other seasonal counters.
+  - **Status & Summaries:** LWP is aggregated into leave status reports, user balances, and department leave lists.
+* **Frontend Panels:**
+  - `Admin/src/pages/Leave.jsx`:
+    - Added "LWP (Unpaid)" metric card showing total days used.
+    - Added "Leave Without Pay (LWP)" option in the application dropdown.
+    - Integrated **Monthly Approved LWP Tracker** with month and year selectors to inspect exact approved LWP dates.
+  - `Admin/src/pages/Approveleaves.jsx`, `HODLeavePanel.jsx`, `ManageLeaves.jsx`:
+    - Added "LWP" filter option and distinct badge rendering in Director, HOD, and Admin review tables.
 
-Leave records filtering
-Admin/src/pages/Approveleaves.jsx
-backend/controller/leavecontroller.js
-Director/approval screen me department filter hai. ALL select ho to sab, warna selected department ki requests.
+---
 
-Leave request record me department save karna
-backend/model/leaverequestmodel.js
-Har leave request ke andar department required hai.
-Is par index bhi hai: { department: 1, status: 1 }, meaning department + status ke basis par queries fast karne ke liye.
+### 12.2. Staff HOD Assignment & Role Preservation
+* **Business Need:** Allow non-teaching Staff members to be assigned as Department HODs, giving them departmental leave approval authority while preserving their Staff Portal UI.
+* **Backend Controller (`backend/controller/admincontroller.js`):**
+  - Upgraded `assignHOD` to search and support both `Teacher` and `Staff` collections.
+  - Safely unsets any existing HOD of the targeted department (Teacher or Staff) to ensure strict one-HOD-per-department rule.
+  - Updates the targeted staff member's profile with `isHOD: true` and `department: req.body.department`.
+* **Leave Routing (`backend/controller/leavecontroller.js`):**
+  - When routing departmental leave requests (`PENDING_HOD`), the backend checks both `Teacher` and `Staff` models to find the active HOD for that department.
+* **Frontend Portal Distinction (`TeacherDashboard.jsx` & `TeacherLogin.jsx`):**
+  - `TeacherLogin.jsx` stores `isStaff: "true" | "false"` in `localStorage`.
+  - When a Staff HOD logs in, they remain in the **Staff Portal** view (showing personal leave balances and staff actions). Academic teacher modules (attendance, marks, syllabus) remain hidden.
+  - Staff HOD receives an extra action: **"Manage Dept Leaves"** (`/hodPanel`) to review, forward, or reject leave requests from their department.
 
-Leave balance ke saath department save karna
-backend/model/leavebalancemodel.js
-getBalance() jab naya balance create karta hai to department save karta hai.
-Semester close/carry-forward me bhi old balance ka department next balance me copy hota hai.
+---
 
-Department-wise leave list / summary
-Route: GET /leaves/department/:department
-Backend function: getDepartmentLeaves
-Summary aggregation me department + leaveType + status ke basis par grouping hoti hai.
+### 12.3. Course Progress & Syllabus Tracking (Class Isolation & Uniqueness)
+* **Business Need:** Allow identical subject names and codes (e.g., `DBMS` / `CS-301`) across different sections or years without conflict, while strictly preventing duplicate subjects within the same section.
+* **Class Container Model (`backend/model/courseprogressmodel.js`):**
+  - Each `(year, batch, section)` is an independent document partitioned by `{ section: 1, year: 1, batch: 1 }` (`unique: true`).
+* **Backend In-Section Validation (`backend/controller/teacherconroller.js`):**
+  - `saveCourseProgressSubject`: Validates that no *other* subject in that specific section uses the same code or name, while allowing seamless updates to the existing subject.
+  - `saveCourseProgress`: Validates that the submitted list of subjects contains no duplicate codes or names within the section.
+* **Frontend Scoped Drafts (`Admin/src/pages/CourseProgress.jsx`):**
+  - Local drafts are strictly partitioned per class and semester: `course-progress-${token}-${year}-${batch}-${section}-${semester}`.
+  - Switching `year`, `batch`, `section`, or `semester` clears or loads only that specific class draft, preventing cross-section data contamination.
+  - On 404 (no record found for that section/semester), subjects are reset to `[]` for a clean slate.
 
-Frontend public Department page
-frontend/src/pages/Department.jsx
-Ye mostly display/static page hai, backend logic se connected nahi lag raha.
+---
 
-Short me: department sabse important leave system me hai: HOD allocation, leave request routing, HOD filtering, director filtering, leave records, leave balances, aur summaries.
+### 12.4. Teacher Panel Visibility vs Director Whole-Section Tracking
+* **Business Need:** When a teacher searches a class in Course Progress, they should only see the subjects they personally added/teach, without seeing other faculty's progress. Meanwhile, the Director panel must remain capable of monitoring all faculty.
+* **Backend Filtering (`backend/controller/teacherconroller.js`):**
+  - In `getCourseProgress`:
+    - When requested with `teachertoken`, the backend resolves `teacherId` and filters `subjects` to ONLY include subjects where `sub.teacher` matches the teacher ID or `sub.teacherName` matches the teacher name.
+    - If no subjects belong to this teacher in that section, returns 404 (`"No subjects added by you found..."`), presenting a clean workspace.
+  - Subject Overwrite Protection: In `saveCourseProgressSubject`, if a subject exists and belongs to another faculty, modification is blocked with `403 Forbidden`.
+* **Director & Dean Monitoring (`TrackCourseProgress.jsx`):**
+  - Requests sent with `admintoken` bypass the single-teacher filter.
+  - Director, Dean, and Admin continue to see all subjects across all faculty with complete progress bars, chapter tables, and report printing.
 
+---
 
-```
+### 12.5. Teacher HOD Track Course Progress ("Track course_progress") vs Staff HOD Exclusion
+* **Business Need:** Empower Teacher HODs to monitor syllabus completion across their department/section just like the Director, while explicitly excluding Staff HODs.
+* **Routing & Navigation (`Admin/src/App.jsx`):**
+  - Added protected route `/trackCourseProgress` wrapped with `<TeacherProTect>`.
+* **Dashboard Action (`Admin/src/pages/TeacherDashboard.jsx`):**
+  - **Teacher HOD (`isHOD === true` AND `!isStaff`):** Granted the quick action card **"Track course_progress"** navigating to `/trackCourseProgress`.
+  - **Staff HOD (`isStaff === true`):** The "Track course_progress" card is **completely excluded/hidden**. Staff HODs only see "Manage Dept Leaves".
+  - **Normal Teachers:** Cannot see this tracking action.
+* **Top Navigation Bar (`Admin/src/Components/TeacherActionButtons.jsx`):**
+  - Dynamically adds "Track course_progress" to the navigation bar when the logged-in user is a Teacher HOD.
+* **Monitoring Page (`Admin/src/pages/TrackCourseProgress.jsx`):**
+  - Recognizes `isTeacherHOD` role.
+  - Sets header label to `"HOD Monitor"`.
+  - Configures "Back to Dashboard" button to return to `/teacherdashboard`.
+  - Sends `mode: "track"` parameter along with `teachertoken`.
+* **Backend HOD Tracking Authorization (`backend/controller/teacherconroller.js`):**
+  - In `getCourseProgress`, when `mode === "track"`:
+    - Verifies the user is a Teacher HOD (`role === "HOD"` in `Teacher` collection).
+    - If verified, returns all subjects and full section progress without single-teacher filtering.
+    - If non-HOD or staff attempts `mode=track`, access is rejected with `403 Forbidden`.
+
+---
+
+### 12.6. Monitor Attendance Compact Print Option
+* **Business Need:** Provide faculty and administrators with an instant, compact tabular attendance summary report of an entire class containing student names, roll numbers, father's names, total lectures, lectures attended, aggregate attendance percentage, and eligibility status without printing multiple pages of individual subject breakdowns.
+* **Component Implementation (`Admin/src/Components/MonitorAttendence.jsx`):**
+  - **Dual Print Controls:** Added a dedicated **"Compact Print"** button alongside the existing **"Print"** button (subject-wise detailed attendance report), keeping the existing detailed print functionality completely intact and unchanged.
+  - **Compact Print Layout:** Opens an optimized printable window displaying:
+    - Institute/Class Header: Section, Year, Batch, Semester, Filtered Date Range, and Generation Timestamp.
+    - Summary Statistic Badges: Total Students, Eligible ($\ge 75\%$), Shortage ($< 75\%$), and Class Aggregate Percentage.
+    - Consolidated Table: Serial Number, Roll Number, Student Name, Father's Name, Total Lectures, Attended Lectures, Aggregate %, and Eligibility Status Badge.
+    - Print Optimization: Compact typography, color-coded shortage/eligible highlights, signature footer block, and automatic print dialog invocation with `@media print` styles.
+
+---
+
+### 12.7. Summary of Modified Files
+
+| File Path | Description of Changes |
+| :--- | :--- |
+| `backend/model/leavebalancemodel.js` | Added `lwpTotal` and `lwpUsed` fields to track Leave Without Pay usage. |
+| `backend/model/leaverequestmodel.js` | Added `"LWP"` to `leaveType` enum. |
+| `backend/controller/leavecontroller.js` | LWP quota bypass, usage increment on approval, semester reset, and Staff HOD routing lookup. |
+| `backend/controller/admincontroller.js` | Updated `assignHOD` to support assigning Staff as HOD with automatic previous HOD reset. |
+| `backend/controller/teacherconroller.js` | In-section subject uniqueness validation, teacher-only subject filtering for `/courseProgress`, and Teacher HOD `mode=track` authorization. |
+| `backend/middelware/teacherAuth.js` | Populates `req.teacherId` and `req.adminID` defensively for both GET and POST endpoints. |
+| `Admin/src/App.jsx` | Added protected route `/trackCourseProgress`. |
+| `Admin/src/pages/Leave.jsx` | Added "LWP (Unpaid)" card, dropdown option, and Monthly Approved LWP Tracker with month/year filter. |
+| `Admin/src/pages/Approveleaves.jsx` | Added LWP to filter list and table badges. |
+| `Admin/src/Components/HODLeavePanel.jsx` | Added LWP to leave type filters. |
+| `Admin/src/Components/ManageLeaves.jsx` | Added LWP to leave type filters. |
+| `Admin/src/Components/AssignHOD.jsx` | Supported assigning staff emails as HOD. |
+| `Admin/src/pages/TeacherLogin.jsx` | Saved `isStaff` state in localStorage. |
+| `Admin/src/pages/TeacherDashboard.jsx` | Staff HOD portal preservation ("Manage Dept Leaves") and Teacher HOD "Track course_progress" card. |
+| `Admin/src/pages/CourseProgress.jsx` | LocalStorage scoping by `(year, batch, section, semester)`, 404 subject reset, and semester query parameter. |
+| `Admin/src/pages/TrackCourseProgress.jsx` | Added Teacher HOD support (`mode=track`), "HOD Monitor" badge, and back navigation to `/teacherdashboard`. |
+| `Admin/src/Components/TeacherActionButtons.jsx` | Added "Track course_progress" shortcut button for Teacher HODs. |
+| `Admin/src/Components/MonitorAttendence.jsx` | Added "Compact Print" button and aggregate attendance tabular print template while preserving existing detailed subject print. |
+| `readme.md` | Comprehensive system documentation and architecture update. |
 
 ---
 

@@ -178,6 +178,10 @@ function TrackCourseProgress() {
   const isDean =
     location.pathname.startsWith("/dean") ||
     (!localStorage.getItem("directorToken") && Boolean(localStorage.getItem("deanToken")));
+  const isTeacherHOD =
+    localStorage.getItem("teacherrole") === "HOD" &&
+    localStorage.getItem("isStaff") !== "true" &&
+    Boolean(localStorage.getItem("teacherToken"));
 
   const [filters, setFilters] = useState({
     year: "IIIrd",
@@ -272,6 +276,7 @@ function TrackCourseProgress() {
         localStorage.getItem("deanToken") ||
         localStorage.getItem("directorToken") ||
         localStorage.getItem("adminToken");
+      const teacherToken = localStorage.getItem("teacherToken");
 
       const response = await axios.get(backendUrl + "/api/course-progress", {
         params: {
@@ -279,9 +284,11 @@ function TrackCourseProgress() {
           batch: filters.batch,
           section: filters.section,
           semester: filters.semester || undefined,
+          mode: isTeacherHOD ? "track" : undefined,
         },
         headers: {
           admintoken: adminLikeToken || null,
+          teachertoken: isTeacherHOD ? teacherToken : null,
         },
       });
       const savedProgress = response.data.courseProgress;
@@ -1069,7 +1076,7 @@ function TrackCourseProgress() {
         <header className="mb-5 flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700">
-              {isDean ? "Dean Monitor" : "Director Monitor"}
+              {isDean ? "Dean Monitor" : isTeacherHOD ? "HOD Monitor" : "Director Monitor"}
             </p>
             <h1 className="mt-1 text-2xl font-bold text-slate-900">
               Course Progress
@@ -1091,7 +1098,7 @@ function TrackCourseProgress() {
             ) : null}
             <button
               type="button"
-              onClick={() => navigate(isDean ? "/dean" : "/director")}
+              onClick={() => navigate(isDean ? "/dean" : isTeacherHOD ? "/teacherdashboard" : "/director")}
               className="inline-flex items-center justify-center gap-2 border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 rounded"
             >
               <ArrowLeft className="h-4 w-4" />

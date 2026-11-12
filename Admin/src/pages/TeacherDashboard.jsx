@@ -38,7 +38,10 @@ const TeacherDashboard = () => {
    
   const [mydata,setmydata]= React.useState([]);
   const [leaveBalances, setLeaveBalances] = React.useState(null);
-  const isStaff = localStorage.getItem("teacherrole") === "STAFF";
+  const isStaff =
+    localStorage.getItem("isStaff") === "true" ||
+    localStorage.getItem("userType") === "STAFF" ||
+    localStorage.getItem("teacherrole") === "STAFF";
   const [assignedSections, setAssignedSections] = React.useState([]);
   const [sectionSemesters, setSectionSemesters] = React.useState({});
   const [sectionSubjects, setSectionSubjects] = React.useState({});
@@ -50,9 +53,9 @@ const TeacherDashboard = () => {
     localStorage.removeItem("teachersection");
     localStorage.removeItem("teacherrole");
     localStorage.removeItem("teacherdepartment");
+    localStorage.removeItem("isStaff");
+    localStorage.removeItem("userType");
     navigate("/teacherlogin");
- 
-
   };
 
 
@@ -358,13 +361,22 @@ const TeacherDashboard = () => {
         }
       ];
 
-  if (!isStaff && isHOD) {
+  if (isHOD) {
     quickActions.push({
       title: "Manage Dept Leaves",
       icon: "ri-calendar-check-line",
       onClick: () => navigate("/hodPanel"),
       className: "from-purple-100 to-purple-200 border-purple-300",
     });
+
+    if (!isStaff) {
+      quickActions.push({
+        title: "Track course_progress",
+        icon: "ri-line-chart-line",
+        onClick: () => navigate("/trackCourseProgress"),
+        className: "from-cyan-100 to-blue-200 border-cyan-300",
+      });
+    }
   }
 
   return (

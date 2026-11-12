@@ -43,10 +43,10 @@ const AssignHOD = () => {
             <CardContent>
                 <form onSubmit={handleAssign} className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Teacher Email</label>
+                        <label className="text-sm font-medium">Faculty / Staff Email</label>
                         <Input 
                             type="email" 
-                            placeholder="teacher@example.com" 
+                            placeholder="faculty@example.com or staff@example.com" 
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required

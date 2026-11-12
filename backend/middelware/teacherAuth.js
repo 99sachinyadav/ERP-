@@ -19,18 +19,24 @@ const authTeacher = async (req,res,next)=>{
          if(!adminIds.includes(adminDecodedToken.id)){
              return res.status(403).json({sucess:false,message:" invalid token"})
           }
+          req.adminID = adminDecodedToken.id;
+          req.body = req.body || {};
           req.body.adminID = adminDecodedToken.id;
         } 
         else{
           const decodedToken = jwt.verify(teachertoken, process.env.JWT_SECRET);
+          req.teacherId = decodedToken.id;
+          req.body = req.body || {};
           req.body.teacherId = decodedToken.id;
           
           const isTeacher = await Teacher.exists({ _id: decodedToken.id });
           if (isTeacher) {
+            req.userType = "Teacher";
             req.body.userType = "Teacher";
           } else {
             const isStaff = await Staff.exists({ _id: decodedToken.id });
             if (isStaff) {
+              req.userType = "Staff";
               req.body.userType = "Staff";
             } else {
               return res.status(403).json({sucess:false,message:"invalid teacher or staff token"})

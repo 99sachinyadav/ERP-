@@ -123,6 +123,16 @@ const leaveBalanceSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    lwpTotal: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    lwpUsed: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   { timestamps: true }
 );

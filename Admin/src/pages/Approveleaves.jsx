@@ -35,6 +35,7 @@ const leaveTypes = [
   "MATERNITY_LEAVE",
   "STUDY_LEAVE",
   "SPECIAL_DISABILITY_LEAVE",
+  "LWP",
 ];
 const requestKinds = ["ALL", "LEAVE_USAGE", "COMPOFF_CREDIT"];
 const statusOptions = [
@@ -114,6 +115,7 @@ const leaveBalanceRows = (balance) => [
     (balance.specialDisabilityLeaveTotal || 0) -
       (balance.specialDisabilityLeaveUsed || 0),
   ],
+  ["LWP", "-", balance.lwpUsed || 0, "-"],
 ];
 
 const leaveTypeLabel = (type) =>
@@ -123,6 +125,7 @@ const leaveTypeLabel = (type) =>
     SPECIAL_DISABILITY_LEAVE: "Special Disability Leave",
     WINTER_LEAVE: "Winter Leave",
     SUMMER_LEAVE: "Summer Leave",
+    LWP: "Leave Without Pay (LWP)",
   }[type] || type);
 
 const attachmentHref = (attachment) => {

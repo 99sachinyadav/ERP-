@@ -29,6 +29,7 @@ const leaveTypes = [
   "MATERNITY_LEAVE",
   "STUDY_LEAVE",
   "SPECIAL_DISABILITY_LEAVE",
+  "LWP",
 ];
 const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024;
 
@@ -90,6 +91,9 @@ const balanceValue = (balance, type) => {
       (balance.specialDisabilityLeaveUsed || 0)
     );
   }
+  if (type === "LWP") {
+    return balance.lwpUsed || 0;
+  }
   return 0;
 };
 
@@ -100,7 +104,23 @@ const leaveTypeLabel = (type) =>
     SPECIAL_DISABILITY_LEAVE: "Special Disability Leave",
     WINTER_LEAVE: "Winter Leave",
     SUMMER_LEAVE: "Summer Leave",
+    LWP: "Leave Without Pay (LWP)",
   })[type] || type;
+
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
 const approvalRemark = (request) => {
   const remarks = [];
@@ -131,6 +151,8 @@ const Leave = () => {
   const [loading, setLoading] = useState(false);
   const [isSubmit, setisSubmit] = useState(false);
   const [isCompoffRequested, setisCompoffRequested] = useState(false);
+  const [lwpMonth, setLwpMonth] = useState(new Date().getMonth().toString());
+  const [lwpYear, setLwpYear] = useState(new Date().getFullYear().toString());
   
 
   const loadLeaveData = async () => {
@@ -167,6 +189,33 @@ const Leave = () => {
   const approvedCount = requests.filter(
     (request) => request.status === "APPROVED",
   ).length;
+
+  const availableYears = useMemo(() => {
+    const years = new Set([new Date().getFullYear().toString()]);
+    requests.forEach((r) => {
+      if (r.fromDate) {
+        years.add(new Date(r.fromDate).getFullYear().toString());
+      }
+    });
+    return Array.from(years).sort((a, b) => Number(b) - Number(a));
+  }, [requests]);
+
+  const monthlyApprovedLwpRequests = useMemo(() => {
+    return requests.filter((r) => {
+      if (r.leaveType !== "LWP" || r.status !== "APPROVED") return false;
+      const d = new Date(r.fromDate);
+      const mMatches = lwpMonth === "ALL" || d.getMonth().toString() === lwpMonth;
+      const yMatches = lwpYear === "ALL" || d.getFullYear().toString() === lwpYear;
+      return mMatches && yMatches;
+    });
+  }, [requests, lwpMonth, lwpYear]);
+
+  const totalMonthlyApprovedLwpDays = useMemo(() => {
+    return monthlyApprovedLwpRequests.reduce(
+      (sum, r) => sum + (Number(r.days) || 0),
+      0
+    );
+  }, [monthlyApprovedLwpRequests]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -205,7 +254,10 @@ const Leave = () => {
     reader.readAsDataURL(file);
   };
 
-  const isStaff = localStorage.getItem("teacherrole") === "STAFF";
+  const isStaff =
+    localStorage.getItem("isStaff") === "true" ||
+    localStorage.getItem("userType") === "STAFF" ||
+    localStorage.getItem("teacherrole") === "STAFF";
 
   const submitLeave = async (event) => {
     event.preventDefault();
@@ -338,13 +390,20 @@ const Leave = () => {
           { type: "MATERNITY_LEAVE", label: "Maternity" },
           { type: "STUDY_LEAVE", label: "Study" },
           { type: "SPECIAL_DISABILITY_LEAVE", label: "Special Disability" },
+          { type: "LWP", label: "LWP (Current Sem)", isLwp: true },
         ].map((item) => (
           <div
             key={item.type}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+            className={`rounded-2xl border p-5 shadow-sm ${
+              item.isLwp ? "border-rose-200 bg-rose-50/40" : "border-slate-200 bg-white"
+            }`}
           >
             <p className="text-sm text-slate-500">{item.label}</p>
-            <h2 className="mt-2 text-3xl font-bold text-blue-700">
+            <h2
+              className={`mt-2 text-3xl font-bold ${
+                item.isLwp ? "text-rose-600" : "text-blue-700"
+              }`}
+            >
               {balanceValue(currentBalance, item.type)}
             </h2>
           </div>
@@ -605,6 +664,102 @@ const Leave = () => {
                 <tr>
                   <td className="p-6 text-center text-slate-500" colSpan="10">
                     No leave history found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Monthly Approved LWP Tracker Section */}
+      <div className="mt-6 rounded-2xl border border-rose-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+              <span className="inline-block h-3 w-3 rounded-full bg-rose-500"></span>
+              Monthly Approved LWP Tracker
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Filter and check your Leave Without Pay (LWP) approved in any specific month (past or current semester).
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-semibold text-slate-600">Month:</label>
+              <select
+                value={lwpMonth}
+                onChange={(e) => setLwpMonth(e.target.value)}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 shadow-sm focus:border-rose-500 focus:outline-none"
+              >
+                <option value="ALL">All Months</option>
+                {MONTH_NAMES.map((m, idx) => (
+                  <option key={idx} value={idx.toString()}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-semibold text-slate-600">Year:</label>
+              <select
+                value={lwpYear}
+                onChange={(e) => setLwpYear(e.target.value)}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 shadow-sm focus:border-rose-500 focus:outline-none"
+              >
+                <option value="ALL">All Years</option>
+                {availableYears.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5">
+              <span className="text-xs font-medium text-rose-800">Approved LWP Days:</span>
+              <span className="rounded-full bg-rose-600 px-2 py-0.5 text-xs font-bold text-white">
+                {totalMonthlyApprovedLwpDays}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[700px] text-sm">
+            <thead>
+              <tr className="border-b bg-rose-50/50 text-left text-xs font-semibold text-rose-900">
+                <th className="p-3">From Date</th>
+                <th className="p-3">To Date</th>
+                <th className="p-3">Days</th>
+                <th className="p-3">Reason</th>
+                <th className="p-3">Director/Admin Remark</th>
+                <th className="p-3">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {monthlyApprovedLwpRequests.map((request) => (
+                <tr key={request._id} className="border-b hover:bg-slate-50">
+                  <td className="p-3">{formatDate(request.fromDate)}</td>
+                  <td className="p-3">{formatDate(request.toDate)}</td>
+                  <td className="p-3 font-semibold text-rose-700">{request.days}</td>
+                  <td className="p-3 max-w-[200px] text-slate-600 truncate">{request.reason}</td>
+                  <td className="p-3 max-w-[200px] text-slate-600">
+                    {approvalRemark(request) || "-"}
+                  </td>
+                  <td className="p-3">
+                    <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                      APPROVED
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {!monthlyApprovedLwpRequests.length && (
+                <tr>
+                  <td className="p-6 text-center text-xs text-slate-500" colSpan="6">
+                    No approved LWP leaves found for the selected {lwpMonth !== "ALL" ? MONTH_NAMES[Number(lwpMonth)] : "month"} {lwpYear !== "ALL" ? lwpYear : ""}.
                   </td>
                 </tr>
               )}

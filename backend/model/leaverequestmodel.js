@@ -86,6 +86,7 @@ const leaveRequestSchema = new mongoose.Schema(
         "MATERNITY_LEAVE",
         "STUDY_LEAVE",
         "SPECIAL_DISABILITY_LEAVE",
+        "LWP",
       ],
     },
     requestKind: {

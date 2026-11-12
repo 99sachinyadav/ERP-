@@ -789,6 +789,356 @@ const MonitorAttendence = () => {
     popupWindow.document.close();
   };
 
+  const printCompactAttendance = () => {
+    if (!students.length) return;
+    const popupWindow = window.open("", "_blank", "width=950,height=800");
+    if (!popupWindow) return;
+
+    let totalStudentsCount = students.length;
+    let eligibleCount = 0;
+    let shortageCount = 0;
+    let totalClassLec = 0;
+    let totalClassAttend = 0;
+
+    const rows = students
+      .map((student, idx) => {
+        const summary = getStudentAttendanceSummary(
+          student,
+          activeAttendanceSemester,
+          attendanceStartDate,
+          attendanceEndDate,
+          sectionSubjects.length > 0 ? sectionSubjects : student?.subjects || []
+        );
+        const { totalLec, totalAttend } = summary;
+        const attendancePercentage =
+          totalLec > 0 ? Number(((totalAttend / totalLec) * 100).toFixed(2)) : null;
+        const attendanceLabel =
+          attendancePercentage !== null ? `${attendancePercentage.toFixed(2)}%` : "N/A";
+        const isLowAttendance = attendancePercentage !== null && attendancePercentage < 75;
+
+        if (attendancePercentage !== null) {
+          totalClassLec += totalLec;
+          totalClassAttend += totalAttend;
+          if (attendancePercentage >= 75) {
+            eligibleCount++;
+          } else {
+            shortageCount++;
+          }
+        }
+
+        const statusClass =
+          attendancePercentage === null
+            ? "pill-neutral"
+            : isLowAttendance
+            ? "pill-danger"
+            : "pill-success";
+        const statusLabel =
+          attendancePercentage === null
+            ? "-"
+            : isLowAttendance
+            ? "Shortage (<75%)"
+            : "Eligible (>=75%)";
+
+        return `
+          <tr class="${isLowAttendance ? "row-low" : ""}">
+            <td class="col-center text-muted">${idx + 1}</td>
+            <td class="col-roll"><strong>${escapeHtml(student?.rollno || "-")}</strong></td>
+            <td class="col-name">${escapeHtml(student?.name || "-")}</td>
+            <td class="col-father">${escapeHtml(student?.father_name || "-")}</td>
+            <td class="col-center">${totalLec > 0 ? totalLec : "-"}</td>
+            <td class="col-center">${totalLec > 0 ? totalAttend : "-"}</td>
+            <td class="col-pct ${isLowAttendance ? "text-danger" : "text-success"}">
+              <strong>${escapeHtml(attendanceLabel)}</strong>
+            </td>
+            <td class="col-center">
+              <span class="status-pill ${statusClass}">${escapeHtml(statusLabel)}</span>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+
+    const avgPercentage =
+      totalClassLec > 0
+        ? ((totalClassAttend / totalClassLec) * 100).toFixed(2) + "%"
+        : "N/A";
+
+    const printDate = new Date().toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Compact Attendance Summary - Section ${escapeHtml(section || "-")}</title>
+          <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+              padding: 20px 24px;
+              color: #0f172a;
+              background: #ffffff;
+              font-size: 11.5px;
+              line-height: 1.4;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .no-print {
+              margin-bottom: 14px;
+              padding: 8px 14px;
+              background: #f1f5f9;
+              border: 1px solid #cbd5e1;
+              border-radius: 6px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              font-size: 11.5px;
+            }
+            .no-print-actions { display: flex; gap: 8px; }
+            .btn {
+              padding: 5px 12px;
+              font-size: 11.5px;
+              font-weight: 600;
+              border-radius: 4px;
+              cursor: pointer;
+              border: 1px solid transparent;
+            }
+            .btn-primary { background: #2563eb; color: #fff; }
+            .btn-secondary { background: #fff; border-color: #cbd5e1; color: #334155; }
+
+            .report-header {
+              border-bottom: 2px solid #0f172a;
+              padding-bottom: 10px;
+              margin-bottom: 12px;
+            }
+            .header-top {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              gap: 12px;
+            }
+            .report-title h1 {
+              font-size: 18px;
+              font-weight: 800;
+              color: #0f172a;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .report-title p {
+              font-size: 11px;
+              color: #64748b;
+              margin-top: 1px;
+            }
+
+            .meta-grid {
+              display: grid;
+              grid-template-columns: repeat(6, 1fr);
+              gap: 8px;
+              margin-top: 8px;
+              padding-top: 8px;
+              border-top: 1px solid #e2e8f0;
+              font-size: 11px;
+            }
+            .meta-item { display: flex; flex-direction: column; }
+            .meta-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; color: #64748b; }
+            .meta-value { font-size: 11.5px; font-weight: 700; color: #0f172a; margin-top: 1px; }
+
+            .stats-strip {
+              display: flex;
+              gap: 10px;
+              margin-top: 8px;
+              flex-wrap: wrap;
+            }
+            .stat-badge {
+              font-size: 10.5px;
+              font-weight: 600;
+              padding: 3px 8px;
+              border-radius: 4px;
+              border: 1px solid #cbd5e1;
+              background: #f8fafc;
+            }
+            .stat-total { background: #f8fafc; color: #334155; border-color: #cbd5e1; }
+            .stat-eligible { background: #dcfce7; color: #166534; border-color: #86efac; }
+            .stat-shortage { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+            .stat-avg { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
+
+            table.compact-table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 11px;
+              margin-top: 8px;
+            }
+            table.compact-table th {
+              background: #0f172a;
+              color: #ffffff;
+              padding: 6px 8px;
+              text-align: left;
+              font-size: 10px;
+              text-transform: uppercase;
+              letter-spacing: 0.3px;
+              border: 1px solid #0f172a;
+            }
+            table.compact-table td {
+              padding: 5px 8px;
+              border: 1px solid #cbd5e1;
+              color: #1e293b;
+            }
+            table.compact-table tr:nth-child(even) td {
+              background: #f8fafc;
+            }
+            table.compact-table tr.row-low td {
+              background: #fff5f5;
+            }
+            table.compact-table tfoot td {
+              background: #f1f5f9;
+              font-weight: 700;
+              border-top: 2px solid #0f172a;
+              padding: 6px 8px;
+            }
+
+            .col-center { text-align: center; }
+            .col-roll { font-family: monospace; font-size: 11px; color: #0f172a; }
+            .col-name { font-weight: 600; }
+            .col-father { color: #475569; }
+            .col-pct { text-align: center; font-size: 11.5px; }
+            .text-danger { color: #dc2626 !important; }
+            .text-success { color: #16a34a !important; }
+            .text-muted { color: #64748b; }
+
+            .status-pill {
+              display: inline-block;
+              padding: 2px 6px;
+              border-radius: 12px;
+              font-size: 9.5px;
+              font-weight: 700;
+              letter-spacing: 0.2px;
+            }
+            .pill-success { background: #dcfce7; color: #166534; }
+            .pill-danger { background: #fee2e2; color: #991b1b; }
+            .pill-neutral { background: #f1f5f9; color: #64748b; }
+
+            .report-footer {
+              margin-top: 14px;
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-end;
+              font-size: 10px;
+              color: #64748b;
+              border-top: 1px solid #e2e8f0;
+              padding-top: 10px;
+            }
+            .signature-block {
+              text-align: center;
+              min-width: 130px;
+              border-top: 1px solid #94a3b8;
+              padding-top: 4px;
+              font-weight: 600;
+              color: #334155;
+            }
+
+            @media print {
+              .no-print { display: none !important; }
+              body { padding: 0 !important; background: #fff !important; }
+              table.compact-table th { background: #0f172a !important; color: #fff !important; -webkit-print-color-adjust: exact; }
+              table.compact-table tr:nth-child(even) td { background: #f8fafc !important; }
+              table.compact-table tr.row-low td { background: #fff5f5 !important; }
+              @page {
+                size: A4 portrait;
+                margin: 10mm 8mm;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="no-print">
+            <span>Tip: Click "Print Report" to print or save as PDF.</span>
+            <div class="no-print-actions">
+              <button class="btn btn-primary" onclick="window.print()">Print Report</button>
+              <button class="btn btn-secondary" onclick="window.close()">Close</button>
+            </div>
+          </div>
+
+          <div class="report-header">
+            <div class="header-top">
+              <div class="report-title">
+                <h1>Class Aggregate Attendance Summary</h1>
+                <p>Consolidated Attendance Register (${escapeHtml(section || "-")} - ${escapeHtml(year || "-")} Year, Batch ${escapeHtml(batch || "-")})</p>
+              </div>
+            </div>
+
+            <div class="meta-grid">
+              <div class="meta-item"><span class="meta-label">Section:</span><span class="meta-value">${escapeHtml(section || "-")}</span></div>
+              <div class="meta-item"><span class="meta-label">Year:</span><span class="meta-value">${escapeHtml(year || "-")}</span></div>
+              <div class="meta-item"><span class="meta-label">Batch:</span><span class="meta-value">${escapeHtml(batch || "-")}</span></div>
+              <div class="meta-item"><span class="meta-label">Semester:</span><span class="meta-value">${escapeHtml(activeAttendanceSemester || "-")}</span></div>
+              <div class="meta-item"><span class="meta-label">Date Range:</span><span class="meta-value">${escapeHtml(getDateRangeLabel(attendanceStartDate, attendanceEndDate))}</span></div>
+              <div class="meta-item"><span class="meta-label">Generated On:</span><span class="meta-value">${escapeHtml(printDate)}</span></div>
+            </div>
+
+            <div class="stats-strip">
+              <span class="stat-badge stat-total">Total Students: <strong>${totalStudentsCount}</strong></span>
+              <span class="stat-badge stat-eligible">Eligible (&ge;75%): <strong>${eligibleCount}</strong></span>
+              <span class="stat-badge stat-shortage">Shortage (&lt;75%): <strong>${shortageCount}</strong></span>
+              <span class="stat-badge stat-avg">Class Aggregate: <strong>${avgPercentage}</strong></span>
+            </div>
+          </div>
+
+          <table class="compact-table">
+            <thead>
+              <tr>
+                <th style="width: 30px; text-align: center;">#</th>
+                <th style="width: 110px;">Roll No</th>
+                <th>Student Name</th>
+                <th>Father's Name</th>
+                <th style="width: 75px; text-align: center;">Total Lec</th>
+                <th style="width: 75px; text-align: center;">Attended</th>
+                <th style="width: 95px; text-align: center;">Aggregate %</th>
+                <th style="width: 105px; text-align: center;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows || "<tr><td colspan='8' style='text-align:center; padding:12px;'>No student records found.</td></tr>"}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="4" style="text-align: right; padding-right: 12px;">Class Totals / Aggregate:</td>
+                <td class="col-center">${totalClassLec > 0 ? totalClassLec : "-"}</td>
+                <td class="col-center">${totalClassAttend > 0 ? totalClassAttend : "-"}</td>
+                <td class="col-pct"><strong>${avgPercentage}</strong></td>
+                <td class="col-center text-muted">${eligibleCount}/${totalStudentsCount} Eligible</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div class="report-footer">
+            <div>
+              <p>Generated via College ERP &bull; Confidential Academic Record</p>
+            </div>
+            <div class="signature-block">
+              Faculty / HOD Signature
+            </div>
+          </div>
+
+          <script>
+            window.onload = function () {
+              window.focus();
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    popupWindow.document.write(html);
+    popupWindow.document.close();
+  };
+
   const getStudent = async () => {
     setLoading(true);
     setErrorMessage("");
@@ -1003,13 +1353,26 @@ const MonitorAttendence = () => {
               </span>
             ) : null}
             </div>
-            <button
-              onClick={printAllStudentsAttendance}
-              className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
-            >
-              <i className="ri-printer-line text-base"></i>
-              Print
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={printCompactAttendance}
+                className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 shadow-sm transition"
+                title="Print compact tabular report with student names, roll numbers, and aggregate attendance %"
+              >
+                <i className="ri-file-list-2-line text-base"></i>
+                Compact Print
+              </button>
+              <button
+                type="button"
+                onClick={printAllStudentsAttendance}
+                className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 shadow-sm transition"
+                title="Subject-wise detailed attendance report for all students"
+              >
+                <i className="ri-printer-line text-base"></i>
+                Print
+              </button>
+            </div>
           </div>
         ) : null}
       </div>
