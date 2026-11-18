@@ -200,7 +200,7 @@ const assignHOD = async (req, res) => {
     user.role = "HOD";
     user.department = department;
     await user.save();
-
+  console.log("hod assigned")
     return res
       .status(200)
       .json({
