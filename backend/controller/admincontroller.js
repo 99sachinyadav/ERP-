@@ -131,6 +131,7 @@ const updateStaffPassword = async (req,res)=>{
 }
 
 const assignHOD = async (req, res) => {
+  console.log("assign hod initated")
   try {
     const email = req.body.teacheremail || req.body.email || req.body.staffemail;
     const { department } = req.body;
