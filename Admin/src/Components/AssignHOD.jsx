@@ -28,7 +28,9 @@ const AssignHOD = () => {
             } else {
                 toast.error(response.data.message);
             }
+            console.log(response.data.message)
         } catch (error) {
+            console.log(error.response?.data?.message)
             toast.error(error.response?.data?.message || "Failed to assign HOD");
         } finally {
             setLoading(false);
